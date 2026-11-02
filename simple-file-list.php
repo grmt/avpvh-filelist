@@ -8,7 +8,7 @@ Plugin Name: Simple File List (grmt)
 Plugin URI: https://github.com/grmt/simple-file-list
 Description: File lists and uploads for WordPress. Independently maintained grmt fork of Simple File List; original upstream credits retained.
 Author: grmt
-Version: 6.3.13+grmt.1
+Version: 6.3.13-grmt.1
 Author URI: https://github.com/grmt
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 require_once __DIR__ . '/includes/ee-github-updater.php';
 
 // CONSTANTS
-if(!defined('eeSFL_Version')) { define('eeSFL_Version', '6.3.13+grmt.1'); }
+if(!defined('eeSFL_Version')) { define('eeSFL_Version', '6.3.13-grmt.1'); }
 define('eeSFL_PluginName', 'Simple File List');
 define('eeSFL_PluginSlug', 'simple-file-list');
 define('eeSFL_Product', 'Free');
