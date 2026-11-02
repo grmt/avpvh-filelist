@@ -1,6 +1,6 @@
 # Simple File List — independent downstream repository
 
-This repository contains version 6.3.12 (based on upstream 6.3.11) of the GPL-licensed WordPress plugin
+This repository contains version 6.3.13+grmt.1 (based on upstream 6.3.11) of the GPL-licensed WordPress plugin
 Simple File List. The initial commit is a byte-for-byte import of the plugin
 copy installed for `vp40-42.vve.rechtspreker.nl` on 14 September 2026.
 
