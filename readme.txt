@@ -1,15 +1,15 @@
-=== Simple File List ===
-Contributors: eemitch
+=== Simple File List (grmt) ===
+Contributors: grmt, eemitch
 Donate link: http://simplefilelist.com
 Tags: file manager, file sharing, share documents, document library, ftp alternative
 Requires at least: 6.0
 Requires PHP: 8.1
 Tested up to: 7.0
-Stable tag: 6.3.12
+Stable tag: 6.3.13-grmt.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Simple File List is a powerful WordPress file manager. Publish a file library anywhere on your site — let users browse, download, upload, share and play files, all without touching the Media Library.
+File lists and uploads for WordPress, independently maintained by grmt. Original upstream credits retained.
 
 == Description ==
 
