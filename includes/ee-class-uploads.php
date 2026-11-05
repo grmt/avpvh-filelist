@@ -536,6 +536,10 @@ class eeSFL_UploadClass {
 
 		// Get this List's Settings before enforcing AllowUploads policy
 		$eeObject->eeSFL_GetSettings($eeListID);
+		if( empty($eeObject->eeListSettings['FileListDir']) ) {
+			eeSFL_Debug_Log("Upload denied: unknown list ID " . $eeListID, 'ERROR', $eeListID);
+			return 'ERROR 97';
+		}
 
 		// Enforce AllowUploads policy on every request.
 		// SECURITY: is_admin() returns TRUE on admin-ajax.php and cannot guard frontend AJAX uploads.
@@ -544,7 +548,7 @@ class eeSFL_UploadClass {
 
 			eeSFL_Debug_Log("Checking upload permissions for non-admin caller...", 'Upload', $eeObject->eeListID);
 			// Who should be uploading?
-			switch ($eeObject->eeListSettings['AllowUploads']) {
+			switch ($eeObject->eeListSettings['AllowUploads'] ?? 'NO') {
 				case 'YES':
 					eeSFL_Debug_Log("Upload allowed: YES (all users)", 'Upload', $eeObject->eeListID);
 					break;
