@@ -177,7 +177,7 @@ class eeSFL_MainClass {
 		'ShowFolderSize' => 'YES', // Calculate the size of each folder
 
 		// Upload Settings
-		'AllowUploads' => 'USER', // Allow File Uploads (YES, ADMIN, USER, NO)
+		'AllowUploads' => 'NO', // Allow File Uploads (YES, ADMIN, USER, NO); front-end uploads are an explicit opt-in
 		'UploadLimit' => 10, // Limit Files Per Upload Job (Quantity)
 		'UploadMaxFileSize' => 8, // Maximum Size per File (MB)
 		'FileFormats' => 'jpg, jpeg, png, tif, pdf, mov, mp4, mp3, zip', // Allowed Formats
@@ -210,29 +210,29 @@ class eeSFL_MainClass {
 
 
 	// Get Settings for Specified List
+	// The list ID often comes from a request (eeSFL_ID, eeListID, id). Only
+	// list 1 restores its defaults when its settings are missing; any other
+	// ID without stored settings is unknown and yields an empty array, so a
+	// request can never create a new list with the default settings.
     public function eeSFL_GetSettings($eeListID) {
 
-	    if(is_numeric($eeListID) AND $eeListID >=1) {
+		$eeListID = is_numeric($eeListID) ? (int) $eeListID : 0;
+		$eeStored = $eeListID >= 1 ? get_option('eeSFL_Settings_' . $eeListID) : FALSE;
 
-	    // Getting the settings array
-	    $this->eeListSettings = get_option('eeSFL_Settings_' . $eeListID);
-
-	    if(!is_array($this->eeListSettings)) {
-
-			$this->eeUserMessages['warnings'][] = 'No Settings Found. Restoring the defaults ...';
-			update_option('eeSFL_Settings_' . $eeListID, $this->eeDefaultListSettings); // The settings are gone, so reset to defaults.
-			$this->eeListSettings = $this->eeDefaultListSettings;
-		} else {
+		if(is_array($eeStored)) {
 			// Merge with defaults to ensure all keys exist
-			$this->eeListSettings = array_merge($this->eeDefaultListSettings, $this->eeListSettings);
-		}
-
-	    $this->eeListSettings['FileListURL'] = $this->eeEnvironment['wpSiteURL'] . $this->eeListSettings['FileListDir']; // The Full URL			ksort($this->eeListSettings);
-
-		} else {
-
+			$this->eeListSettings = array_merge($this->eeDefaultListSettings, $eeStored);
+		} elseif($eeListID === 1) {
+			$this->eeUserMessages['warnings'][] = 'No Settings Found. Restoring the defaults ...';
+			update_option('eeSFL_Settings_1', $this->eeDefaultListSettings); // The settings are gone, so reset to defaults.
 			$this->eeListSettings = $this->eeDefaultListSettings;
+		} else {
+			eeSFL_Debug_Log("Unknown list ID: " . $eeListID, 'Settings');
+			$this->eeListSettings = array();
+			return $this->eeListSettings;
 		}
+
+		$this->eeListSettings['FileListURL'] = $this->eeEnvironment['wpSiteURL'] . $this->eeListSettings['FileListDir']; // The Full URL
 
 		// Remove folder-related settings if folder support is disabled (free version)
 		global $eeSFLF;

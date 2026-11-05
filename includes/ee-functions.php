@@ -1345,12 +1345,16 @@ function eeSFL_FileEditor() {
 
 	eeSFL_Debug_Log("Processing request for List ID: " . $eeSFL->eeListID, 'Admin', $eeSFL->eeListID);
 	$eeSFL->eeSFL_GetSettings($eeSFL->eeListID);
+	if( empty($eeSFL->eeListSettings['FileListDir']) ) {
+		eeSFL_Debug_Log("ERROR: Unknown list ID", 'Admin', 0);
+		return 'Bad List ID';
+	}
 
 	// Check if we should be doing this
 	// Note: is_admin() is NOT a user-identity check — it is TRUE for ALL admin-ajax.php requests,
 	// including unauthenticated nopriv ones. Use current_user_can() for authorization.
 	// When AllowFrontManage = YES the gate is intentionally open to all page visitors (by design).
-	if( !current_user_can('manage_options') AND $eeSFL->eeListSettings['AllowFrontManage'] != 'YES' ) {
+	if( !current_user_can('manage_options') AND ($eeSFL->eeListSettings['AllowFrontManage'] ?? 'NO') != 'YES' ) {
 		eeSFL_Debug_Log("ERROR: Front manage not allowed", 'Admin', $eeSFL->eeListID);
 		return;
 	}
