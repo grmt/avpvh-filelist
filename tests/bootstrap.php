@@ -16,4 +16,18 @@ if ( ! is_dir(WP_PLUGIN_DIR) ) {
 function get_transient($eeKey) { return false; }
 function eeSFL_Debug_Log($eeString, $eeCategory = '', $eeListID = 0) { return false; }
 
+// Options live in $GLOBALS['eeTestOptions']; tests reset it in setUp().
+$GLOBALS['eeTestOptions'] = array();
+function get_option($eeName, $eeDefault = false) { return $GLOBALS['eeTestOptions'][$eeName] ?? $eeDefault; }
+function update_option($eeName, $eeValue, $eeAutoload = null) { $GLOBALS['eeTestOptions'][$eeName] = $eeValue; return true; }
+function delete_option($eeName) { unset($GLOBALS['eeTestOptions'][$eeName]); return true; }
+
+function absint($eeValue) { return abs((int) $eeValue); }
+function wp_unslash($eeValue) { return is_string($eeValue) ? stripslashes($eeValue) : $eeValue; }
+
+// Capabilities of the "current user" live in $GLOBALS['eeTestCaps'].
+$GLOBALS['eeTestCaps'] = array();
+function current_user_can($eeCap) { return in_array($eeCap, $GLOBALS['eeTestCaps'], true); }
+
 require dirname(__DIR__) . '/includes/ee-functions.php';
+require dirname(__DIR__) . '/includes/ee-lists.php';

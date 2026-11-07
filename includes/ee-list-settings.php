@@ -33,7 +33,14 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 
 			$eeFileListDir = eeSFL_ValidateFileListDir($new_directory); // Sanitize and Validate the Path
 
-			if($eeFileListDir) {
+			$eeOverlap = $eeFileListDir ? eeSFL_FindOverlappingList($eeFileListDir, $eeSFL->eeListID) : 0;
+
+			if($eeOverlap) {
+
+				/* translators: %d: ID of the other file list */
+				$eeSFL->eeUserMessages['warnings'][] = sprintf(__('Not saved: this folder overlaps the folder of list %d. Each list needs its own folder.', 'simple-file-list'), $eeOverlap);
+
+			} elseif($eeFileListDir) {
 
 				if( eeSFL_FileListDirCheck($eeFileListDir) ) { // Check / Create the Dir
 
@@ -42,16 +49,13 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 
 				} else {
 
-					$eeSFL->eeUserMessages['warnings'][] = $eeSFL_DirCheck;
-					$eeSFL->eeUserMessages['warnings'][] = __('Cannot create the file directory. Reverting to default.', 'simple-file-list');
-					$eeSFL->eeListSettings['FileListDir'] = $eeSFL->eeEnvironment['FileListDefaultDir'];
+					$eeSFL->eeUserMessages['warnings'][] = __('Cannot create the file directory. The folder was not changed.', 'simple-file-list');
 				}
 
 			} else {
 
 				$eeSFL->eeUserMessages['warnings'][] = __('Not Saved', 'simple-file-list');
 				$eeSFL->eeUserMessages['warnings'][] = __('Choose a different file list directory.', 'simple-file-list');
-				$eeSFL->eeListSettings['FileListDir'] = $eeSFL->eeEnvironment['FileListDefaultDir'];
 			}
 		}
 

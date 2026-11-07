@@ -222,6 +222,13 @@ Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/
 
 == Changelog ==
 
+= Unreleased =
+* New: Multiple file lists. Create, rename and remove lists under "All File Lists" and "Create List"; each list has its own folder, settings and `[eeSFL list="N"]` shortcode. Lists left by the old File Access Manager add-on are picked up automatically.
+* New: A list switcher in wp-admin, and per-list admin access based on each list's "Admin Role" setting.
+* Change: A new list starts visible to admins only, without uploads, until its settings are reviewed. Two lists can never share or nest folders.
+* Fix: Shortcode attributes (style, sorting, visibility) no longer carry over to the next shortcode on the same page.
+* Fix: A failed folder change keeps the current folder instead of switching to the default one.
+
 = 6.3.12 =
 * Security Fix: Escaped file names, descriptions, submitter metadata, and column labels across Table, Flex, and Tiles display templates to prevent Stored XSS.
 * Security Fix: Removed broken `&& !is_admin()` guard in settings input processors and enforced `manage_options` capability across all settings tabs.

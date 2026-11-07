@@ -162,6 +162,7 @@ function eeSFL_Setup() {
 
 		// Get Functions File
 		include_once(plugin_dir_path(__FILE__) . 'includes/ee-functions.php');
+		include_once(plugin_dir_path(__FILE__) . 'includes/ee-lists.php');
 
 		if(!is_admin() || (defined('DOING_AJAX') && DOING_AJAX)) {
 			include_once(plugin_dir_path(__FILE__) . 'includes/ee-front-end.php');
@@ -209,8 +210,12 @@ function eeSFL_Setup() {
 			$eeSFLE = new eeSFLE_class();
 		}
 
-		// Set List ID
+		// Set List ID: the main list, or in wp-admin the list chosen with ?eeListID=
 		$eeSFL->eeListID = 1;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only routing; eeSFL_AdminListID() checks access
+		if( is_admin() && isset($_GET['page']) && sanitize_key(wp_unslash($_GET['page'])) === eeSFL_PluginSlug ) {
+			$eeSFL->eeListID = eeSFL_AdminListID() ?: 1;
+		}
 
 		// Load Settings
 		$eeSFL->eeSFL_GetSettings($eeSFL->eeListID);

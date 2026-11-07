@@ -156,8 +156,10 @@ class eeSFL_UploadClass {
 			global $eeSFL;
 			$eeObject = $eeSFL;
 
-			if(isset($_POST['eeListID'])) {
-				$eeListID = absint(wp_unslash($_POST['eeListID']));
+			// Only the list shown here: its settings are the ones checked below
+			$eeListID = isset($_POST['eeListID']) ? absint(wp_unslash($_POST['eeListID'])) : 1;
+			if( $eeListID !== (int) $eeObject->eeListID ) {
+				return FALSE;
 			}
 
 			// Enforce AllowUploads policy for non-admin callers

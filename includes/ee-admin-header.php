@@ -38,8 +38,23 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 		<div id="eeSFL_HeaderTools">';
 
-		if($eeSFLA) {
-			include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_ListNavigation.php'); // List Navigator
+		// List switcher, when this user manages more than one list
+		$eeManageable = eeSFL_ManageableListIDs();
+		if(count($eeManageable) > 1) {
+			$eeOutput .= '
+			<form method="get" class="eeSFL_ListNavigation">
+				<input type="hidden" name="page" value="' . esc_attr(eeSFL_PluginSlug) . '" />
+				<input type="hidden" name="tab" value="list" />
+				<select name="eeListID" onchange="this.form.submit()" aria-label="' . esc_attr__('Choose List', 'simple-file-list') . '">';
+			foreach($eeManageable as $eeNavID) {
+				$eeNavSettings = get_option('eeSFL_Settings_' . $eeNavID, array());
+				$eeOutput .= '
+					<option value="' . (int) $eeNavID . '"' . selected($eeNavID, (int) $eeSFL->eeListID, false) . '>' . esc_html(stripslashes($eeNavSettings['ListTitle'] ?? '')) . '</option>';
+			}
+			$eeOutput .= '
+				</select>
+				<noscript><button type="submit" class="button">' . esc_html__('Go', 'simple-file-list') . '</button></noscript>
+			</form>';
 		}
 
 		// Verify nonce for admin tab navigation (Recommended security practice)
@@ -61,7 +76,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 				<input class="eeFlex3" type="text" name="eeSFL_ShortCode" value="[eeSFL';
 
-			if($eeSFLA) {  $eeOutput .= ' list=\'' . $eeSFL->eeListID . '\''; }
+			if((int) $eeSFL->eeListID !== 1) {  $eeOutput .= ' list=\'' . (int) $eeSFL->eeListID . '\''; }
 			if(isset($_GET['eeFolder'])) {
 				// Verify nonce for folder navigation (Recommended security practice)
 				$eeFolderNonceValid = isset($_GET['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'ee-admin-navigation');
