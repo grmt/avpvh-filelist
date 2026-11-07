@@ -29,5 +29,28 @@ function wp_unslash($eeValue) { return is_string($eeValue) ? stripslashes($eeVal
 $GLOBALS['eeTestCaps'] = array();
 function current_user_can($eeCap) { return in_array($eeCap, $GLOBALS['eeTestCaps'], true); }
 
+// Users live in $GLOBALS['eeTestUsers']: ID => ['login', 'email', 'roles', 'caps'].
+$GLOBALS['eeTestUsers'] = array();
+function get_userdata($eeID) {
+	$eeUser = $GLOBALS['eeTestUsers'][(int) $eeID] ?? null;
+	if( !$eeUser ) { return false; }
+	return (object) array('ID' => (int) $eeID, 'user_login' => $eeUser['login'] ?? '', 'user_email' => $eeUser['email'] ?? '', 'roles' => $eeUser['roles'] ?? array());
+}
+function user_can($eeID, $eeCap) { return in_array($eeCap, $GLOBALS['eeTestUsers'][(int) $eeID]['caps'] ?? array(), true); }
+
+// Filters: tests may put a callable in $GLOBALS['eeTestFilters'][$eeHook].
+$GLOBALS['eeTestFilters'] = array();
+function apply_filters($eeHook, $eeValue, ...$eeArgs) {
+	return isset($GLOBALS['eeTestFilters'][$eeHook]) ? $GLOBALS['eeTestFilters'][$eeHook]($eeValue, ...$eeArgs) : $eeValue;
+}
+
+function set_transient($eeKey, $eeValue, $eeExpiration = 0) { return true; }
+function home_url($eePath = '') { return 'https://example.org' . $eePath; }
+function wp_json_encode($eeData) { return json_encode($eeData); }
+function __($eeText, $eeDomain = 'default') { return $eeText; }
+if( !defined('MINUTE_IN_SECONDS') ) { define('MINUTE_IN_SECONDS', 60); }
+
 require dirname(__DIR__) . '/includes/ee-functions.php';
+require dirname(__DIR__) . '/includes/ee-groups.php';
+require dirname(__DIR__) . '/includes/ee-access.php';
 require dirname(__DIR__) . '/includes/ee-lists.php';

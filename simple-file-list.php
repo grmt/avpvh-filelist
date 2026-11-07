@@ -163,6 +163,11 @@ function eeSFL_Setup() {
 		// Get Functions File
 		include_once(plugin_dir_path(__FILE__) . 'includes/ee-functions.php');
 		include_once(plugin_dir_path(__FILE__) . 'includes/ee-lists.php');
+		include_once(plugin_dir_path(__FILE__) . 'includes/ee-groups.php');
+		include_once(plugin_dir_path(__FILE__) . 'includes/ee-access.php');
+		if( is_admin() ) {
+			include_once(plugin_dir_path(__FILE__) . 'includes/ee-access-admin.php');
+		}
 
 		if(!is_admin() || (defined('DOING_AJAX') && DOING_AJAX)) {
 			include_once(plugin_dir_path(__FILE__) . 'includes/ee-front-end.php');
@@ -254,6 +259,9 @@ function eeSFL_Setup() {
 
 // Core Initialization
 add_action('init', 'eeSFL_Setup'); // Main setup - loads all classes and functions
+add_action('init', function() { // Protected downloads, after eeSFL_Setup() has found the site root
+	if( function_exists('eeSFL_HandleFileRequest') ) { eeSFL_HandleFileRequest(); }
+}, 20);
 add_action('init', 'eeSFL_Textdomain'); // Load textdomain at init to comply with WordPress 6.7+ requirements
 
 // Asset Management

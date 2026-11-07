@@ -588,17 +588,11 @@ class eeSFL_MainClass {
 			// File Download
 			if($eeAdmin OR $this->eeListSettings['ShowFileDownload'] == 'YES') {
 
-				 $eeOutput .= '
-				<a class="eeSFL_FileDownload" href="' . esc_url($this->eeFileURL);
+				// A protected list's handler sends the file as a download itself
+				$eeDownloadURL = eeSFL_FileURL($this->eeListID, $this->eeListSettings, $this->eeFilePath, array('download' => TRUE));
 
-				// Extension Check
-				if($eeSFLA) {  // File Access Manager
-					if(isset($this->eeListSettings['Mode']) && $this->eeListSettings['Mode'] != 'NORMAL') {  $eeOutput .= '&mode=download"'; }
-						else {  $eeOutput .= '" download="' . esc_attr(basename($this->eeFileURL)) . '"'; } // Basic Download link
-				} else {
-					 $eeOutput .= '" download="' . esc_attr(basename($this->eeFileURL)) . '"'; // Basic Download link
-				}
-				 $eeOutput .= '>' . __('Download', 'simple-file-list') . '</a>';
+				 $eeOutput .= '
+				<a class="eeSFL_FileDownload" href="' . esc_url($eeDownloadURL) . '" download="' . esc_attr($this->eeRealFileName) . '">' . __('Download', 'simple-file-list') . '</a>';
 
 			}
 
@@ -670,6 +664,16 @@ class eeSFL_MainClass {
 			}
 		}
 
+
+		// Who may open this file (wp-admin)
+		if($eeAdmin AND $this->eeIsFile) {
+
+			$eeAccessURL = admin_url('admin.php?page=' . eeSFL_PluginSlug . '&tab=access&eeListID=' . $this->eeListID . '&eeFile=' . rawurlencode($this->eeFilePath));
+			$eeHasGrant = !eeSFL_GrantIsEmpty(eeSFL_FileGrant($eeFileArray));
+
+			 $eeOutput .= '
+			<a href="' . esc_url($eeAccessURL) . '">' . ($eeHasGrant ? esc_html__('Access (limited)', 'simple-file-list') : esc_html__('Access', 'simple-file-list')) . '</a>';
+		}
 
 		// Extension Check
 		if($eeSFLA) {
@@ -813,6 +817,9 @@ class eeSFL_MainClass {
 
 	    if( is_array($eeFileArray) ) {
 
+			// Files with their own access grant are only listed for the people in it
+			if( !eeSFL_UserCanReadFile($this->eeListID, $this->eeListSettings, $eeFileArray, get_current_user_id()) ) { return FALSE; }
+
 			// Internal file tracking removed - was debug only
 
 			// Assign values to our properties
@@ -822,7 +829,7 @@ class eeSFL_MainClass {
 			$this->eeFileName = basename($eeFileArray['FilePath']); // This name might change
 			$this->eeRealFileName = $this->eeFileName; // Never changed
 			$this->eeFileExt = $eeFileArray['FileExt']; // Just the name
-			$this->eeFileURL = $this->eeEnvironment['wpSiteURL'] . $this->eeListSettings['FileListDir'] . $this->eeFilePath; // Clickable URL
+			$this->eeFileURL = eeSFL_FileURL($this->eeListID, $this->eeListSettings, $this->eeFilePath); // Clickable URL (the download handler for a protected list)
 			$this->eeFileSize = $this->eeSFL_FormatFileSize($eeFileArray['FileSize']); // Formatted Size
 			$this->eeFileDateAdded = $eeFileArray['FileDateAdded'];
 			$this->eeFileDateChanged = $eeFileArray['FileDateChanged'];
@@ -889,7 +896,10 @@ class eeSFL_MainClass {
 					$eeFileThumbPath = $this->eeSFL_GetRootPath() . $this->eeListSettings['FileListDir'] . $eeFolder . '_eeSFL_Thumbnails/thumb_' . $eePathParts['filename'] . '.jpg';
 
 					$thumb_check = eeSFL_FileSystem('exists', array('file' => $eeFileThumbPath));
-					if( $thumb_check['data'] ) {
+					if( $thumb_check['data'] && eeSFL_ListIsProtected($this->eeListSettings) ) {
+						$this->eeFileThumbURL = eeSFL_ProtectedFileURL($this->eeListID, $this->eeFilePath, array('thumb' => TRUE));
+						$eeThumbSet = TRUE;
+					} elseif( $thumb_check['data'] ) {
 						$eeFileThumbURL = $this->eeListSettings['FileListURL'];
 						if($eePathParts['dirname']) { $eeFileThumbURL .= $eePathParts['dirname'] . '/'; }
 						$this->eeFileThumbURL = $eeFileThumbURL . '_eeSFL_Thumbnails/thumb_' . $eePathParts['filename'] . '.jpg';
