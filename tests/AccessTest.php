@@ -119,6 +119,28 @@ class AccessTest extends TestCase {
 		$this->assertFalse(eeSFL_UserCanReadFile(1, $eeSettings, $eeSecret, 3));
 	}
 
+	public function test_changing_a_file_needs_front_management_and_read_access() {
+		$eeSettings = $GLOBALS['eeTestOptions']['eeSFL_Settings_1'];
+		$eeSecret = $GLOBALS['eeTestOptions']['eeSFL_FileList_1'][1];
+		$eeOpen = $GLOBALS['eeTestOptions']['eeSFL_FileList_1'][0];
+
+		// Front-end management off: only the list's managers
+		$this->assertTrue(eeSFL_UserCanChangeFile(1, $eeSettings, $eeSecret, 1));
+		$this->assertFalse(eeSFL_UserCanChangeFile(1, $eeSettings, $eeOpen, 2));
+
+		// On: only items the user may read
+		$eeSettings['AllowFrontManage'] = 'YES';
+		$this->assertTrue(eeSFL_UserCanChangeFile(1, $eeSettings, $eeOpen, 2));
+		$this->assertFalse(eeSFL_UserCanChangeFile(1, $eeSettings, $eeSecret, 2));
+		$this->assertTrue(eeSFL_UserCanChangeFile(1, $eeSettings, $eeSecret, 3));
+		$this->assertFalse(eeSFL_UserCanChangeFile(1, $eeSettings, $eeOpen, 0)); // List is for logged-in users
+
+		// A list nobody but its managers may see
+		$eeSettings['ShowList'] = 'NO';
+		$this->assertFalse(eeSFL_UserCanChangeFile(1, $eeSettings, $eeOpen, 3));
+		$this->assertTrue(eeSFL_UserCanChangeFile(1, $eeSettings, $eeOpen, 1));
+	}
+
 	public function test_protected_url_keeps_the_extension_last() {
 		$this->assertSame(
 			'https://example.org/?sfl-list=2&sfl-dl=1&sfl-file=sub/my%20file%26x.pdf',

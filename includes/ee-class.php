@@ -625,7 +625,7 @@ class eeSFL_MainClass {
 
 				// Use proper WordPress admin URL for extract functionality
 				if(is_admin()) {
-					$eeBaseURL = admin_url('admin.php?page=ee-simple-file-list-pro');
+					$eeBaseURL = admin_url('admin.php?page=' . eeSFL_PluginSlug);
 				} else {
 					$eeBaseURL = $this->eeSFL_GetThisURL(FALSE); // Get URL without query string
 				}

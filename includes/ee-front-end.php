@@ -119,12 +119,6 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		if($hidename) { $eeSFL_HideName = $hidename; } else { $eeSFL_HideName = FALSE; }
 		if($hidetype) { $eeSFL_HideType = strtolower($hidetype); } else { $eeSFL_HideType = FALSE; }
 
-
-		// Both "folder" and "showfolder" will work. (Pro only — handled by eeSFL_ProShortcodeAtts in pro/ee-pro-functions.php)
-		if(function_exists('eeSFL_ProShortcodeAtts')) {
-			$eeProResult = eeSFL_ProShortcodeAtts($folder, $showfolder, $paged, $filecount, $search);
-			if($eeProResult === '') { return ''; }
-		}
 	}
 
 	// Who Can Upload? (Evaluated before eeSFL_UploadCheck so unauthorized POSTs are rejected)
@@ -136,7 +130,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	        if( get_current_user_id() ) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
 	    case 'ADMIN':
 	        // Show It If...
-	        if(current_user_can('manage_options')) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
+	        if(current_user_can('manage_options') || eeSFL_UserManagesList($eeSFL->eeListID, get_current_user_id())) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
 	        break;
 		default:
 			$eeSFL->eeListSettings['AllowUploads'] = 'NO'; // Show Nothing
@@ -243,7 +237,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	        if( get_current_user_id() ) { break; } else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
 	    case 'ADMIN':
 	        // Show It If...
-	        if(current_user_can('manage_options')) { break; } else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
+	        if(current_user_can('manage_options') || eeSFL_UserManagesList($eeSFL->eeListID, get_current_user_id())) { break; } else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
 	        break;
 		default:
 			$eeSFL->eeListSettings['ShowList'] = 'NO'; // Show Nothing

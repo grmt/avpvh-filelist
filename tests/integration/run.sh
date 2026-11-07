@@ -38,6 +38,7 @@ wp core install --url="$URL" --title="SFL integration" --admin_user=admin --admi
 wp user create jan jan@example.org --role=subscriber --user_pass=pw-jan --porcelain >/dev/null
 wp user create piet piet@example.net --role=subscriber --user_pass=pw-piet --porcelain >/dev/null
 wp user create kees kees@example.net --role=subscriber --user_pass=pw-kees --porcelain >/dev/null
+wp user create redacteur redacteur@example.net --role=editor --user_pass=pw-redacteur --porcelain >/dev/null
 wp plugin activate simple-file-list >/dev/null
 PAGE=$(wp post create --post_type=page --post_status=publish --post_title=Files --post_content='[eeSFL]' --porcelain)
 
@@ -71,7 +72,10 @@ $DC exec -T -u www-data wordpress bash -c '
 	head -c 300000 /dev/urandom > video.mp4
 '
 
-SFL_IT_URL="$URL" SFL_IT_PAGE="$PAGE" python3 -I test_access.py
+# Logged-out visitors all share one nonce per action, so WP-CLI (no user) produces theirs
+ANON_NONCE=$(wp eval 'echo wp_create_nonce("eeSFL_ActionNonce");')
+
+SFL_IT_URL="$URL" SFL_IT_PAGE="$PAGE" SFL_IT_ANON_NONCE="$ANON_NONCE" python3 -I test_access.py
 
 echo "--- debug.log"
 LOG=$($DC exec -T wordpress bash -c 'cat /var/www/html/wp-content/debug.log 2>/dev/null || true')

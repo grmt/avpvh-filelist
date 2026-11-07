@@ -17,7 +17,7 @@ BASE = os.environ.get('SFL_IT_URL', 'http://localhost:8891')
 PAGE = os.environ.get('SFL_IT_PAGE', '')
 ADMIN = '/wp-admin/admin.php?page=simple-file-list'
 FILES = ['notulen-bestuur.pdf', 'ledenbrief.txt', 'publiek.txt', 'video.mp4', 'evil.html']
-USERS = {'admin': 'password', 'jan': 'pw-jan', 'piet': 'pw-piet', 'kees': 'pw-kees'}
+USERS = {'admin': 'password', 'jan': 'pw-jan', 'piet': 'pw-piet', 'kees': 'pw-kees', 'redacteur': 'pw-redacteur'}
 
 failures = []
 
@@ -116,6 +116,16 @@ class Browser:
 
     def post(self, path, fields):
         return self.request(path, data=urllib.parse.urlencode(fields).encode())
+
+    def upload(self, path, fields, name, content):
+        """POST multipart/form-data with one file, as the uploader script does."""
+        boundary = 'sfl-it-boundary'
+        parts = []
+        for k, v in fields.items():
+            parts.append('--%s\r\nContent-Disposition: form-data; name="%s"\r\n\r\n%s\r\n' % (boundary, k, v))
+        head = '--%s\r\nContent-Disposition: form-data; name="file"; filename="%s"\r\nContent-Type: application/octet-stream\r\n\r\n' % (boundary, name)
+        data = (''.join(parts) + head).encode() + content + ('\r\n--%s--\r\n' % boundary).encode()
+        return self.request(path, data=data, headers={'Content-Type': 'multipart/form-data; boundary=' + boundary})
 
     def submit(self, path, marker, values=None, button=None):
         """Load `path`, take the form holding element #marker, change `values`, submit it."""
@@ -250,6 +260,80 @@ def step_ldap_down(admin):
     check('directory back: jan reads again', Browser('jan').get(handler('ledenbrief.txt'), follow=False)[0] == 200)
 
 
+def edit_job(browser, nonce, action, name, **extra):
+    fields = {'action': 'simplefilelist_edit_job', 'eeSFL_ID': '1', 'eeFileName': name, 'eeFileAction': action, 'eeSecurity': nonce}
+    fields.update(extra)
+    return browser.post('/wp-admin/admin-ajax.php', fields)[2].decode('utf-8', 'replace').strip()
+
+
+def page_value(page, pattern):
+    found = re.search(pattern, page)
+    return found.group(1) if found else ''
+
+
+def content(user, name):
+    status, _, body = Browser(user).get(handler(name), follow=False)
+    return body if status == 200 else status
+
+
+def step_front_manage(admin):
+    """Front-end management, uploads and bulk actions stay inside each user's file access."""
+    # An editor who manages the list (Admin Role 4) may change any file from wp-admin,
+    # without front-end management
+    admin.submit(ADMIN + '&tab=settings&eeListID=1', 'eeShowList', {'eeAdminRole': '4'})
+    editor = Browser('redacteur')
+    page = editor.text(ADMIN + '&tab=list&eeListID=1')
+    answer = edit_job(editor, page_value(page, r'id="eeSFL_ActionNonce">([^<]+)<'), 'Edit', 'notulen-bestuur.pdf', eeFileDescNew='Notulen')
+    check('list manager (editor) can edit any file', answer.startswith('SUCCESS'), answer)
+
+    admin.submit(ADMIN + '&tab=settings&eeListID=1', 'eeShowList', {'eeAllowFrontManage': 'YES'})
+    admin.submit(ADMIN + '&tab=settings&subtab=uploader_settings&eeListID=1', 'eeAllowUploads', {'eeAllowUploads': 'USER', 'eeAllowOverwrite': 'YES', 'eeFileFormats': 'pdf, txt'})
+    original = content('piet', 'notulen-bestuur.pdf')
+
+    # Item IDs as the bulk actions use them, from the list as the admin sees it
+    page = admin.text('/?page_id=' + PAGE)
+    ids = dict((html.unescape(n), i) for i, n in re.findall(r'id="eeSFL_FileID-(\d+)".*?eeSFL_RealFileName[^>]*>([^<]+)<', page, re.S))
+    check('front manage: item IDs found', set(FILES) <= set(ids), ids)
+
+    # Logged-out visitor, who may not see the list at all
+    anon_nonce = os.environ.get('SFL_IT_ANON_NONCE', '')
+    answer = edit_job(Browser(), anon_nonce, 'Delete', 'ledenbrief.txt')
+    check('front manage: anonymous cannot delete in a list it cannot see', answer == 'File Not Found' and content('jan', 'ledenbrief.txt') == b'voor alle leden\n', answer)
+
+    # jan sees the list but not the minutes
+    jan = Browser('jan')
+    page = jan.text('/?page_id=' + PAGE)
+    nonce = page_value(page, r'id="eeSFL_ActionNonce">([^<]+)<')
+    check('front manage: jan gets the action nonce', bool(nonce))
+    answer = edit_job(jan, nonce, 'Delete', 'notulen-bestuur.pdf')
+    check('front manage: jan cannot delete a file restricted to bestuur', answer == 'File Not Found' and content('piet', 'notulen-bestuur.pdf') == original, answer)
+    answer = edit_job(jan, nonce, 'Edit', 'notulen-bestuur.pdf', eeFileNameNew='weg.pdf')
+    check('front manage: jan cannot rename it', answer == 'File Not Found' and content('piet', 'notulen-bestuur.pdf') == original, answer)
+    answer = edit_job(jan, nonce, 'Delete', '.htaccess')
+    check('front manage: jan cannot delete the .htaccess', answer == 'File Not Found' and Browser().get('/wp-content/uploads/simple-file-list/ledenbrief.txt')[0] == 403, answer)
+    answer = edit_job(jan, nonce, 'Edit', 'ledenbrief.txt', eeFileDescNew='Brief')
+    check('front manage: jan can edit a file he may read', answer.startswith('SUCCESS'), answer)
+
+    # Uploads with overwrite on: only files the uploader may read are replaced
+    upload_nonce = page_value(page, r'var eeSFL_Nonce = "([^"]+)"')
+    check('upload: jan gets the upload nonce', bool(upload_nonce))
+    fields = {'action': 'simplefilelist_upload_job', 'eeSFL_ID': '1', 'eeSFL_FileUploadDir': '', 'ee-simple-file-list-upload': upload_nonce}
+    answer = jan.upload('/wp-admin/admin-ajax.php', fields, 'notulen-bestuur.pdf', b'%PDF-1.4 overwritten\n')[2].decode().strip()
+    check('upload: a restricted file is not overwritten', content('piet', 'notulen-bestuur.pdf') == original, (answer, content('piet', 'notulen-bestuur.pdf')))
+    answer = jan.upload('/wp-admin/admin-ajax.php', fields, 'ledenbrief.txt', b'nieuwe brief\n')[2].decode().strip()
+    check('upload: a readable file is overwritten', content('jan', 'ledenbrief.txt') == b'nieuwe brief\n', (answer, content('jan', 'ledenbrief.txt')))
+
+    # Bulk delete of every item: only jan's own readable files go
+    page = jan.text('/?page_id=' + PAGE)
+    jan.post('/?page_id=' + PAGE, {
+        'ee': '1', 'eeListID': '1', 'eeSFL_FileOpsAction': 'Delete', 'eeSFL_FileOpsFiles': ','.join(sorted(ids.values())),
+        'ee-simple-file-list-file-ops-bar-nonce': page_value(page, r'name="ee-simple-file-list-file-ops-bar-nonce" value="([^"]+)"'),
+        'eeSFL_ListOpsBarGo': 'GO',
+    })
+    check('bulk delete: the restricted file survives', content('piet', 'notulen-bestuur.pdf') == original, content('piet', 'notulen-bestuur.pdf'))
+    check('bulk delete: jan\'s readable files are gone', content('admin', 'publiek.txt') == 404, content('admin', 'publiek.txt'))
+
+
 def main():
     if not PAGE:
         raise SystemExit('SFL_IT_PAGE is not set; start the tests with run.sh')
@@ -260,6 +344,7 @@ def main():
     step_front_end()
     step_headers()
     step_ldap_down(admin)
+    step_front_manage(admin)
     print()
     if failures:
         print('%d check(s) failed' % len(failures))

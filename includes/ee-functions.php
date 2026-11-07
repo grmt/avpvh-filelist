@@ -866,6 +866,53 @@ function eeSFL_ProcessEmailString($eeString) {
 
 
 
+/**
+ * Turn the FileFormats setting ("jpg, PDF ,zip") into a regex alternation ("jpg|pdf|zip")
+ * for the RewriteRule in htaccess-template.txt. Each type is regex-escaped; empties are dropped.
+ *
+ * @param string $eeFileFormats Comma separated list of extensions
+ * @return string Pipe separated, escaped extensions ('' if none)
+ */
+function eeSFL_HtaccessFileTypes($eeFileFormats) {
+
+	$eeTypes = array();
+	foreach( explode(',', (string) $eeFileFormats) as $eeType ) {
+		$eeType = strtolower(trim($eeType));
+		if($eeType !== '') { $eeTypes[] = preg_quote($eeType, '/'); }
+	}
+
+	return implode('|', array_unique($eeTypes));
+}
+
+
+/**
+ * Is $eeName an item in the stored file list? The free version lists only the root
+ * directory, so a listed item's FilePath is its bare name (folders may carry a trailing slash).
+ *
+ * @param mixed  $eeAllFiles The stored file list array
+ * @param string $eeName     The bare file or folder name
+ * @return bool
+ */
+function eeSFL_IsListedItem($eeAllFiles, $eeName) {
+	return eeSFL_ListedItem($eeAllFiles, $eeName) !== array();
+}
+
+
+// The stored entry of a listed item, or an empty array when it is not in the list.
+function eeSFL_ListedItem($eeAllFiles, $eeName) {
+
+	if( !is_array($eeAllFiles) || !is_string($eeName) || $eeName === '' ) { return array(); }
+
+	foreach( $eeAllFiles as $eeThisFileArray ) {
+		if( isset($eeThisFileArray['FilePath']) && rtrim($eeThisFileArray['FilePath'], '/') === $eeName ) {
+			return $eeThisFileArray;
+		}
+	}
+
+	return array();
+}
+
+
 // Protect file list directories form direct URL access (hotlinking)
 function eeSFL_LimitDirAccess($eeMode) {
 
@@ -899,8 +946,11 @@ function eeSFL_LimitDirAccess($eeMode) {
 		}
 
 		// Assign our file types
-		$eeFormats = str_replace(',', '|', $eeSFL->eeListSettings['FileFormats']);
-		$eeFormats = str_replace(' ', '', $eeFormats);
+		$eeFormats = eeSFL_HtaccessFileTypes($eeSFL->eeListSettings['FileFormats']);
+		if($eeFormats === '') {
+			$eeSFL->eeUserMessages['errors'][] = __('ERROR: No file types to protect', 'simple-file-list');
+			return FALSE;
+		}
 		$eeString = str_replace('FILE_TYPES', $eeFormats, $template_content['data']);
 
 		// Create .htaccess file using WordPress filesystem
@@ -1355,9 +1405,9 @@ function eeSFL_FileEditor() {
 
 	// Check if we should be doing this
 	// Note: is_admin() is NOT a user-identity check — it is TRUE for ALL admin-ajax.php requests,
-	// including unauthenticated nopriv ones. Use current_user_can() for authorization.
-	// When AllowFrontManage = YES the gate is intentionally open to all page visitors (by design).
-	if( !current_user_can('manage_options') AND ($eeSFL->eeListSettings['AllowFrontManage'] ?? 'NO') != 'YES' ) {
+	// including unauthenticated nopriv ones. Authorise the user, per item below.
+	// List managers may always act; with AllowFrontManage = YES, visitors may act on items they may read.
+	if( !eeSFL_UserManagesList($eeSFL->eeListID, get_current_user_id()) AND ($eeSFL->eeListSettings['AllowFrontManage'] ?? 'NO') != 'YES' ) {
 		eeSFL_Debug_Log("ERROR: Front manage not allowed", 'Admin', $eeSFL->eeListID);
 		return;
 	}
@@ -1386,6 +1436,21 @@ function eeSFL_FileEditor() {
 	if( strpbrk($eeFileName, '/\\') !== FALSE || $eeFileName === '.' || $eeFileName === '..' ) {
 		eeSFL_Debug_Log("ERROR: File name contains a path: " . $eeFileName);
 		return "Invalid File Name";
+	}
+
+	// SECURITY: Only act on items that are in this list. Without this, anyone allowed to manage
+	// files could delete or rename unlisted files in the directory, such as the .htaccess that
+	// protects it (".htaccess" -> "x.htaccess" passes the extension check in eeSFL_RenameFile()).
+	if( !eeSFL_IsListedItem($eeSFL->eeAllFiles, $eeFileName) ) {
+		eeSFL_Debug_Log("ERROR: File is not in the list: " . $eeFileName, 'Admin', $eeSFL->eeListID);
+		return "File Not Found";
+	}
+
+	// SECURITY: Front-end management never reaches items the user may not read (list or per-file access).
+	// Answer as for an unlisted item, so restricted names are not confirmed.
+	if( !eeSFL_UserCanChangeFile($eeSFL->eeListID, $eeSFL->eeListSettings, eeSFL_ListedItem($eeSFL->eeAllFiles, $eeFileName), get_current_user_id()) ) {
+		eeSFL_Debug_Log("ERROR: No access to file: " . $eeFileName, 'Admin', $eeSFL->eeListID);
+		return "File Not Found";
 	}
 
 	// Subfolder support is a Pro feature — the free version always operates on the root directory.

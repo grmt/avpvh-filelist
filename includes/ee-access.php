@@ -187,6 +187,25 @@ function eeSFL_UserCanReadFile($eeListID, $eeSettings, $eeFileArray, $eeUserID) 
 
 
 /**
+ * May this user rename, delete, move or edit this item?
+ * List managers always may; others only with front-end management on, and only items they may read.
+ *
+ * @param int   $eeListID
+ * @param array $eeSettings
+ * @param array $eeFileArray
+ * @param int   $eeUserID
+ * @return bool
+ */
+function eeSFL_UserCanChangeFile($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
+
+	if( eeSFL_UserManagesList($eeListID, $eeUserID) ) { return TRUE; }
+	if( ($eeSettings['AllowFrontManage'] ?? 'NO') !== 'YES' ) { return FALSE; }
+
+	return eeSFL_UserCanReadFile($eeListID, $eeSettings, $eeFileArray, $eeUserID);
+}
+
+
+/**
  * The handler URL of a file in a protected list.
  *
  * @param int    $eeListID
