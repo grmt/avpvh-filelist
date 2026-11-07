@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. v6.3.12)'
+        description: 'Release tag (e.g. v6.3.13-grmt.1)'
         required: true
         type: string
 
@@ -15,35 +15,52 @@ permissions:
   contents: write
 
 jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/CI.yml
+    permissions:
+      contents: read
+
   release:
     name: Build & Publish Plugin ZIP
     runs-on: ubuntu-latest
+    needs: ci
     steps:
-      - uses: actions/checkout@v7
-
       - name: Determine tag and version
         id: meta
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ inputs.tag }}"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG="$INPUT_TAG"
           else
             TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          if ! [[ "$TAG" =~ ^v[0-9A-Za-z.+_-]+$ ]]; then
+            echo "Invalid tag: $TAG" >&2
+            exit 1
           fi
           VERSION="${TAG#v}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
+      # CI's build is the git archive of this commit, so the ZIP holds
+      # exactly what CI checked.
+      - name: Download build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: build-artifact
+          path: simple-file-list
+
       - name: Package simple-file-list.zip
         run: |
-          STAGE_DIR="$(mktemp -d)/simple-file-list"
-          mkdir -p "$STAGE_DIR"
-          rsync -a --exclude-from=.distignore --exclude=README.md ./ "$STAGE_DIR/"
-          (cd "$(dirname "$STAGE_DIR")" && zip -r "$GITHUB_WORKSPACE/simple-file-list.zip" simple-file-list)
-          ls -lh "$GITHUB_WORKSPACE/simple-file-list.zip"
+          zip -r -q "$GITHUB_WORKSPACE/simple-file-list.zip" simple-file-list
+          ls -lh simple-file-list.zip
 
       - name: Create or Update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ steps.meta.outputs.tag }}
           VERSION: ${{ steps.meta.outputs.version }}
         run: |

@@ -1,14 +1,22 @@
+# Minor and patch updates come as one PR per ecosystem a week; majors stay
+# separate PRs.
 version: 2
 updates:
-  - package-ecosystem: composer
-    directory: /
-    schedule:
-      interval: weekly
-    groups:
-      dev-tools:
-        dependency-type: development
-
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: weekly
+- package-ecosystem: github-actions
+  directory: "/"
+  groups:
+    actions:
+      update-types: [minor, patch]
+  schedule:
+    interval: weekly
+  assignees:
+    - grmt
+- package-ecosystem: composer
+  directory: "/"
+  groups:
+    composer:
+      update-types: [minor, patch]
+  schedule:
+    interval: weekly
+  assignees:
+    - grmt
