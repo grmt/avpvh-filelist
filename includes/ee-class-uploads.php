@@ -207,7 +207,7 @@ class eeSFL_UploadClass {
 	// Process an Upload Job, Update the DB as Needed and Return the Results in a Nice Message
 	public function eeSFL_ProcessUploadJob($eeListID) {
 
-		global $eeSFL, $eeSFLA, $eeSFL_Tasks;
+		global $eeSFL, $eeSFL_Tasks;
 		$eeObject = $eeSFL;
 
 		$eeObject->eeUserMessages['notice'][] = 'Processing the Upload Job...';
@@ -486,7 +486,7 @@ class eeSFL_UploadClass {
 	// File Upload Engine
 	public function eeSFL_FileUploader() {
 
-		global $eeSFL, $eeSFLA, $eeSFL_Tasks;
+		global $eeSFL, $eeSFL_Tasks;
 
 		// return print_r($_POST, FALSE);
 

@@ -29,10 +29,6 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 	<p class="ee-plugin-version">' . __('Plugin Version', 'simple-file-list') . ': ' . eeSFL_Version;
 
-	if( defined('eeSFLA_Version') ) {  $eeOutput .= '<br />
-
-		' . __('Access Extension', 'simple-file-list') . ': ' . eeSFLA_Version;
-	}
 
 	if( defined('eeSFLE_Version') ) {  $eeOutput .= '<br />
 

@@ -104,38 +104,6 @@ if( $eeSFL_Uploaded ) { // Reduce down to upload Results
 		$eeSFL->eeDisplayFiles = array_slice($eeSFL->eeDisplayFiles, $eePaging['offset'], $eePaging['length'], TRUE); // Keep the keys
 	}
 
-	// Extension Check
-	if($eeSFLA) {
-
-		if( $eeSFLA->eeSFLA_GetNextAvailableID() > 2 ) {
-
-			if($eeAdmin) { $eeShowCopyLink = TRUE; }
-			if($eeSFL->eeListSettings['AllowCopyToList'] == 'YES') { $eeShowCopyLink = TRUE; }
-
-			// Build the Select Input
-			$eeArray = $eeSFLA->eeSFLA_GetAllListBasics();
-			unset($eeArray[$eeSFL->eeListID]); // Remove this list
-
-			$eeSelectListInput = '
-			<select name="eeListID">';
-
-			foreach( $eeArray as $eeKey => $eeList ) {
-				$eeSelectListInput .= '
-				<option value="' . $eeKey . '">' . $eeList['ListTitle'] . '</option>';
-			}
-
-			$eeSelectListInput .= '
-			</select>';
-		}
-
-		if($eeAdmin AND (
-			(isset($eeSFL->eeListSettings['Mode']) && $eeSFL->eeListSettings['Mode'] == 'RESTRICTED') OR
-			(isset($eeSFL->eeListSettings['Mode']) && $eeSFL->eeListSettings['Mode'] == 'USER')
-		)) {
-
-			$eeShowGrantLink = TRUE;
-		}
-	}
 }
 
 // echo '<pre>'; print_r($eeSFL->eeDisplayFiles); echo '</pre>'; exit;
@@ -156,37 +124,6 @@ if($eeSFL->eeListRun == 1) { $eeOutput .= ' id="eeSFL"'; } // 3/20 - Legacy for 
 // User Messaging
  $eeOutput .= $eeSFL->eeSFL_ResultsNotification();
 
-// Check if user needs to log in for RESTRICTED or USER mode
-$eeSFLA_ShowLoginForm = false;
-$eeSFLA_HasPublicFiles = false;
-
-if( !is_admin() &&
-    !get_current_user_id() &&
-    isset($eeSFL->eeListSettings['Mode']) &&
-    ($eeSFL->eeListSettings['Mode'] == 'RESTRICTED' || $eeSFL->eeListSettings['Mode'] == 'USER') ) {
-
-    $eeSFLA_ShowLoginForm = true;
-
-    // Check if there are any publicly accessible files
-    if($eeSFLA && !empty($eeSFL->eeDisplayFiles)) {
-
-        foreach($eeSFL->eeDisplayFiles as $eeFileArray) {
-            if($eeSFLA->eeSFLA_FileFirewall($eeFileArray) !== FALSE) {
-                $eeSFLA_HasPublicFiles = true;
-                break;
-            }
-        }
-    }
-
-    // If no public files, show only login form and return early
-    if(!$eeSFLA_HasPublicFiles) {
-         $eeOutput .= eeSFLA_DisplayLoginForm();
-         $eeOutput .= '</div><!-- .eeSFL -->';
-        return  $eeOutput;
-    }
-
-    // Otherwise, we'll show the list and add login form at the bottom
-}
 
 // Page Setup ----------
  $eeOutput .= '
@@ -379,25 +316,7 @@ if(is_object($eeSFLE) && method_exists($eeSFLE, 'eeSFLE_EmailSendForm')) {
 	 $eeOutput .= $eeSFLE->eeSFLE_EmailSendForm();
 }
 
-// Extension Check
-if($eeSFLA) {
 
-	if($eeAdmin OR $eeSFL->eeListSettings['AllowCopyToList'] == 'YES') {
-		include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_ModalCopy.php');
-	}
-
-	if($eeAdmin OR $eeSFLA->eeSFLA_IsListOwner) {
-		include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_ModalAccess.php');
-	}
-}
-
-// Show login form at the bottom if there are public files but user isn't logged in
-if(isset($eeSFLA_ShowLoginForm) && $eeSFLA_ShowLoginForm && isset($eeSFLA_HasPublicFiles) && $eeSFLA_HasPublicFiles) {
-	 $eeOutput .= '<div class="eeSFL_LoginPrompt" style="margin-top: 2em; padding-top: 2em; border-top: 1px solid #ddd;">';
-	 $eeOutput .= '<p>' . __('Log in to see additional files.', 'simple-file-list') . '</p>';
-	 $eeOutput .= eeSFLA_DisplayLoginForm();
-	 $eeOutput .= '</div>';
-}
 
 
 eeSFL_Debug_Log("File Listing Completed.", 'List');

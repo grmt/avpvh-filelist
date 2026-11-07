@@ -5,25 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
-// Pre-filter files for RESTRICTED/USER mode to check if any will be displayed
-$eeSFLA_HasAccessibleFiles = false;
-if($eeSFLA && !is_admin() &&
-   isset($eeSFL->eeListSettings['Mode']) &&
-   ($eeSFL->eeListSettings['Mode'] == 'RESTRICTED' || $eeSFL->eeListSettings['Mode'] == 'USER')) {
-
-    // Check if at least one file passes the firewall
-    foreach($eeSFL->eeDisplayFiles as $eeFileArray) {
-        if($eeSFLA->eeSFLA_FileFirewall($eeFileArray) !== FALSE) {
-            $eeSFLA_HasAccessibleFiles = true;
-            break;
-        }
-    }
-
-    // If no accessible files, don't render the table at all
-    if(!$eeSFLA_HasAccessibleFiles) {
-        return;
-    }
-}
 
 // TABLE HEAD ==================================================================================================
 
@@ -98,10 +79,6 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 	// Populate our class properties for this file
 	if( $eeSFL->eeSFL_ProcessFileArray($eeFileArray, $eeSFL_HideName, $eeSFL_HideType) ) {
 
-		// Extension Check
-		if($eeSFLA AND !is_admin() ) {
-			if( $eeSFLA->eeSFLA_FileFirewall($eeFileArray) === FALSE ) { continue; } // Skip this file if FALSE
-		}
 
 
 		// Start The List --------------------------------------------------------------

@@ -118,6 +118,9 @@ In the [issues on GitHub](https://github.com/grmt/simple-file-list/issues). Plea
 * Change: Maintained by grmt, with credit to the original author, Mitchell Bennis, in the plugin header, the readme, the admin footer and every source file. Help and documentation links go to the GitHub repository.
 * Removed: The "Get Pro Version" tab and links, the upgrade texts, the settings that only the paid version used, and the links to the original author's support pages. The index page placed in list folders no longer loads a logo from the original author's website.
 * Removed: The leftover code for sub-folders from the old Pro version (create, move, folder download, breadcrumbs, archive extraction). It could never run. A list shows the files directly in its folder; folders and their contents are ignored.
+* Removed: The hooks for the old File Access Manager add-on. If that add-on, or the old Search & Pagination add-on, is still active, it is deactivated, because its features are built in; its lists and per-file grants are kept. A list it left on "show by file" becomes "Specific Users, Roles or Groups" with no one chosen yet, so only its managers see it until its access is set.
+* Fix: Sending files by e-mail now works in lists shown to specific users, roles or groups, for the people who may see them.
+* Fix: Creating the first list folder no longer tries to copy the removed PDF manual into it.
 
 = 6.3.12 =
 * Security Fix: Escaped file names, descriptions, submitter metadata, and column labels across Table, Flex, and Tiles display templates to prevent Stored XSS.

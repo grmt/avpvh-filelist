@@ -40,7 +40,7 @@ Not supported:
 - Sub-folders: a list shows only the files directly in its folder. The old Pro folder code was removed.
 - Background tasks / WP-Cron scanning
 
-The old File Access Manager add-on (`$eeSFLA`) still has hooks in the code; they only run if that add-on is installed.
+The old File Access Manager and Search & Pagination add-ons are deactivated on the first wp-admin request (their features are built in). A list left on the add-on's "show by file" setting (`ShowList` = `RESTRICTED`) is read as `GRANTED` by `eeSFL_GetSettings()`.
 
 ---
 
@@ -158,7 +158,7 @@ AJAX: simplefilelist_upload_job
 ## Naming Conventions
 
 - **Functions**: `eeSFL_PascalCase()` — e.g. `eeSFL_VersionCheck()`, `eeSFL_FileEditor()`
-- **Globals**: `$eeSFL`, `$eeSFLU`, `$eeSFLE`, `$eeSFLA` (FALSE unless the old access add-on is installed)
+- **Globals**: `$eeSFL`, `$eeSFLU`, `$eeSFLE`
 - **DB options**: `eeSFL_ListIDs`, `eeSFL_Settings_{ID}`, `eeSFL_FileList_{ID}`, `eeSFL_LDAP`, `eeSFL_AccessSettings`, `eeSFL_Version`
 - **AJAX actions**: `simplefilelist_upload_job`, `simplefilelist_edit_job`, `simplefilelist_sendfile_job`
 - **WP action hooks**: `eeSFL_Hook_Uploaded`, `eeSFL_Hook_Deleted`, `eeSFL_Hook_Edited`, `eeSFL_Hook_Listed`

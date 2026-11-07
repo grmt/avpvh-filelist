@@ -21,10 +21,6 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 	// Populate our class properties for this file
 	if( $eeSFL->eeSFL_ProcessFileArray($eeFileArray, $eeSFL_HideName, $eeSFL_HideType) ) {
 
-		// Extension Check
-		if($eeSFLA AND !is_admin() ) {
-			if( $eeSFLA->eeSFLA_FileFirewall($eeFileArray) === FALSE ) { continue; } // Skip this file if FALSE
-		}
 
 
 		 $eeOutput .= '
