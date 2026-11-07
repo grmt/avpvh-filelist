@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -155,79 +155,6 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 	}
 
 
-	if(defined('eeSFL_Pro')) {
-
-		// Re-Scan and Thumbnail Tasks
-		$eeSFL_Tasks[$eeSFL->eeListID]['Scan'] = 'OFF'; // Assume OFF
-		$eeSFL_Tasks[$eeSFL->eeListID]['Background'] = 'NO';
-		$eeSFL_Tasks[$eeSFL->eeListID]['GenerateThumbs'] = 'NO'; // Assume NO
-
-		if(isset($_POST['eeUseCache'])) {
-
-			// Choices are...
-			// 	EACH - The file list is re-scanned each time.
-			//  HOUR - The file list is re-scanned not more than once each hour.
-			//  DAY - The file list is re-scanned not more than once each night.
-			//  OFF - The file list is only re-scanned using the button.
-
-			if($_POST['eeUseCache'] == 'EACH') {
-				$eeSFL->eeListSettings['UseCache'] = 'EACH';
-
-			} elseif($_POST['eeUseCache'] == 'HOUR') {
-				$eeSFL->eeListSettings['UseCache'] = 'HOUR';
-
-			} elseif($_POST['eeUseCache'] == 'DAY') {
-				$eeSFL->eeListSettings['UseCache'] = 'DAY';
-
-			} else {
-				$eeSFL->eeListSettings['UseCache'] = 'OFF';
-			}
-
-			// Use wp-cron ?
-			$eeSFL->eeListSettings['UseCacheCron'] = 'NO';
-			$eeSFL_Tasks[$eeSFL->eeListID]['Scan'] = $eeSFL->eeListSettings['UseCache'];
-			if(isset($_POST['eeUseCacheCron'])) {
-				if($_POST['eeUseCacheCron'] == 'YES' AND ($eeSFL->eeListSettings['UseCache'] == 'HOUR' OR $eeSFL->eeListSettings['UseCache'] == 'DAY')) {
-					$eeSFL->eeListSettings['UseCacheCron'] = 'YES';
-					$eeSFL_Tasks[$eeSFL->eeListID]['Background'] = 'YES';
-				}
-			}
-
-		} else {
-			$eeSFL->eeListSettings['UseCache'] = 'EACH';
-		}
-
-
-		// Background Thumbnail Generation
-		if($eeSFL->eeListSettings['UseCacheCron'] == 'YES') {
-
-			if(isset($_POST['eeGenerateImgThumbs'])) {
-				$eeSFL_Tasks[$eeSFL->eeListID]['GenerateThumbs'] = 'YES';
-			}
-			if(isset($_POST['eeGeneratePDFThumbs'])) {
-				$eeSFL_Tasks[$eeSFL->eeListID]['GenerateThumbs'] = 'YES';
-			}
-			if(isset($_POST['eeGenerateVideoThumbs'])) {
-				$eeSFL_Tasks[$eeSFL->eeListID]['GenerateThumbs'] = 'YES';
-			}
-			if(isset($_POST['eeGeneratePDFThumbs'])) {
-				$eeSFL->eeUserMessages['warnings'][] = __('Missing thumbnail images will be generated in the background and may not appear right away.', 'simple-file-list');
-			}
-		}
-
-		// Remove Any Running Tasks
-		$eeSFL_Timestamp = wp_next_scheduled( 'eeSFL_Background_ReIndex_Hook_' . $eeSFL->eeListID, array($eeSFL->eeListID) );
-		if($eeSFL_Timestamp) {
-			wp_unschedule_event( $eeSFL_Timestamp, 'eeSFL_Background_ReIndex_Hook_' . $eeSFL->eeListID, array($eeSFL->eeListID) );
-		}
-		$eeSFL_Timestamp = wp_next_scheduled( 'eeSFL_Background_GenerateThumbs_Hook_' . $eeSFL->eeListID, array($eeSFL->eeListID) );
-		if($eeSFL_Timestamp) {
-			wp_unschedule_event( $eeSFL_Timestamp, 'eeSFL_Background_GenerateThumbs_Hook_' . $eeSFL->eeListID, array($eeSFL->eeListID) );
-		}
-
-		update_option('eeSFL_Tasks', $eeSFL_Tasks);
-
-	} // end defined('eeSFL_Pro') — Performance save logic
 
 	// echo '<pre>'; print_r($eeSFL->eeUserMessages); echo '</pre>'; exit;
 
@@ -267,7 +194,6 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 	<div class="eeColHalfLeft">
 
 		<h1>' . __('File List Settings', 'simple-file-list') . '</h1>
-		<a class="" href="https://simplefilelist.com/file-list-settings/" target="_blank">' . __('Instructions', 'simple-file-list') . '</a>
 
 	</div>
 
@@ -628,59 +554,6 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 
 		</div>';
 
-	if(defined('eeSFL_Pro')) {
-
-		 $eeOutput .= '<div class="eeSettingsTile">
-
-		<h2>' . __('Performance', 'simple-file-list') . '</h2>
-
-		<fieldset>
-
-		<legend>' . __('File List Disk Re-Scan Method', 'simple-file-list') . '</legend>
-
-		<div><label for="eeUseCache">' . __('Re-Scan', 'simple-file-list') . '</label>
-
-		<select name="eeUseCache" id="eeUseCache">
-			<option value="EACH"';
-			$eeDisabled = FALSE;
-			if( $eeSFL->eeListSettings['UseCache'] == 'EACH') {  $eeOutput .= ' selected="selected"'; $eeDisabled = TRUE; }
-			 $eeOutput .= '>' . __('Scan Each Time', 'simple-file-list') . '</option>
-			<option value="HOUR"';
-			if( $eeSFL->eeListSettings['UseCache'] == 'HOUR') {  $eeOutput .= ' selected="selected"'; }
-			 $eeOutput .= '>' . __('Scan Each Hour', 'simple-file-list') . '</option>
-			<option value="DAY"';
-			if( $eeSFL->eeListSettings['UseCache'] == 'DAY') {  $eeOutput .= ' selected="selected"'; }
-			 $eeOutput .= '>' . __('Scan Each Day', 'simple-file-list') . '</option>
-			<option value="OFF"';
-			if( $eeSFL->eeListSettings['UseCache'] == 'OFF') {  $eeOutput .= ' selected="selected"'; $eeDisabled = TRUE; }
-			 $eeOutput .= '>' . __('Scan Only Manually', 'simple-file-list') . '</option>
-		</select></div>
-
-		<div class="eeNote">' . __('Reduce server load by only scanning the hard disk occasionally.', 'simple-file-list') . ' '  . __('Choose to re-scan for external changes each time a page loads, each hour, once per day or manually.', 'simple-file-list') . '</div>
-
-		</fieldset>
-		<fieldset>
-
-		<legend>' . __('Scan in Background', 'simple-file-list') . '</legend>
-
-		<div><label for="eeUseCacheCron">' . __('Background', 'simple-file-list') . '</label>
-
-		<input id="eeUseCacheCron" type="checkbox" name="eeUseCacheCron" value="YES"';
-
-		if(defined('DISABLE_WP_CRON')) { if('DISABLE_WP_CRON') { $eeDisabled = TRUE; } }
-
-		if( !$eeDisabled AND $eeSFL->eeListSettings['UseCacheCron'] == 'YES' ) {  $eeOutput .= ' checked="checked"'; }
-		if( $eeDisabled ) {  $eeOutput .= ' disabled="disabled"'; }
-
-		 $eeOutput .= ' /></div>
-
-		<div class="eeNote">' . __('Background scanning may not work well in all environments.', 'simple-file-list') . '</div>
-
-		</fieldset>
-
-		</div>';
-
-	} // end defined('eeSFL_Pro') — Performance UI
 
 		 $eeOutput .= '<div class="eeSettingsTile">
 

@@ -346,6 +346,14 @@ def listed(page):
     return [n for n in FILES if 'sfl-file=' + n in page or '>' + n + '<' in page]
 
 
+def step_identity(admin):
+    """wp-admin credits the original author and has no upgrade prompts."""
+    for tab in ('list', 'settings', 'lists'):
+        page = admin.text(ADMIN + '&tab=' + tab + '&eeListID=1')
+        check('identity (%s tab): credits the original author' % tab, 'Based on Simple File List by Mitchell Bennis' in page)
+        check('identity (%s tab): no upgrade prompts' % tab, not re.search(r'(?i)get pro|upgrade to|get\.simplefilelist|tab=getpro', page), re.findall(r'(?i).{40}(?:get pro|upgrade to).{20}', page))
+
+
 def step_search_and_pages(admin):
     """Search and paging on the front end, through GET parameters per list."""
     admin.submit(ADMIN + '&tab=settings&eeListID=1', 'eeShowList', {'eeShowSearch': 'YES', 'eeFilesPerPage': '2', 'eeShowList': 'YES'})
@@ -389,6 +397,7 @@ def main():
         raise SystemExit('SFL_IT_PAGE is not set; start the tests with run.sh')
     admin = Browser('admin')
     step_no_folders(admin)
+    step_identity(admin)
     step_search_and_pages(admin)
     step_ldap_settings(admin)
     step_list_settings(admin)

@@ -6,7 +6,7 @@
 /*
 Plugin Name: Simple File List (grmt)
 Plugin URI: https://github.com/grmt/simple-file-list
-Description: File lists and uploads for WordPress. Independently maintained grmt fork of Simple File List; original upstream credits retained.
+Description: File lists with uploads, access control, search and paging. Maintained by grmt; based on Simple File List by Mitchell Bennis (simplefilelist.com), not affiliated with the original author.
 Author: grmt
 Version: 6.3.13-grmt.1
 Author URI: https://github.com/grmt
@@ -31,10 +31,6 @@ define('eeSFL_PluginMenuTitle', 'File List');
 // Common
 define('eeSFL_Prefix', 'eeSFL');
 define('eeSFL_FileListDefaultDir', 'simple-file-list/'); // Default Upload Directory
-define('eeSFL_PluginWebPage', 'https://simplefilelist.com');
-define('eeSFL_AddOnsURL', 'https://get.simplefilelist.com/index.php');
-define('eeSFL_RegCheckURL', 'https://reg.simplefilelist.com/index.php');
-define('eeSFL_AdminEmail', 'admin@simplefilelist.com');
 define('eeSFL_Go', wp_date('Y-m-d h:m:s') ); // Log Entry Key
 
 

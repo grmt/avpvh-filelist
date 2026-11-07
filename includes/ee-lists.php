@@ -1,6 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // Simple File List - Multiple file lists
+// Copyright 2026 grmt, part of Simple File List (grmt): https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 //
 // Each list keeps its settings in eeSFL_Settings_{ID} and its file cache in eeSFL_FileList_{ID},

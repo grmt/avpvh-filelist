@@ -1,6 +1,6 @@
 # Simple File List — Agent & Developer Guide
 
-This file helps AI coding agents and developers understand the structure, conventions, and boundaries of the **Simple File List Free** WordPress plugin.
+This file helps AI coding agents and developers understand the structure, conventions, and boundaries of **Simple File List (grmt)**: the version of Simple File List by Mitchell Bennis (simplefilelist.com) that grmt maintains at https://github.com/grmt/simple-file-list. It is not affiliated with the original author.
 
 ---
 
@@ -20,25 +20,27 @@ This file helps AI coding agents and developers understand the structure, conven
 
 ## What This Plugin Is (and Is Not)
 
-**This is the Free version.** Standalone — no Pro license or extension dependencies.
+There is one version and it is free. No licensing, registration or upsell code belongs here.
 
-Features **only in Pro** — do NOT add here:
-- Multi-list support (SFLA / Access extension)
-- Background tasks / WP-Cron scanning
-- Folder management (eeSFLF)
-- Search extension (eeSFLS)
-- Registration / licensing checks
-
-Features **included in Free**:
-- Single file list (List ID = 1 always)
+Built in (some of it used to be paid add-ons, now rewritten):
+- Several file lists (`ee-lists.php`, `ee-lists-admin.php`); list IDs in `eeSFL_ListIDs`
+- Access per list and per file, protected downloads through WordPress (`ee-access.php`, `ee-access-admin.php`)
+- Groups from LDAP (`ee-groups.php`)
+- Search and paging (`ee-search.php`)
 - File upload with type/size restrictions
 - File editing: rename, describe, date, delete
 - Email file sharing (via `ee-class-send.php`)
 - Media player (audio/video inline)
 - Image thumbnails
-- Front-end management (configurable by role)
+- Front-end management (configurable per list)
 - Light/dark themes; table, tiles, flex display styles
 - Bulk file operations for deleting, downloading and applying descriptions
+
+Not supported:
+- Sub-folders: a list shows only the files directly in its folder. The old Pro folder code was removed.
+- Background tasks / WP-Cron scanning
+
+The old File Access Manager add-on (`$eeSFLA`) still has hooks in the code; they only run if that add-on is installed.
 
 ---
 
@@ -52,7 +54,7 @@ includes/
   ee-class.php                    eeSFL_MainClass — core methods: GetEnv, GetSettings, UpdateFileListArray,
                                   UpdateFileDetail, CheckThumbnail, GetRootPath, GetThisURL, etc.
   ee-class-uploads.php            eeSFL_UploadClass — handles file upload processing and validation
-  ee-class-send.php               eeSFLE_class — email file sharing (integrated into Free core)
+  ee-class-send.php               eeSFLE_class — email file sharing
   ee-functions.php                Standalone functions: eeSFL_FileSystem wrapper, eeSFL_VersionCheck,
                                   eeSFL_FileEditor, AJAX job functions, asset registration, admin menu
   ee-front-end.php                eeSFL_FrontEnd() — [eeSFL] shortcode handler, front-end rendering
@@ -69,6 +71,11 @@ includes/
   ee-list-settings.php            List Settings tab — display, access, sort, date options
   ee-upload-settings.php          Upload Settings tab — allowed types, size limits, notifications
   ee-email-settings.php           Email Settings tab — notify addresses, message template
+  ee-lists.php / ee-lists-admin.php   List registry, create/rename/remove lists, list admin rights
+  ee-access.php                   Who may see a list or read a file; the protected download handler
+  ee-access-admin.php             File Access and Groups tabs
+  ee-groups.php                   LDAP group lookup with caching (fails closed)
+  ee-search.php                   Search matching, paging, search form and page links
   ee-index-template.html          Template copied as index.html into new upload directories (security)
   htaccess-template.txt           Template for .htaccess hotlink protection (Apache/LiteSpeed only)
 
@@ -151,8 +158,8 @@ AJAX: simplefilelist_upload_job
 ## Naming Conventions
 
 - **Functions**: `eeSFL_PascalCase()` — e.g. `eeSFL_VersionCheck()`, `eeSFL_FileEditor()`
-- **Globals**: `$eeSFL`, `$eeSFLU`, `$eeSFLE`, `$eeSFLF` (always FALSE in Free)
-- **DB options**: `eeSFL_Settings_1`, `eeSFL_FileList_1`, `eeSFL_Version`
+- **Globals**: `$eeSFL`, `$eeSFLU`, `$eeSFLE`, `$eeSFLA` (FALSE unless the old access add-on is installed)
+- **DB options**: `eeSFL_ListIDs`, `eeSFL_Settings_{ID}`, `eeSFL_FileList_{ID}`, `eeSFL_LDAP`, `eeSFL_AccessSettings`, `eeSFL_Version`
 - **AJAX actions**: `simplefilelist_upload_job`, `simplefilelist_edit_job`, `simplefilelist_sendfile_job`
 - **WP action hooks**: `eeSFL_Hook_Uploaded`, `eeSFL_Hook_Deleted`, `eeSFL_Hook_Edited`, `eeSFL_Hook_Listed`
 - **CSS IDs**: `#eeSFL` (wrapper), `#eeSFL_AdminMain`, `#eeSFL_ListOpsBarGo`, `#eeSFL_UploadForm`
@@ -179,10 +186,10 @@ eeSFL_FileSystem('dirlist', array('path' => $dir, 'include_hidden' => false, 're
 All return `array('success' => bool, 'data' => mixed)`.
 
 ### Settings
-Stored in `get_option('eeSFL_Settings_1')`. Access via `$eeSFL->eeListSettings['Key']`. Defaults are defined in `$eeSFL->eeDefaultListSettings` inside `ee-class.php`. Always merge new defaults over existing settings on upgrade — never overwrite blindly.
+Stored per list in `get_option('eeSFL_Settings_{ID}')`. Access via `$eeSFL->eeListSettings['Key']`. Defaults are defined in `$eeSFL->eeDefaultListSettings` inside `ee-class.php`. Always merge new defaults over existing settings on upgrade — never overwrite blindly.
 
 ### File List Array
-Stored in `get_option('eeSFL_FileList_1')`. Each entry is an array with: `FilePath`, `FileName`, `FileExt`, `FileSize`, `FileDateAdded`, `FileDateChanged`, `FileNiceName`, `FileDescription`, `ItemCount` (folders only).
+Stored per list in `get_option('eeSFL_FileList_{ID}')`. Each entry is an array with: `FilePath`, `FileExt`, `FileSize`, `FileDateAdded`, `FileDateChanged`, `FileNiceName`, `FileDescription`, and optionally `Access` (a per-file grant of users, roles and groups).
 
 ### Version / Update Routine
 `eeSFL_VersionCheck()` in `ee-functions.php`:
@@ -194,15 +201,10 @@ Stored in `get_option('eeSFL_FileList_1')`. Each entry is an array with: `FilePa
 
 ---
 
-## Globals Always FALSE in Free
+## Tests
 
-| Global | Purpose (Pro/extension only) |
-|--------|------------------------------|
-| `$eeSFLF` | Folder management |
-| `$eeSFLS` | Search extension |
-| `$eeSFLA` | Access / multi-list extension |
-
-Code checks `if($eeSFLF)` etc. before calling extension methods — safe and intentional.
+- Unit: `vendor/bin/phpunit` (WordPress stubbed in `tests/bootstrap.php`).
+- Integration: `tests/integration/run.sh` (Docker: WordPress, MariaDB, OpenLDAP; see README.md).
 
 ---
 
