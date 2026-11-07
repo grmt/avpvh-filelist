@@ -1,5 +1,5 @@
-// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
-// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
+// AV-PvH File List, based on Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 var eeBaseShortcode = 'eeSFL';
@@ -257,7 +257,7 @@ jQuery(document).ready(function() {
 	   console.log('Confirmed');
 
 	   var eeData = {
-			'action': 'simplefilelist_confirm',
+			'action': 'avpvh_filelist_confirm',
 			'confirm': 'toggle'
 		};
 

@@ -39,15 +39,20 @@ wp user create jan jan@example.org --role=subscriber --user_pass=pw-jan --porcel
 wp user create piet piet@example.net --role=subscriber --user_pass=pw-piet --porcelain >/dev/null
 wp user create kees kees@example.net --role=subscriber --user_pass=pw-kees --porcelain >/dev/null
 wp user create redacteur redacteur@example.net --role=editor --user_pass=pw-redacteur --porcelain >/dev/null
-wp plugin activate simple-file-list >/dev/null
-# A stand-in for the old File Access Manager add-on, still active, and list 1 left on its
-# "show by file" setting. The stand-in only sets the global the old hooks looked for. The
-# first-run setup is done before the setting is changed, or the first page load would reset it.
+# The site starts as a Simple File List site: a stand-in for the old plugin (it only answers
+# [eeSFL]), its options, a page with [eeSFL], and the old File Access Manager add-on with
+# list 1 left on its "show by file" setting. The stand-in add-on only sets the global its
+# hooks looked for. AV-PvH File List is installed on top and has to move all of it over.
 $DC exec -T -u www-data wordpress bash -c '
 	set -e
-	D=/var/www/html/wp-content/plugins/ee-simple-file-list-access
-	mkdir -p "$D"
-	cat > "$D/ee-simple-file-list-access.php" <<"PHP"
+	P=/var/www/html/wp-content/plugins
+	mkdir -p "$P/simple-file-list" "$P/ee-simple-file-list-access"
+	cat > "$P/simple-file-list/simple-file-list.php" <<"PHP"
+<?php
+/* Plugin Name: Simple File List (test stand-in for the old plugin) */
+add_shortcode("eeSFL", function () { return "OLD SIMPLE FILE LIST"; });
+PHP
+	cat > "$P/ee-simple-file-list-access/ee-simple-file-list-access.php" <<"PHP"
 <?php
 /* Plugin Name: File Access Manager (test stand-in for the old add-on) */
 define("eeSFLA_Version", "0-test");
@@ -62,9 +67,39 @@ add_action("plugins_loaded", function () {
 });
 PHP
 '
-wp plugin activate ee-simple-file-list-access >/dev/null
-wp eval 'eeSFL_VersionCheck(); $s = get_option("eeSFL_Settings_1"); if (!is_array($s)) { exit(1); } $s["ShowList"] = "RESTRICTED"; $s["Mode"] = "RESTRICTED"; update_option("eeSFL_Settings_1", $s);'
-PAGE=$(wp post create --post_type=page --post_status=publish --post_title=Files --post_content='[eeSFL]' --porcelain)
+wp plugin activate simple-file-list ee-simple-file-list-access >/dev/null
+wp eval '
+	update_option("eeSFL_Version", "6.3.13-grmt.1");
+	update_option("eeSFL_ListIDs", array(1));
+	update_option("eeSFL_Settings_1", array(
+		"FileListDir" => "wp-content/uploads/simple-file-list/",
+		"ListTitle" => "Ledenarchief",
+		"ShowList" => "RESTRICTED",
+		"Mode" => "RESTRICTED",
+		"NotifyFromName" => "Simple File List",
+	));
+	update_option("eeSFL_TheLog", array("old log"));
+'
+PAGE=$(wp post create --post_type=page --post_status=publish --post_title=Files --post_content='<!-- wp:shortcode -->[eeSFL]<!-- /wp:shortcode -->' --porcelain)
+
+# Install AV-PvH File List; its first request moves the site over
+wp plugin activate avpvh-filelist >/dev/null
+wp eval 'echo "";' >/dev/null
+
+echo "--- moving over from Simple File List"
+MIGRATION_FAILS=0
+expect() { # label, condition result
+	if [ "$2" = "yes" ]; then echo "ok    $1"; else echo "FAIL  $1"; MIGRATION_FAILS=$((MIGRATION_FAILS + 1)); fi
+}
+expect "migration: the old plugin is deactivated" "$(wp plugin is-active simple-file-list && echo no || echo yes)"
+expect "migration: the page uses [avpvh_filelist]" "$([ "$(wp post get "$PAGE" --field=post_content)" = '<!-- wp:shortcode -->[avpvh_filelist]<!-- /wp:shortcode -->' ] && echo yes || echo no)"
+expect "migration: list 1 keeps its settings" "$(wp eval '$s = get_option("avpvh_filelist_settings_1"); echo ($s["ListTitle"] ?? "") === "Ledenarchief" && $s["FileListDir"] === "wp-content/uploads/simple-file-list/" ? "yes" : "no";')"
+expect "migration: the old default sender name is updated" "$(wp eval '$s = get_option("avpvh_filelist_settings_1"); echo $s["NotifyFromName"] === "AV-PvH File List" ? "yes" : "no";')"
+expect "migration: the list ids are copied" "$(wp eval 'echo get_option("avpvh_filelist_list_ids") === array(1) ? "yes" : "no";')"
+expect "migration: an existing install, not a new one" "$(wp eval 'echo get_option("avpvh_filelist_version") === AVPVH_FILELIST_VERSION ? "yes" : "no";')"
+expect "migration: the old log is left behind" "$(wp eval 'echo get_option("avpvh_filelist_log", "none") === "none" ? "yes" : "no";')"
+expect "migration: the old options stay for a rollback" "$(wp eval 'echo is_array(get_option("eeSFL_Settings_1")) ? "yes" : "no";')"
+expect "migration: runs once" "$(wp eval 'update_option("eeSFL_ListIDs", array(1, 7)); avpvh_filelist_migrate_legacy(); echo get_option("avpvh_filelist_list_ids") === array(1) ? "yes" : "no";')"
 
 # Directory: jan gets an e-mail address (matched by mail), piet is matched by uid; bestuur = piet
 for _ in $(seq 60); do
@@ -101,11 +136,12 @@ $DC exec -T -u www-data wordpress bash -c '
 ANON_NONCE=$(wp eval 'echo wp_create_nonce("eeSFL_ActionNonce");')
 
 SFL_IT_URL="$URL" SFL_IT_PAGE="$PAGE" SFL_IT_ANON_NONCE="$ANON_NONCE" python3 -I test_access.py
+if [ "$MIGRATION_FAILS" -gt 0 ]; then echo "FAIL: $MIGRATION_FAILS migration check(s) failed"; exit 1; fi
 
 echo "--- debug.log"
 LOG=$($DC exec -T wordpress bash -c 'cat /var/www/html/wp-content/debug.log 2>/dev/null || true')
-if echo "$LOG" | grep -E "PHP (Fatal|Warning|Notice|Deprecated|Parse)" | grep -q "plugins/simple-file-list/"; then
-	echo "$LOG" | grep "plugins/simple-file-list/"
+if echo "$LOG" | grep -E "PHP (Fatal|Warning|Notice|Deprecated|Parse)" | grep -q "plugins/avpvh-filelist/"; then
+	echo "$LOG" | grep "plugins/avpvh-filelist/"
 	echo "FAIL: PHP errors from the plugin in debug.log"
 	exit 1
 fi

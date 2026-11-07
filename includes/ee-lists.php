@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Multiple file lists
-// Copyright 2026 grmt, part of Simple File List (grmt): https://github.com/grmt/simple-file-list
+// AV-PvH File List - Multiple file lists
+// Copyright 2026 grmt, part of AV-PvH File List: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 //
 // Each list keeps its settings in eeSFL_Settings_{ID} and its file cache in eeSFL_FileList_{ID},
@@ -20,13 +20,13 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  *
  * @return int[]
  */
-function eeSFL_GetListIDs() {
+function avpvh_filelist_get_list_ids() {
 
-	$eeIDs = get_option('eeSFL_ListIDs');
+	$eeIDs = get_option('avpvh_filelist_list_ids');
 
 	if( !is_array($eeIDs) ) {
-		$eeIDs = eeSFL_DiscoverListIDs();
-		update_option('eeSFL_ListIDs', $eeIDs);
+		$eeIDs = avpvh_filelist_discover_list_ids();
+		update_option('avpvh_filelist_list_ids', $eeIDs);
 	}
 
 	$eeIDs = array_map('intval', $eeIDs);
@@ -43,7 +43,7 @@ function eeSFL_GetListIDs() {
  *
  * @return int[]
  */
-function eeSFL_DiscoverListIDs() {
+function avpvh_filelist_discover_list_ids() {
 
 	global $wpdb;
 
@@ -52,7 +52,7 @@ function eeSFL_DiscoverListIDs() {
 	if( !isset($wpdb) || !is_object($wpdb) ) { return $eeIDs; }
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-time discovery, result is stored in eeSFL_ListIDs
-	$eeNames = $wpdb->get_col( $wpdb->prepare("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like('eeSFL_Settings_') . '%') );
+	$eeNames = $wpdb->get_col( $wpdb->prepare("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like('avpvh_filelist_settings_') . '%') );
 
 	foreach( (array) $eeNames as $eeName ) {
 		if( preg_match('/^eeSFL_Settings_(\d+)$/', $eeName, $eeMatch) ) {
@@ -68,8 +68,8 @@ function eeSFL_DiscoverListIDs() {
  * @param mixed $eeListID
  * @return bool
  */
-function eeSFL_ListExists($eeListID) {
-	return is_numeric($eeListID) && in_array((int) $eeListID, eeSFL_GetListIDs(), true);
+function avpvh_filelist_list_exists($eeListID) {
+	return is_numeric($eeListID) && in_array((int) $eeListID, avpvh_filelist_get_list_ids(), true);
 }
 
 
@@ -78,12 +78,12 @@ function eeSFL_ListExists($eeListID) {
  *
  * @return int
  */
-function eeSFL_NextListID() {
+function avpvh_filelist_next_list_id() {
 
-	$eeNext = (int) get_option('eeSFL_NextListID', 0);
-	$eeNext = max($eeNext, max(eeSFL_GetListIDs()) + 1);
+	$eeNext = (int) get_option('avpvh_filelist_next_list_id', 0);
+	$eeNext = max($eeNext, max(avpvh_filelist_get_list_ids()) + 1);
 
-	update_option('eeSFL_NextListID', $eeNext + 1);
+	update_option('avpvh_filelist_next_list_id', $eeNext + 1);
 
 	return $eeNext;
 }
@@ -97,7 +97,7 @@ function eeSFL_NextListID() {
  * @param string $eeDirB Folder relative to the site root
  * @return bool
  */
-function eeSFL_DirsOverlap($eeDirA, $eeDirB) {
+function avpvh_filelist_dirs_overlap($eeDirA, $eeDirB) {
 
 	$eeNormalise = function($eeDir) {
 		$eeDir = trim(str_replace('\\', '/', (string) $eeDir), '/');
@@ -120,14 +120,14 @@ function eeSFL_DirsOverlap($eeDirA, $eeDirB) {
  * @param int    $eeExceptID
  * @return int
  */
-function eeSFL_FindOverlappingList($eeDir, $eeExceptID = 0) {
+function avpvh_filelist_find_overlapping_list($eeDir, $eeExceptID = 0) {
 
-	foreach( eeSFL_GetListIDs() as $eeID ) {
+	foreach( avpvh_filelist_get_list_ids() as $eeID ) {
 
 		if( $eeID === (int) $eeExceptID ) { continue; }
 
-		$eeSettings = get_option('eeSFL_Settings_' . $eeID);
-		if( !empty($eeSettings['FileListDir']) && eeSFL_DirsOverlap($eeDir, $eeSettings['FileListDir']) ) {
+		$eeSettings = get_option('avpvh_filelist_settings_' . $eeID);
+		if( !empty($eeSettings['FileListDir']) && avpvh_filelist_dirs_overlap($eeDir, $eeSettings['FileListDir']) ) {
 			return $eeID;
 		}
 	}
@@ -145,7 +145,7 @@ function eeSFL_FindOverlappingList($eeDir, $eeExceptID = 0) {
  * @param string $eeDir   Validated folder relative to the site root
  * @return array
  */
-function eeSFL_NewListSettings($eeBase, $eeTitle, $eeDir) {
+function avpvh_filelist_new_list_settings($eeBase, $eeTitle, $eeDir) {
 
 	$eeSettings = is_array($eeBase) ? $eeBase : array();
 
@@ -168,40 +168,40 @@ function eeSFL_NewListSettings($eeBase, $eeTitle, $eeDir) {
  * @param string $eeDir Folder relative to the site root; created if missing
  * @return int|string The new list ID, or an error message
  */
-function eeSFL_CreateList($eeTitle, $eeDir) {
+function avpvh_filelist_create_list($eeTitle, $eeDir) {
 
 	global $eeSFL;
 
 	$eeTitle = trim(sanitize_text_field($eeTitle));
-	if( $eeTitle === '' ) { return __('Give the list a name.', 'simple-file-list'); }
+	if( $eeTitle === '' ) { return __('Give the list a name.', 'avpvh-filelist'); }
 
-	$eeDir = eeSFL_ValidateFileListDir($eeDir);
-	if( !$eeDir ) { return __('This folder cannot be used.', 'simple-file-list'); }
+	$eeDir = avpvh_filelist_validate_file_list_dir($eeDir);
+	if( !$eeDir ) { return __('This folder cannot be used.', 'avpvh-filelist'); }
 
-	$eeOverlap = eeSFL_FindOverlappingList($eeDir);
+	$eeOverlap = avpvh_filelist_find_overlapping_list($eeDir);
 	if( $eeOverlap ) {
 		/* translators: %d: ID of the existing file list */
-		return sprintf(__('This folder overlaps the folder of list %d. Each list needs its own folder.', 'simple-file-list'), $eeOverlap);
+		return sprintf(__('This folder overlaps the folder of list %d. Each list needs its own folder.', 'avpvh-filelist'), $eeOverlap);
 	}
 
-	if( !eeSFL_FileListDirCheck($eeDir) ) { return __('The folder could not be created.', 'simple-file-list'); }
+	if( !avpvh_filelist_file_list_dir_check($eeDir) ) { return __('The folder could not be created.', 'avpvh-filelist'); }
 
-	$eeBase = array_merge($eeSFL->eeDefaultListSettings, (array) get_option('eeSFL_Settings_1', array()));
-	$eeSettings = eeSFL_NewListSettings($eeBase, $eeTitle, $eeDir);
+	$eeBase = array_merge($eeSFL->eeDefaultListSettings, (array) get_option('avpvh_filelist_settings_1', array()));
+	$eeSettings = avpvh_filelist_new_list_settings($eeBase, $eeTitle, $eeDir);
 
-	$eeListID = eeSFL_NextListID();
-	update_option('eeSFL_Settings_' . $eeListID, $eeSettings);
+	$eeListID = avpvh_filelist_next_list_id();
+	update_option('avpvh_filelist_settings_' . $eeListID, $eeSettings);
 
-	$eeIDs = eeSFL_GetListIDs();
+	$eeIDs = avpvh_filelist_get_list_ids();
 	$eeIDs[] = $eeListID;
-	update_option('eeSFL_ListIDs', $eeIDs);
+	update_option('avpvh_filelist_list_ids', $eeIDs);
 
 	// Protect the new folder for its (admins only) visibility setting
-	eeSFL_WithList($eeListID, function() use ($eeSettings) {
-		eeSFL_LimitDirAccess($eeSettings['ShowList']);
+	avpvh_filelist_with_list($eeListID, function() use ($eeSettings) {
+		avpvh_filelist_limit_dir_access($eeSettings['ShowList']);
 	});
 
-	eeSFL_Debug_Log("Created list $eeListID: $eeTitle ($eeDir)", 'Lists', $eeListID);
+	avpvh_filelist_debug_log("Created list $eeListID: $eeTitle ($eeDir)", 'Lists', $eeListID);
 
 	return $eeListID;
 }
@@ -213,18 +213,18 @@ function eeSFL_CreateList($eeTitle, $eeDir) {
  * @param int $eeListID
  * @return bool
  */
-function eeSFL_DeleteList($eeListID) {
+function avpvh_filelist_delete_list($eeListID) {
 
 	$eeListID = (int) $eeListID;
-	if( $eeListID <= 1 || !eeSFL_ListExists($eeListID) ) { return FALSE; }
+	if( $eeListID <= 1 || !avpvh_filelist_list_exists($eeListID) ) { return FALSE; }
 
-	delete_option('eeSFL_Settings_' . $eeListID);
-	delete_option('eeSFL_FileList_' . $eeListID);
+	delete_option('avpvh_filelist_settings_' . $eeListID);
+	delete_option('avpvh_filelist_files_' . $eeListID);
 
-	$eeIDs = array_values(array_diff(eeSFL_GetListIDs(), array($eeListID)));
-	update_option('eeSFL_ListIDs', $eeIDs);
+	$eeIDs = array_values(array_diff(avpvh_filelist_get_list_ids(), array($eeListID)));
+	update_option('avpvh_filelist_list_ids', $eeIDs);
 
-	eeSFL_Debug_Log("Deleted list $eeListID (files kept on disk)", 'Lists', $eeListID);
+	avpvh_filelist_debug_log("Deleted list $eeListID (files kept on disk)", 'Lists', $eeListID);
 
 	return TRUE;
 }
@@ -238,14 +238,14 @@ function eeSFL_DeleteList($eeListID) {
  * @param callable $eeCallback
  * @return mixed The callback's return value
  */
-function eeSFL_WithList($eeListID, $eeCallback) {
+function avpvh_filelist_with_list($eeListID, $eeCallback) {
 
 	global $eeSFL;
 
 	$eeSavedID = $eeSFL->eeListID;
 	$eeSavedSettings = $eeSFL->eeListSettings;
 
-	$eeSFL->eeSFL_GetSettings($eeListID);
+	$eeSFL->get_settings($eeListID);
 	$eeSFL->eeListID = (int) $eeListID;
 
 	try {
@@ -263,9 +263,9 @@ function eeSFL_WithList($eeListID, $eeCallback) {
  * @param int $eeListID
  * @return string
  */
-function eeSFL_ListAdminCapability($eeListID = 1) {
+function avpvh_filelist_list_admin_capability($eeListID = 1) {
 
-	$eeSettings = get_option('eeSFL_Settings_' . (int) $eeListID, array());
+	$eeSettings = get_option('avpvh_filelist_settings_' . (int) $eeListID, array());
 	$eeAdminRole = isset($eeSettings['AdminRole']) ? (int) $eeSettings['AdminRole'] : 5;
 
 	switch ( $eeAdminRole ) {
@@ -284,10 +284,10 @@ function eeSFL_ListAdminCapability($eeListID = 1) {
  *
  * @return int[]
  */
-function eeSFL_ManageableListIDs() {
+function avpvh_filelist_manageable_list_ids() {
 
-	return array_values(array_filter(eeSFL_GetListIDs(), function($eeID) {
-		return current_user_can(eeSFL_ListAdminCapability($eeID));
+	return array_values(array_filter(avpvh_filelist_get_list_ids(), function($eeID) {
+		return current_user_can(avpvh_filelist_list_admin_capability($eeID));
 	}));
 }
 
@@ -298,13 +298,13 @@ function eeSFL_ManageableListIDs() {
  *
  * @return string
  */
-function eeSFL_MenuCapability() {
+function avpvh_filelist_menu_capability() {
 
 	$eeRank = array('read' => 1, 'edit_posts' => 2, 'publish_posts' => 3, 'edit_others_pages' => 4, 'activate_plugins' => 5);
 	$eeBest = 'activate_plugins';
 
-	foreach( eeSFL_GetListIDs() as $eeID ) {
-		$eeCap = eeSFL_ListAdminCapability($eeID);
+	foreach( avpvh_filelist_get_list_ids() as $eeID ) {
+		$eeCap = avpvh_filelist_list_admin_capability($eeID);
 		if( $eeRank[$eeCap] < $eeRank[$eeBest] ) { $eeBest = $eeCap; }
 	}
 
@@ -318,9 +318,9 @@ function eeSFL_MenuCapability() {
  *
  * @return int 0 when the user may not manage any list
  */
-function eeSFL_AdminListID() {
+function avpvh_filelist_admin_list_id() {
 
-	$eeAllowed = eeSFL_ManageableListIDs();
+	$eeAllowed = avpvh_filelist_manageable_list_ids();
 	if( !$eeAllowed ) { return 0; }
 
 	// A posted form names the list it was shown for; that wins over the URL, so settings are

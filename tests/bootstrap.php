@@ -14,7 +14,7 @@ if ( ! is_dir(WP_PLUGIN_DIR) ) {
 }
 
 function get_transient($eeKey) { return false; }
-function eeSFL_Debug_Log($eeString, $eeCategory = '', $eeListID = 0) { return false; }
+function avpvh_filelist_debug_log($eeString, $eeCategory = '', $eeListID = 0) { return false; }
 
 // Options live in $GLOBALS['eeTestOptions']; tests reset it in setUp().
 $GLOBALS['eeTestOptions'] = array();
@@ -74,3 +74,5 @@ require dirname(__DIR__) . '/includes/ee-groups.php';
 require dirname(__DIR__) . '/includes/ee-access.php';
 require dirname(__DIR__) . '/includes/ee-lists.php';
 require dirname(__DIR__) . '/includes/ee-search.php';
+if (!function_exists('add_action')) { function add_action($eeHook, $eeCallback, $eePriority = 10, $eeArgs = 1) { return true; } }
+require dirname(__DIR__) . '/includes/ee-migrate.php';

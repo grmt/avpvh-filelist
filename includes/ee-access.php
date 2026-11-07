@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Who may see a list and read its files, and the protected download handler
-// Copyright 2026 grmt, part of Simple File List (grmt): https://github.com/grmt/simple-file-list
+// AV-PvH File List - Who may see a list and read its files, and the protected download handler
+// Copyright 2026 grmt, part of AV-PvH File List: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 //
 // A list's "Show To" setting decides who sees the list. ShowList = GRANTED limits it to the
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /**
  * @return array{users: int[], roles: string[], groups: string[]}
  */
-function eeSFL_EmptyGrant() {
+function avpvh_filelist_empty_grant() {
 	return array('users' => array(), 'roles' => array(), 'groups' => array());
 }
 
@@ -33,7 +33,7 @@ function eeSFL_EmptyGrant() {
  * @param mixed $eeGrant
  * @return array{users: int[], roles: string[], groups: string[]}
  */
-function eeSFL_NormaliseGrant($eeGrant) {
+function avpvh_filelist_normalise_grant($eeGrant) {
 
 	$eeGrant = is_array($eeGrant) ? $eeGrant : array();
 
@@ -51,7 +51,7 @@ function eeSFL_NormaliseGrant($eeGrant) {
 	return array(
 		'users'  => $eeUsers,
 		'roles'  => $eeRoles,
-		'groups' => eeSFL_NormaliseGroupNames($eeGrant['groups'] ?? array()),
+		'groups' => avpvh_filelist_normalise_group_names($eeGrant['groups'] ?? array()),
 	);
 }
 
@@ -60,8 +60,8 @@ function eeSFL_NormaliseGrant($eeGrant) {
  * @param array $eeGrant
  * @return bool
  */
-function eeSFL_GrantIsEmpty($eeGrant) {
-	$eeGrant = eeSFL_NormaliseGrant($eeGrant);
+function avpvh_filelist_grant_is_empty($eeGrant) {
+	$eeGrant = avpvh_filelist_normalise_grant($eeGrant);
 	return !$eeGrant['users'] && !$eeGrant['roles'] && !$eeGrant['groups'];
 }
 
@@ -73,9 +73,9 @@ function eeSFL_GrantIsEmpty($eeGrant) {
  * @param array $eeFileArray
  * @return array{users: int[], roles: string[], groups: string[]}
  */
-function eeSFL_FileGrant($eeFileArray) {
+function avpvh_filelist_file_grant($eeFileArray) {
 
-	$eeGrant = eeSFL_NormaliseGrant($eeFileArray['Access'] ?? array());
+	$eeGrant = avpvh_filelist_normalise_grant($eeFileArray['Access'] ?? array());
 
 	if( !empty($eeFileArray['AccessUsers']) && is_array($eeFileArray['AccessUsers']) ) {
 		$eeGrant['users'] = array_merge($eeGrant['users'], $eeFileArray['AccessUsers']);
@@ -90,7 +90,7 @@ function eeSFL_FileGrant($eeFileArray) {
 		$eeGrant['roles'][] = $eeLegacyRole;
 	}
 
-	return eeSFL_NormaliseGrant($eeGrant);
+	return avpvh_filelist_normalise_grant($eeGrant);
 }
 
 
@@ -101,12 +101,12 @@ function eeSFL_FileGrant($eeFileArray) {
  * @param int   $eeUserID
  * @return bool
  */
-function eeSFL_UserMatchesGrant($eeGrant, $eeUserID) {
+function avpvh_filelist_user_matches_grant($eeGrant, $eeUserID) {
 
 	$eeUserID = (int) $eeUserID;
 	if( $eeUserID <= 0 ) { return FALSE; }
 
-	$eeGrant = eeSFL_NormaliseGrant($eeGrant);
+	$eeGrant = avpvh_filelist_normalise_grant($eeGrant);
 
 	if( in_array($eeUserID, $eeGrant['users'], true) ) { return TRUE; }
 
@@ -116,7 +116,7 @@ function eeSFL_UserMatchesGrant($eeGrant, $eeUserID) {
 	}
 
 	// Last: this may ask the directory
-	if( $eeGrant['groups'] && array_intersect($eeGrant['groups'], eeSFL_UserGroups($eeUserID)) ) { return TRUE; }
+	if( $eeGrant['groups'] && array_intersect($eeGrant['groups'], avpvh_filelist_user_groups($eeUserID)) ) { return TRUE; }
 
 	return FALSE;
 }
@@ -129,8 +129,8 @@ function eeSFL_UserMatchesGrant($eeGrant, $eeUserID) {
  * @param int $eeUserID
  * @return bool
  */
-function eeSFL_UserManagesList($eeListID, $eeUserID) {
-	return (int) $eeUserID > 0 && user_can((int) $eeUserID, eeSFL_ListAdminCapability($eeListID));
+function avpvh_filelist_user_manages_list($eeListID, $eeUserID) {
+	return (int) $eeUserID > 0 && user_can((int) $eeUserID, avpvh_filelist_list_admin_capability($eeListID));
 }
 
 
@@ -138,7 +138,7 @@ function eeSFL_UserManagesList($eeListID, $eeUserID) {
  * @param array $eeSettings
  * @return bool
  */
-function eeSFL_ListIsProtected($eeSettings) {
+function avpvh_filelist_list_is_protected($eeSettings) {
 	return ($eeSettings['ProtectFiles'] ?? 'NO') === 'YES';
 }
 
@@ -151,17 +151,17 @@ function eeSFL_ListIsProtected($eeSettings) {
  * @param int   $eeUserID
  * @return bool
  */
-function eeSFL_UserCanSeeList($eeListID, $eeSettings, $eeUserID) {
+function avpvh_filelist_user_can_see_list($eeListID, $eeSettings, $eeUserID) {
 
 	$eeUserID = (int) $eeUserID;
 
-	if( eeSFL_UserManagesList($eeListID, $eeUserID) ) { return TRUE; }
+	if( avpvh_filelist_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
 
 	switch ( $eeSettings['ShowList'] ?? 'YES' ) {
 		case 'YES':     return TRUE;
 		case 'USER':    return $eeUserID > 0;
 		case 'ADMIN':   return $eeUserID > 0 && user_can($eeUserID, 'manage_options');
-		case 'GRANTED': return eeSFL_UserMatchesGrant($eeSettings['ListAccess'] ?? array(), $eeUserID);
+		case 'GRANTED': return avpvh_filelist_user_matches_grant($eeSettings['ListAccess'] ?? array(), $eeUserID);
 		default:        return FALSE;
 	}
 }
@@ -176,14 +176,14 @@ function eeSFL_UserCanSeeList($eeListID, $eeSettings, $eeUserID) {
  * @param int   $eeUserID
  * @return bool
  */
-function eeSFL_UserCanReadFile($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
+function avpvh_filelist_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
 
-	if( eeSFL_UserManagesList($eeListID, $eeUserID) ) { return TRUE; }
-	if( !eeSFL_UserCanSeeList($eeListID, $eeSettings, $eeUserID) ) { return FALSE; }
+	if( avpvh_filelist_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
+	if( !avpvh_filelist_user_can_see_list($eeListID, $eeSettings, $eeUserID) ) { return FALSE; }
 
-	$eeGrant = eeSFL_FileGrant($eeFileArray);
+	$eeGrant = avpvh_filelist_file_grant($eeFileArray);
 
-	return eeSFL_GrantIsEmpty($eeGrant) || eeSFL_UserMatchesGrant($eeGrant, $eeUserID);
+	return avpvh_filelist_grant_is_empty($eeGrant) || avpvh_filelist_user_matches_grant($eeGrant, $eeUserID);
 }
 
 
@@ -197,12 +197,12 @@ function eeSFL_UserCanReadFile($eeListID, $eeSettings, $eeFileArray, $eeUserID) 
  * @param int   $eeUserID
  * @return bool
  */
-function eeSFL_UserCanChangeFile($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
+function avpvh_filelist_user_can_change_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
 
-	if( eeSFL_UserManagesList($eeListID, $eeUserID) ) { return TRUE; }
+	if( avpvh_filelist_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
 	if( ($eeSettings['AllowFrontManage'] ?? 'NO') !== 'YES' ) { return FALSE; }
 
-	return eeSFL_UserCanReadFile($eeListID, $eeSettings, $eeFileArray, $eeUserID);
+	return avpvh_filelist_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID);
 }
 
 
@@ -214,7 +214,7 @@ function eeSFL_UserCanChangeFile($eeListID, $eeSettings, $eeFileArray, $eeUserID
  * @param array  $eeOptions  'download' => bool (save instead of open), 'thumb' => bool
  * @return string
  */
-function eeSFL_ProtectedFileURL($eeListID, $eeFilePath, $eeOptions = array()) {
+function avpvh_filelist_protected_file_url($eeListID, $eeFilePath, $eeOptions = array()) {
 
 	$eeURL = home_url('/') . '?sfl-list=' . (int) $eeListID;
 
@@ -232,15 +232,15 @@ function eeSFL_ProtectedFileURL($eeListID, $eeFilePath, $eeOptions = array()) {
  * @param int    $eeListID
  * @param array  $eeSettings
  * @param string $eeFilePath
- * @param array  $eeOptions See eeSFL_ProtectedFileURL()
+ * @param array  $eeOptions See avpvh_filelist_protected_file_url()
  * @return string
  */
-function eeSFL_FileURL($eeListID, $eeSettings, $eeFilePath, $eeOptions = array()) {
+function avpvh_filelist_file_url($eeListID, $eeSettings, $eeFilePath, $eeOptions = array()) {
 
 	global $eeSFL;
 
-	if( eeSFL_ListIsProtected($eeSettings) ) {
-		return eeSFL_ProtectedFileURL($eeListID, $eeFilePath, $eeOptions);
+	if( avpvh_filelist_list_is_protected($eeSettings) ) {
+		return avpvh_filelist_protected_file_url($eeListID, $eeFilePath, $eeOptions);
 	}
 
 	return $eeSFL->eeEnvironment['wpSiteURL'] . $eeSettings['FileListDir'] . $eeFilePath;
@@ -253,8 +253,8 @@ function eeSFL_FileURL($eeListID, $eeSettings, $eeFilePath, $eeOptions = array()
  *
  * @return array{AccelPrefix: string}
  */
-function eeSFL_AccessSettings() {
-	$eeStored = get_option('eeSFL_AccessSettings', array());
+function avpvh_filelist_access_settings() {
+	$eeStored = get_option('avpvh_filelist_access_settings', array());
 	return array_merge(array('AccelPrefix' => ''), is_array($eeStored) ? $eeStored : array());
 }
 
@@ -272,22 +272,22 @@ function eeSFL_AccessSettings() {
  * @param string $eeRoot     Site root path, with trailing slash
  * @return array{status: int, file?: string, name?: string}
  */
-function eeSFL_ResolveFileRequest($eeListID, $eeFilePath, $eeThumb, $eeUserID, $eeRoot) {
+function avpvh_filelist_resolve_file_request($eeListID, $eeFilePath, $eeThumb, $eeUserID, $eeRoot) {
 
 	$eeDenied = array('status' => (int) $eeUserID > 0 ? 404 : 401);
 
 	$eeListID = (int) $eeListID;
 	$eeFilePath = ltrim(str_replace('\\', '/', (string) $eeFilePath), '/');
 
-	if( $eeFilePath === '' || strpos($eeFilePath, "\0") !== FALSE || !eeSFL_ListExists($eeListID) ) { return $eeDenied; }
+	if( $eeFilePath === '' || strpos($eeFilePath, "\0") !== FALSE || !avpvh_filelist_list_exists($eeListID) ) { return $eeDenied; }
 	if( in_array('..', explode('/', $eeFilePath), true) ) { return $eeDenied; }
 
-	$eeSettings = get_option('eeSFL_Settings_' . $eeListID);
+	$eeSettings = get_option('avpvh_filelist_settings_' . $eeListID);
 	if( !is_array($eeSettings) || empty($eeSettings['FileListDir']) ) { return $eeDenied; }
 
 	// Only files the list knows about
 	$eeFileArray = null;
-	foreach( (array) get_option('eeSFL_FileList_' . $eeListID, array()) as $eeItem ) {
+	foreach( (array) get_option('avpvh_filelist_files_' . $eeListID, array()) as $eeItem ) {
 		if( is_array($eeItem) && ($eeItem['FilePath'] ?? null) === $eeFilePath && ($eeItem['FileExt'] ?? '') !== 'folder' ) {
 			$eeFileArray = $eeItem;
 			break;
@@ -295,7 +295,7 @@ function eeSFL_ResolveFileRequest($eeListID, $eeFilePath, $eeThumb, $eeUserID, $
 	}
 	if( $eeFileArray === null ) { return $eeDenied; }
 
-	if( !eeSFL_UserCanReadFile($eeListID, $eeSettings, $eeFileArray, $eeUserID) ) { return $eeDenied; }
+	if( !avpvh_filelist_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) ) { return $eeDenied; }
 
 	$eeListDir = $eeRoot . trim($eeSettings['FileListDir'], '/') . '/';
 
@@ -330,7 +330,7 @@ function eeSFL_ResolveFileRequest($eeListID, $eeFilePath, $eeThumb, $eeUserID, $
  * @param int    $eeSize
  * @return array{0: int, 1: int}|null|false [start, end] inclusive; null: whole file; false: not satisfiable
  */
-function eeSFL_ParseRange($eeHeader, $eeSize) {
+function avpvh_filelist_parse_range($eeHeader, $eeSize) {
 
 	if( !preg_match('/^bytes=(\d*)-(\d*)$/', trim((string) $eeHeader), $eeMatch) ) { return null; } // Ignore what we don't support
 	if( $eeMatch[1] === '' && $eeMatch[2] === '' ) { return null; }
@@ -357,7 +357,7 @@ function eeSFL_ParseRange($eeHeader, $eeSize) {
  *
  * @return string[]
  */
-function eeSFL_InlineExtensions() {
+function avpvh_filelist_inline_extensions() {
 	return array('pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'mp3', 'm4a', 'ogg', 'oga', 'wav', 'flac', 'mp4', 'm4v', 'webm', 'ogv', 'mov', 'txt');
 }
 
@@ -369,7 +369,7 @@ function eeSFL_InlineExtensions() {
  * @param bool   $eeInline
  * @return string
  */
-function eeSFL_ContentDisposition($eeName, $eeInline) {
+function avpvh_filelist_content_disposition($eeName, $eeInline) {
 	// One _ per character; per byte when the name is not valid UTF-8
 	$eeAscii = preg_replace('/[^\x20-\x7E]|["\\\\]/u', '_', $eeName) ?? preg_replace('/[^\x20-\x7E]|["\\\\]/', '_', $eeName);
 	return ($eeInline ? 'inline' : 'attachment') . '; filename="' . $eeAscii . '"; filename*=UTF-8\'\'' . rawurlencode($eeName);
@@ -379,35 +379,35 @@ function eeSFL_ContentDisposition($eeName, $eeInline) {
 /**
  * Send a resolved file and stop.
  *
- * @param array $eeResolved From eeSFL_ResolveFileRequest()
+ * @param array $eeResolved From avpvh_filelist_resolve_file_request()
  * @param bool  $eeDownload Save instead of open
  */
-function eeSFL_SendFile($eeResolved, $eeDownload) {
+function avpvh_filelist_send_file($eeResolved, $eeDownload) {
 
 	$eeFile = $eeResolved['file'];
 	$eeName = $eeResolved['name'];
 	$eeSize = (int) filesize($eeFile);
 	$eeExt = strtolower(pathinfo($eeName, PATHINFO_EXTENSION));
 	$eeType = wp_check_filetype($eeName);
-	$eeInline = !$eeDownload && in_array($eeExt, eeSFL_InlineExtensions(), true);
+	$eeInline = !$eeDownload && in_array($eeExt, avpvh_filelist_inline_extensions(), true);
 
 	while( ob_get_level() ) { ob_end_clean(); }
 
 	header('Content-Type: ' . ($eeInline && $eeType['type'] ? $eeType['type'] : 'application/octet-stream'));
-	header('Content-Disposition: ' . eeSFL_ContentDisposition($eeName, $eeInline));
+	header('Content-Disposition: ' . avpvh_filelist_content_disposition($eeName, $eeInline));
 	header('X-Content-Type-Options: nosniff');
 	header('Cache-Control: private, no-store');
 	header('Accept-Ranges: bytes');
 
 	// Let nginx send the file from an internal location
-	$eeAccel = trim(eeSFL_AccessSettings()['AccelPrefix']);
+	$eeAccel = trim(avpvh_filelist_access_settings()['AccelPrefix']);
 	if( $eeAccel !== '' ) {
 		$eeEncoded = implode('/', array_map('rawurlencode', explode('/', $eeResolved['path'])));
 		header('X-Accel-Redirect: ' . rtrim($eeAccel, '/') . '/' . $eeEncoded);
 		exit;
 	}
 
-	$eeRange = isset($_SERVER['HTTP_RANGE']) ? eeSFL_ParseRange(sanitize_text_field(wp_unslash($_SERVER['HTTP_RANGE'])), $eeSize) : null;
+	$eeRange = isset($_SERVER['HTTP_RANGE']) ? avpvh_filelist_parse_range(sanitize_text_field(wp_unslash($_SERVER['HTTP_RANGE'])), $eeSize) : null;
 
 	if( $eeRange === FALSE ) {
 		status_header(416);
@@ -452,7 +452,7 @@ function eeSFL_SendFile($eeResolved, $eeDownload) {
 /**
  * The download handler: ?sfl-list=N&sfl-file=path[&sfl-dl=1][&sfl-thumb=1]
  */
-function eeSFL_HandleFileRequest() {
+function avpvh_filelist_handle_file_request() {
 
 	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- links are shareable; access is checked per user
 	if( !isset($_GET['sfl-list'], $_GET['sfl-file']) ) { return; }
@@ -465,11 +465,11 @@ function eeSFL_HandleFileRequest() {
 
 	nocache_headers();
 
-	$eeRoot = defined('eeSFL_WP_ROOT') ? eeSFL_WP_ROOT : ABSPATH;
-	$eeResolved = eeSFL_ResolveFileRequest($eeListID, $eeFilePath, $eeThumb, get_current_user_id(), $eeRoot);
+	$eeRoot = defined('AVPVH_FILELIST_WP_ROOT') ? AVPVH_FILELIST_WP_ROOT : ABSPATH;
+	$eeResolved = avpvh_filelist_resolve_file_request($eeListID, $eeFilePath, $eeThumb, get_current_user_id(), $eeRoot);
 
 	if( $eeResolved['status'] === 401 ) {
-		$eeHere = eeSFL_ProtectedFileURL($eeListID, $eeFilePath, array('download' => $eeDownload, 'thumb' => $eeThumb));
+		$eeHere = avpvh_filelist_protected_file_url($eeListID, $eeFilePath, array('download' => $eeDownload, 'thumb' => $eeThumb));
 		wp_safe_redirect(wp_login_url($eeHere));
 		exit;
 	}
@@ -477,13 +477,13 @@ function eeSFL_HandleFileRequest() {
 	if( $eeResolved['status'] !== 200 ) {
 		status_header(404);
 		header('Content-Type: text/plain; charset=utf-8');
-		echo esc_html__('File not found.', 'simple-file-list');
+		echo esc_html__('File not found.', 'avpvh-filelist');
 		exit;
 	}
 
-	eeSFL_Debug_Log('Serving ' . $eeResolved['path'] . ' to user ' . get_current_user_id(), 'Access', $eeListID);
+	avpvh_filelist_debug_log('Serving ' . $eeResolved['path'] . ' to user ' . get_current_user_id(), 'Access', $eeListID);
 
-	eeSFL_SendFile($eeResolved, $eeDownload);
+	avpvh_filelist_send_file($eeResolved, $eeDownload);
 }
 
 
@@ -494,30 +494,30 @@ function eeSFL_HandleFileRequest() {
  *
  * @return bool
  */
-function eeSFL_ProtectListDir() {
+function avpvh_filelist_protect_list_dir() {
 
 	global $eeSFL;
 
-	$eeDir = $eeSFL->eeSFL_GetRootPath() . $eeSFL->eeListSettings['FileListDir'];
+	$eeDir = $eeSFL->get_root_path() . $eeSFL->eeListSettings['FileListDir'];
 	$eeServer = (string) ($eeSFL->eeEnvironment['eeWebServer'] ?? '');
 
 	if( stripos($eeServer, 'Apache') === 0 || stripos($eeServer, 'LiteSpeed') === 0 ) {
 
-		$eeRules = "# Simple File List: files in this list are served by WordPress, which checks access.\n"
+		$eeRules = "# AV-PvH File List: files in this list are served by WordPress, which checks access.\n"
 			. "<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n"
 			. "<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n";
 
-		$eeWrite = eeSFL_FileSystem('put_contents', array('file' => $eeDir . '.htaccess', 'data' => $eeRules));
+		$eeWrite = avpvh_filelist_file_system('put_contents', array('file' => $eeDir . '.htaccess', 'data' => $eeRules));
 
 		if( !$eeWrite['success'] ) {
-			$eeSFL->eeUserMessages['errors'][] = __('WARNING: Could not write', 'simple-file-list') . ' .htaccess';
+			$eeSFL->eeUserMessages['errors'][] = __('WARNING: Could not write', 'avpvh-filelist') . ' .htaccess';
 			return FALSE;
 		}
 		return TRUE;
 	}
 
-	$eeSFL->eeUserMessages['messages'][] = '<strong>' . esc_html__('Block direct access to this folder on your web server', 'simple-file-list') . '</strong><br />'
-		. esc_html__('Files are now served through WordPress, but their folder is still reachable by direct URL until your server blocks it. For nginx:', 'simple-file-list')
+	$eeSFL->eeUserMessages['messages'][] = '<strong>' . esc_html__('Block direct access to this folder on your web server', 'avpvh-filelist') . '</strong><br />'
+		. esc_html__('Files are now served through WordPress, but their folder is still reachable by direct URL until your server blocks it. For nginx:', 'avpvh-filelist')
 		. '<br /><code>location ^~ /' . esc_html(trim($eeSFL->eeListSettings['FileListDir'], '/')) . '/ { deny all; }</code>';
 
 	return TRUE;

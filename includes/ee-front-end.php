@@ -2,7 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // Shortcode
-function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
+function avpvh_filelist_front_end($atts, $content = null) { // Shortcode Usage: [eeSFL]
 
 	if(has_filter('wpautop')) {
 		remove_filter( 'the_content', 'wpautop' ); // This will break SFL
@@ -11,8 +11,8 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	global $eeSFL, $eeSFL_UploadFormRun, $eeSFL_VarsForJS;
     global $eeSFLU, $eeSFLE, $eeSFLM; // Extensions
 
-    eeSFL_Debug_Log("Shortcode Function Loading ...", 'Shortcode');
-	eeSFL_Debug_Log('URL: ' . $eeSFL->eeSFL_GetThisURL(), 'Shortcode', $eeSFL->eeListID);
+    avpvh_filelist_debug_log("Shortcode Function Loading ...", 'Shortcode');
+	avpvh_filelist_debug_log('URL: ' . $eeSFL->get_this_url(), 'Shortcode', $eeSFL->eeListID);
 
 	$eeAdmin = is_admin();
 	if($eeAdmin) { return; } // Don't execute shortcode on page editor
@@ -51,8 +51,8 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	// Which list: [eeSFL list="2"]. The settings are reloaded for every shortcode, so one
 	// shortcode's list or attribute overrides never carry over to the next one on the page.
 	$eeShortcodeListID = absint($list) ?: 1;
-	if( !eeSFL_ListExists($eeShortcodeListID) || !$eeSFL->eeSFL_GetSettings($eeShortcodeListID) ) {
-		return current_user_can('manage_options') ? '[' . esc_html__('List Not Found', 'simple-file-list') . ']' : '';
+	if( !avpvh_filelist_list_exists($eeShortcodeListID) || !$eeSFL->get_settings($eeShortcodeListID) ) {
+		return current_user_can('manage_options') ? '[' . esc_html__('List Not Found', 'avpvh-filelist') . ']' : '';
 	}
 	$eeSFL->eeListID = $eeShortcodeListID;
 
@@ -63,14 +63,14 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		$eeShortcodeAtts = array_filter($atts);
 		foreach( $eeShortcodeAtts as $eeAtt => $eeValue) { $eeShortcode .= ' ' . $eeAtt . '="' . $eeValue . '"'; }
 		$eeShortcode .= ']';
-		eeSFL_Debug_Log('- Shortcode: ' . $eeShortcode, 'Shortcode', $eeSFL->eeListID);
+		avpvh_filelist_debug_log('- Shortcode: ' . $eeShortcode, 'Shortcode', $eeSFL->eeListID);
 
 		 $eeOutput .= '
 		<!-- Shortcode: ' . esc_html(str_replace('--', '', $eeShortcode)) . ' List Run: #' . intval($eeSFL->eeListRun) . ' -->';
 
 		extract($atts); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- keys are limited to the shortcode_atts() whitelist above
 
-		eeSFL_Debug_Log("Frontend shortcode processing - List: $eeShortcodeListID", 'Shortcode', $eeShortcodeListID);
+		avpvh_filelist_debug_log("Frontend shortcode processing - List: $eeShortcodeListID", 'Shortcode', $eeShortcodeListID);
 
 		// SECURITY: Shortcode overrides for showlist/allowuploads.
 		// Overrides that are equally or more restrictive than the stored setting always apply.
@@ -127,7 +127,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 
 	}
 
-	// Who Can Upload? (Evaluated before eeSFL_UploadCheck so unauthorized POSTs are rejected)
+	// Who Can Upload? (Evaluated before upload_check so unauthorized POSTs are rejected)
 	switch ($eeSFL->eeListSettings['AllowUploads']) {
 	    case 'YES':
 	        break; // Show It
@@ -136,7 +136,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	        if( get_current_user_id() ) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
 	    case 'ADMIN':
 	        // Show It If...
-	        if(current_user_can('manage_options') || eeSFL_UserManagesList($eeSFL->eeListID, get_current_user_id())) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
+	        if(current_user_can('manage_options') || avpvh_filelist_user_manages_list($eeSFL->eeListID, get_current_user_id())) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
 	        break;
 		default:
 			$eeSFL->eeListSettings['AllowUploads'] = 'NO'; // Show Nothing
@@ -147,42 +147,42 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	if($eeSFL->eeListRun == 1) {
 
 	    if($eeSFL->eeListSettings['AllowFrontManage'] != 'NO') {
-	    	wp_enqueue_script('ee-simple-file-list-js-edit-file', plugin_dir_url(__FILE__) . 'js/ee-edit-file.js', $eeDependents, eeSFL_Version, TRUE);
+	    	wp_enqueue_script('avpvh-filelist-js-edit-file', plugin_dir_url(__FILE__) . 'js/ee-edit-file.js', $eeDependents, AVPVH_FILELIST_VERSION, TRUE);
 		}
 
 		// Media Player Script and Variables
 		$eeSFLM = TRUE; // Enable media player
 		if($eeSFLM) {
-			wp_enqueue_script('ee-simple-file-list-js-media', plugin_dir_url(dirname(__FILE__)) . 'js/ee-media-scripts-footer.js', $eeDependents, eeSFL_Version, TRUE);
+			wp_enqueue_script('avpvh-filelist-js-media', plugin_dir_url(dirname(__FILE__)) . 'js/ee-media-scripts-footer.js', $eeDependents, AVPVH_FILELIST_VERSION, TRUE);
 			$eeSFLM_VarsForJS = array(
-				'eePlayLabel' => __('Play', 'simple-file-list'),
-				'eeBrowserWarning' => __('Browser is Not Compatible', 'simple-file-list'),
+				'eePlayLabel' => __('Play', 'avpvh-filelist'),
+				'eeBrowserWarning' => __('Browser is Not Compatible', 'avpvh-filelist'),
 				'eeAudioEnabled' => $eeSFL->eeListSettings['AudioEnabled'],
 				'eeAudioHeight' => $eeSFL->eeListSettings['AudioHeight']
 			);
-			wp_localize_script( 'ee-simple-file-list-js-media', 'eeSFLM_Vars', $eeSFLM_VarsForJS );
+			wp_localize_script( 'avpvh-filelist-js-media', 'eeSFLM_Vars', $eeSFLM_VarsForJS );
 		}
 
 
 		// List Theme CSS
 	    if($eeSFL->eeListSettings['ShowListTheme'] == 'DARK') {
-			wp_enqueue_style('ee-simple-file-list-css-theme-dark');
+			wp_enqueue_style('avpvh-filelist-css-theme-dark');
 		} elseif($eeSFL->eeListSettings['ShowListTheme'] == 'LIGHT') {
-			wp_enqueue_style('ee-simple-file-list-css-theme-light');
+			wp_enqueue_style('avpvh-filelist-css-theme-light');
 		}
 
 	    // List Style CSS
 	    if($eeSFL->eeListSettings['ShowListStyle'] == 'FLEX') {
-			wp_enqueue_style('ee-simple-file-list-css-flex');
+			wp_enqueue_style('avpvh-filelist-css-flex');
 		} elseif($eeSFL->eeListSettings['ShowListStyle'] == 'TILES') {
-			wp_enqueue_style('ee-simple-file-list-css-tiles');
+			wp_enqueue_style('avpvh-filelist-css-tiles');
 		} else {
-			wp_enqueue_style('ee-simple-file-list-css-table');
+			wp_enqueue_style('avpvh-filelist-css-table');
 		}
 
 		// Upload Check (only if uploads are permitted)
 		if($eeSFL->eeListSettings['AllowUploads'] != 'NO') {
-			$eeSFL_Uploaded = $eeSFLU->eeSFL_UploadCheck($eeSFL->eeListRun);
+			$eeSFL_Uploaded = $eeSFLU->upload_check($eeSFL->eeListRun);
 		}
 
 	}
@@ -194,15 +194,15 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 
 	if(!$eeSFL_Uploaded AND $eeSFL->eeListSettings['AllowUploads'] != 'NO' AND !$eeSFL_UploadFormRun) {
 
-		eeSFL_Debug_Log("Upload form enabled - AllowUploads: " . $eeSFL->eeListSettings['AllowUploads'], 'Shortcode', $eeSFL->eeListID);
-		wp_enqueue_style('ee-simple-file-list-css-upload');
-		wp_enqueue_script('ee-simple-file-list-js-uploader', plugin_dir_url(__FILE__) . 'js/ee-uploader.js', $eeDependents , eeSFL_Version, TRUE);
+		avpvh_filelist_debug_log("Upload form enabled - AllowUploads: " . $eeSFL->eeListSettings['AllowUploads'], 'Shortcode', $eeSFL->eeListID);
+		wp_enqueue_style('avpvh-filelist-css-upload');
+		wp_enqueue_script('avpvh-filelist-js-uploader', plugin_dir_url(__FILE__) . 'js/ee-uploader.js', $eeDependents , AVPVH_FILELIST_VERSION, TRUE);
 		$eeSFL_UploadFormRun = TRUE;
 		$eeShowUploadForm = TRUE;
 	}
 
 	if($eeShowUploadForm AND $eeSFL->eeListSettings['UploadPosition'] == 'Above') {
-		 $eeOutput .= $eeSFLU->eeSFL_UploadForm();
+		 $eeOutput .= $eeSFLU->upload_form();
 	}
 
 
@@ -212,7 +212,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	        break; // Show It
 	    case 'GRANTED':
 	        // Only the users, roles and groups in the list's grant
-	        if( eeSFL_UserCanSeeList($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) { break; }
+	        if( avpvh_filelist_user_can_see_list($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) { break; }
 	        $eeSFL->eeListSettings['ShowList'] = 'NO';
 	        break;
 	    case 'USER':
@@ -220,7 +220,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	        if( get_current_user_id() ) { break; } else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
 	    case 'ADMIN':
 	        // Show It If...
-	        if(current_user_can('manage_options') || eeSFL_UserManagesList($eeSFL->eeListID, get_current_user_id())) { break; } else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
+	        if(current_user_can('manage_options') || avpvh_filelist_user_manages_list($eeSFL->eeListID, get_current_user_id())) { break; } else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
 	        break;
 		default:
 			$eeSFL->eeListSettings['ShowList'] = 'NO'; // Show Nothing
@@ -229,19 +229,19 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	if($eeSFL->eeListSettings['ShowList'] != 'NO') {
 
 		// Lazy-load the email class if email sharing is enabled and it was not loaded at setup
-		if((!is_object($eeSFLE) || !method_exists($eeSFLE, 'eeSFLE_EmailSendForm')) && ($eeSFL->eeListSettings['AllowFrontSend'] ?? 'NO') === 'YES') {
+		if((!is_object($eeSFLE) || !method_exists($eeSFLE, 'email_send_form')) && ($eeSFL->eeListSettings['AllowFrontSend'] ?? 'NO') === 'YES') {
 			require_once($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-class-send.php');
-			$eeSFLE = new eeSFLE_class();
+			$eeSFLE = new Avpvh_Filelist_Send();
 		}
 
-		eeSFL_Debug_Log("Displaying frontend list - ShowList: " . $eeSFL->eeListSettings['ShowList'], 'Shortcode', $eeSFL->eeListID);
+		avpvh_filelist_debug_log("Displaying frontend list - ShowList: " . $eeSFL->eeListSettings['ShowList'], 'Shortcode', $eeSFL->eeListID);
 		include($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-list-display.php'); // The List is Loaded Here -------------
 	} else {
-		eeSFL_Debug_Log("List display blocked (ShowList = NO)", 'Shortcode', $eeSFL->eeListID);
+		avpvh_filelist_debug_log("List display blocked (ShowList = NO)", 'Shortcode', $eeSFL->eeListID);
 	}
 
 	if($eeShowUploadForm AND $eeSFL->eeListSettings['UploadPosition'] == 'Below') {
-		 $eeOutput .= $eeSFLU->eeSFL_UploadForm();
+		 $eeOutput .= $eeSFLU->upload_form();
 	}
 
 	// Smooth Scrolling is AWESOME!
@@ -250,11 +250,11 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 
 	$eeSFL->eeListRun++;
 
-	eeSFL_Debug_Log("SFL Display Completed", 'Shortcode', $eeSFL->eeListID);
+	avpvh_filelist_debug_log("SFL Display Completed", 'Shortcode', $eeSFL->eeListID);
 
 	// Hook for debug output (used by Simple File List Tools plugin)
 	ob_start();
-	do_action('eeSFL_Hook_DebugOutput');
+	do_action('avpvh_filelist_debug_output');
 	 $eeOutput .= ob_get_clean();
 
 	// Give it back

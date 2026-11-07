@@ -1,5 +1,5 @@
-// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
-// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
+// AV-PvH File List, based on Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 // console.log('ee-edit-file.js v7 Loaded');
@@ -258,7 +258,7 @@ function eeSFL_EditFileAction(eeSFL_FileID, eeSFL_FileAction) {
 	if(eeSFL_FileAction == 'Edit') {
 
 		eeFormData = {
-			'action': 'simplefilelist_edit_job',
+			'action': 'avpvh_filelist_edit_job',
 			'eeSFL_ID': eeSFL_ListID,
 			'eeFileName': eeSFL_FileNameOld,
 			'eeFileNameNew': eeSFL_FileNameNew,
@@ -276,7 +276,7 @@ function eeSFL_EditFileAction(eeSFL_FileID, eeSFL_FileAction) {
 		var eeSFL_FileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text();
 
 		eeFormData = {
-			'action': 'simplefilelist_edit_job',
+			'action': 'avpvh_filelist_edit_job',
 			'eeSFL_ID': eeSFL_ListID,
 			'eeFileName': eeSFL_FileName,
 			'eeFileAction': 'Delete',

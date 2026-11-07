@@ -1,5 +1,5 @@
-// Simple File List - File Sending - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
-// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
+// AV-PvH File List - File Sending, based on Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 function eeSFLE_SendFile(eeSFL_FileID) {
@@ -109,7 +109,7 @@ function eeSFLE_DoFileSend() {
 		'message': eeMessage,
 		'files': eeFileList,
 		'eeSecurity': eeSFL_SendNonce,
-		'action': 'simplefilelist_sendfile_job'
+		'action': 'avpvh_filelist_sendfile_job'
 	};
 
 	var eeSaved = jQuery('#SendFilesButton').html(); // Save the button

@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Search and paging
-// Copyright 2026 grmt, part of Simple File List (grmt): https://github.com/grmt/simple-file-list
+// AV-PvH File List - Search and paging
+// Copyright 2026 grmt, part of AV-PvH File List: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 // Search and paging for a file list. Both work through GET parameters named per list
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  * @param int $eeListID
  * @return array{search: string, page: string}
  */
-function eeSFL_SearchParams($eeListID) {
+function avpvh_filelist_search_params($eeListID) {
 	$eeListID = (int) $eeListID;
 	return array('search' => 'sfl_search_' . $eeListID, 'page' => 'sfl_page_' . $eeListID);
 }
@@ -28,11 +28,11 @@ function eeSFL_SearchParams($eeListID) {
  * @param int $eeListID
  * @return string
  */
-function eeSFL_SearchQuery($eeListID) {
-	$eeParam = eeSFL_SearchParams($eeListID)['search'];
+function avpvh_filelist_search_query($eeListID) {
+	$eeParam = avpvh_filelist_search_params($eeListID)['search'];
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only filter of what the visitor may already see
 	$eeQuery = isset($_GET[$eeParam]) && is_string($_GET[$eeParam]) ? sanitize_text_field(wp_unslash($_GET[$eeParam])) : '';
-	return eeSFL_Substr(trim($eeQuery), 200);
+	return avpvh_filelist_substr(trim($eeQuery), 200);
 }
 
 
@@ -42,8 +42,8 @@ function eeSFL_SearchQuery($eeListID) {
  * @param int $eeListID
  * @return int
  */
-function eeSFL_PageQuery($eeListID) {
-	$eeParam = eeSFL_SearchParams($eeListID)['page'];
+function avpvh_filelist_page_query($eeListID) {
+	$eeParam = avpvh_filelist_search_params($eeListID)['page'];
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only navigation
 	$eePage = isset($_GET[$eeParam]) && is_string($_GET[$eeParam]) ? absint($_GET[$eeParam]) : 1;
 	return max(1, $eePage);
@@ -57,7 +57,7 @@ function eeSFL_PageQuery($eeListID) {
  * @param int    $eeLength
  * @return string
  */
-function eeSFL_Substr($eeText, $eeLength) {
+function avpvh_filelist_substr($eeText, $eeLength) {
 	return function_exists('mb_substr') ? mb_substr($eeText, 0, $eeLength) : substr($eeText, 0, $eeLength);
 }
 
@@ -68,7 +68,7 @@ function eeSFL_Substr($eeText, $eeLength) {
  * @param string $eeText
  * @return string
  */
-function eeSFL_Lower($eeText) {
+function avpvh_filelist_lower($eeText) {
 	return function_exists('mb_strtolower') ? mb_strtolower($eeText, 'UTF-8') : strtolower($eeText);
 }
 
@@ -79,8 +79,8 @@ function eeSFL_Lower($eeText) {
  * @param string $eeQuery
  * @return string[]
  */
-function eeSFL_SearchTerms($eeQuery) {
-	$eeTerms = preg_split('/\s+/u', eeSFL_Lower(trim((string) $eeQuery)), -1, PREG_SPLIT_NO_EMPTY);
+function avpvh_filelist_search_terms($eeQuery) {
+	$eeTerms = preg_split('/\s+/u', avpvh_filelist_lower(trim((string) $eeQuery)), -1, PREG_SPLIT_NO_EMPTY);
 	return array_slice(array_values(array_unique(is_array($eeTerms) ? $eeTerms : array())), 0, 10);
 }
 
@@ -93,12 +93,12 @@ function eeSFL_SearchTerms($eeQuery) {
  * @param string[] $eeTerms
  * @return bool
  */
-function eeSFL_FileMatchesSearch($eeFileArray, $eeTerms) {
+function avpvh_filelist_file_matches_search($eeFileArray, $eeTerms) {
 
 	if( !$eeTerms ) { return TRUE; }
 
 	$eeName = (string) ($eeFileArray['FilePath'] ?? '');
-	$eeHaystack = eeSFL_Lower(implode(' ', array(
+	$eeHaystack = avpvh_filelist_lower(implode(' ', array(
 		$eeName,
 		str_replace(array('-', '_', '.'), ' ', $eeName),
 		(string) ($eeFileArray['FileNiceName'] ?? ''),
@@ -121,11 +121,11 @@ function eeSFL_FileMatchesSearch($eeFileArray, $eeTerms) {
  * @param string $eeQuery
  * @return array
  */
-function eeSFL_FilterFiles($eeFiles, $eeQuery) {
-	$eeTerms = eeSFL_SearchTerms($eeQuery);
+function avpvh_filelist_filter_files($eeFiles, $eeQuery) {
+	$eeTerms = avpvh_filelist_search_terms($eeQuery);
 	if( !$eeTerms ) { return $eeFiles; }
 	return array_filter($eeFiles, function($eeFileArray) use ($eeTerms) {
-		return is_array($eeFileArray) && eeSFL_FileMatchesSearch($eeFileArray, $eeTerms);
+		return is_array($eeFileArray) && avpvh_filelist_file_matches_search($eeFileArray, $eeTerms);
 	});
 }
 
@@ -138,7 +138,7 @@ function eeSFL_FilterFiles($eeFiles, $eeQuery) {
  * @param int $eePage    Requested page, clamped to the valid range
  * @return array{page: int, pages: int, offset: int, length: int|null}
  */
-function eeSFL_Paginate($eeCount, $eePerPage, $eePage) {
+function avpvh_filelist_paginate($eeCount, $eePerPage, $eePage) {
 
 	$eeCount = max(0, (int) $eeCount);
 	$eePerPage = (int) $eePerPage;
@@ -162,7 +162,7 @@ function eeSFL_Paginate($eeCount, $eePerPage, $eePage) {
  * @param int $eePages
  * @return int[]
  */
-function eeSFL_PageNumbers($eePage, $eePages) {
+function avpvh_filelist_page_numbers($eePage, $eePages) {
 
 	$eeShow = array();
 	for( $i = 1; $i <= $eePages; $i++ ) {
@@ -190,9 +190,9 @@ function eeSFL_PageNumbers($eePage, $eePages) {
  * @param string $eeBaseURL The page URL
  * @return string
  */
-function eeSFL_SearchFormHTML($eeListID, $eeQuery, $eeBaseURL) {
+function avpvh_filelist_search_form_html($eeListID, $eeQuery, $eeBaseURL) {
 
-	$eeParams = eeSFL_SearchParams($eeListID);
+	$eeParams = avpvh_filelist_search_params($eeListID);
 	$eeAction = strtok($eeBaseURL, '?');
 
 	$eeHidden = '';
@@ -208,13 +208,13 @@ function eeSFL_SearchFormHTML($eeListID, $eeQuery, $eeBaseURL) {
 
 	$eeOutput = '
 	<form class="eeSFL_SearchForm" role="search" method="get" action="' . esc_url($eeAction) . '">' . $eeHidden . '
-		<label class="screen-reader-text" for="eeSFL_Search_' . (int) $eeListID . '">' . esc_html__('Search the files', 'simple-file-list') . '</label>
-		<input type="search" id="eeSFL_Search_' . (int) $eeListID . '" name="' . esc_attr($eeParams['search']) . '" value="' . esc_attr($eeQuery) . '" placeholder="' . esc_attr__('Search the files', 'simple-file-list') . '" maxlength="200" />
-		<button type="submit" class="button">' . esc_html__('Search', 'simple-file-list') . '</button>';
+		<label class="screen-reader-text" for="eeSFL_Search_' . (int) $eeListID . '">' . esc_html__('Search the files', 'avpvh-filelist') . '</label>
+		<input type="search" id="eeSFL_Search_' . (int) $eeListID . '" name="' . esc_attr($eeParams['search']) . '" value="' . esc_attr($eeQuery) . '" placeholder="' . esc_attr__('Search the files', 'avpvh-filelist') . '" maxlength="200" />
+		<button type="submit" class="button">' . esc_html__('Search', 'avpvh-filelist') . '</button>';
 
 	if( $eeQuery !== '' ) {
 		$eeOutput .= '
-		<a class="eeSFL_SearchReset" href="' . esc_url(remove_query_arg(array_values($eeParams), $eeBaseURL)) . '">' . esc_html__('Show All', 'simple-file-list') . '</a>';
+		<a class="eeSFL_SearchReset" href="' . esc_url(remove_query_arg(array_values($eeParams), $eeBaseURL)) . '">' . esc_html__('Show All', 'avpvh-filelist') . '</a>';
 	}
 
 	$eeOutput .= '
@@ -228,15 +228,15 @@ function eeSFL_SearchFormHTML($eeListID, $eeQuery, $eeBaseURL) {
  * Previous / numbered / next links. Empty when everything fits on one page.
  *
  * @param int    $eeListID
- * @param array  $eePaging  From eeSFL_Paginate()
+ * @param array  $eePaging  From avpvh_filelist_paginate()
  * @param string $eeBaseURL The page URL, including any search
  * @return string
  */
-function eeSFL_PaginationHTML($eeListID, $eePaging, $eeBaseURL) {
+function avpvh_filelist_pagination_html($eeListID, $eePaging, $eeBaseURL) {
 
 	if( $eePaging['pages'] < 2 ) { return ''; }
 
-	$eeParam = eeSFL_SearchParams($eeListID)['page'];
+	$eeParam = avpvh_filelist_search_params($eeListID)['page'];
 	$eePage = $eePaging['page'];
 	$eeLink = function($eeNumber, $eeText, $eeClass) use ($eeParam, $eeBaseURL) {
 		$eeURL = $eeNumber > 1 ? add_query_arg($eeParam, $eeNumber, $eeBaseURL) : remove_query_arg($eeParam, $eeBaseURL);
@@ -244,13 +244,13 @@ function eeSFL_PaginationHTML($eeListID, $eePaging, $eeBaseURL) {
 	};
 
 	$eeOutput = '
-	<nav class="eeSFL_Pagination" aria-label="' . esc_attr__('File list pages', 'simple-file-list') . '">';
+	<nav class="eeSFL_Pagination" aria-label="' . esc_attr__('File list pages', 'avpvh-filelist') . '">';
 
 	if( $eePage > 1 ) {
-		$eeOutput .= $eeLink($eePage - 1, '&larr; ' . esc_html__('Previous', 'simple-file-list'), 'eeSFL_PagePrev');
+		$eeOutput .= $eeLink($eePage - 1, '&larr; ' . esc_html__('Previous', 'avpvh-filelist'), 'eeSFL_PagePrev');
 	}
 
-	foreach( eeSFL_PageNumbers($eePage, $eePaging['pages']) as $eeNumber ) {
+	foreach( avpvh_filelist_page_numbers($eePage, $eePaging['pages']) as $eeNumber ) {
 		if( $eeNumber === 0 ) {
 			$eeOutput .= '<span class="eeSFL_PageGap">&hellip;</span>';
 		} elseif( $eeNumber === $eePage ) {
@@ -261,7 +261,7 @@ function eeSFL_PaginationHTML($eeListID, $eePaging, $eeBaseURL) {
 	}
 
 	if( $eePage < $eePaging['pages'] ) {
-		$eeOutput .= $eeLink($eePage + 1, esc_html__('Next', 'simple-file-list') . ' &rarr;', 'eeSFL_PageNext');
+		$eeOutput .= $eeLink($eePage + 1, esc_html__('Next', 'avpvh-filelist') . ' &rarr;', 'eeSFL_PageNext');
 	}
 
 	$eeOutput .= '

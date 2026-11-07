@@ -44,4 +44,4 @@ services:
         define('WP_DEBUG_LOG', true);
         define('WP_DEBUG_DISPLAY', false);
     volumes:
-      - ../..:/var/www/html/wp-content/plugins/simple-file-list:ro
+      - ../..:/var/www/html/wp-content/plugins/avpvh-filelist:ro

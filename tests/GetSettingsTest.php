@@ -27,14 +27,14 @@ final class GetSettingsTest extends TestCase {
 
 	#[DataProvider('unknownIdProvider')]
 	public function testUnknownListCreatesNothing(int|string $eeListID): void {
-		$eeSFL = new eeSFL_MainClass();
-		$this->assertSame(array(), $eeSFL->eeSFL_GetSettings($eeListID));
+		$eeSFL = new Avpvh_Filelist_Main();
+		$this->assertSame(array(), $eeSFL->get_settings($eeListID));
 		$this->assertSame(array(), $eeSFL->eeListSettings);
 		$this->assertSame(array(), $GLOBALS['eeTestOptions'], 'no option may be written');
 	}
 
 	public function testUploadsAreOffByDefault(): void {
-		$eeSFL = new eeSFL_MainClass();
+		$eeSFL = new Avpvh_Filelist_Main();
 		$this->assertSame('NO', $eeSFL->eeDefaultListSettings['AllowUploads']);
 	}
 }

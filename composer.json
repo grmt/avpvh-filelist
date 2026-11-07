@@ -1,6 +1,6 @@
 {
-    "name": "grmt/simple-file-list",
-    "description": "Independent downstream maintenance of the Simple File List WordPress plugin.",
+    "name": "grmt/avpvh-filelist",
+    "description": "AV-PvH File List: file lists with uploads, access control, search and paging. Based on Simple File List by Mitchell Bennis.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "require": {

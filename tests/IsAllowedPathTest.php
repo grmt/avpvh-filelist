@@ -29,19 +29,19 @@ final class IsAllowedPathTest extends TestCase {
 
 	#[DataProvider('pathProvider')]
 	public function testRelativeToListDir(string $eeRelative, bool $eeExpected): void {
-		$this->assertSame($eeExpected, eeSFL_IsAllowedPath(self::$eeList . $eeRelative));
+		$this->assertSame($eeExpected, avpvh_filelist_is_allowed_path(self::$eeList . $eeRelative));
 	}
 
 	public function testAbsolutePathOutsideInstallIsRejected(): void {
-		$this->assertFalse(eeSFL_IsAllowedPath('/etc/passwd'));
+		$this->assertFalse(avpvh_filelist_is_allowed_path('/etc/passwd'));
 	}
 
 	public function testEmptyPathIsRejected(): void {
-		$this->assertFalse(eeSFL_IsAllowedPath(''));
+		$this->assertFalse(avpvh_filelist_is_allowed_path(''));
 	}
 
 	public function testFileSystemRefusesPathsOutsideInstall(): void {
-		$eeResult = eeSFL_FileSystem('get_contents', array('file' => '/etc/passwd'));
+		$eeResult = avpvh_filelist_file_system('get_contents', array('file' => '/etc/passwd'));
 		$this->assertFalse($eeResult['success']);
 	}
 }
