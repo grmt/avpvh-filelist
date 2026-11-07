@@ -1,9 +1,9 @@
 === Simple File List (grmt) ===
 Contributors: grmt, eemitch
 Tags: file manager, file sharing, document library, file access, ldap
-Requires at least: 6.0
-Requires PHP: 8.1
-Tested up to: 7.0
+Requires at least: 7.1
+Requires PHP: 8.4
+Tested up to: 7.1
 Stable tag: 6.3.13-grmt.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -100,6 +100,7 @@ In the [issues on GitHub](https://github.com/grmt/simple-file-list/issues). Plea
 == Changelog ==
 
 = Unreleased =
+* Change: Requires PHP 8.4 and WordPress 7.1, the versions it is tested on. Both are now also in the plugin header, so WordPress won't activate it on older versions.
 * New: Multiple file lists. Create, rename and remove lists under "All File Lists" and "Create List"; each list has its own folder, settings and `[eeSFL list="N"]` shortcode. Lists left by the old File Access Manager add-on are picked up automatically.
 * New: A list switcher in wp-admin, and per-list admin access based on each list's "Admin Role" setting.
 * Change: A new list starts visible to admins only, without uploads, until its settings are reviewed. Two lists can never share or nest folders.

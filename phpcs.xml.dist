@@ -12,8 +12,8 @@
 	<arg value="sp"/>
 	<config name="ignore_warnings_on_exit" value="1"/>
 
-	<config name="testVersion" value="8.1-"/>
-	<config name="minimum_wp_version" value="6.0"/>
+	<config name="testVersion" value="8.4-"/>
+	<config name="minimum_wp_version" value="7.1"/>
 
 	<!-- Security and WordPress API correctness. Formatting sniffs (WordPress-Core) are
 	     left out on purpose: the upstream code does not follow them and reformatting
