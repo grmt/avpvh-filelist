@@ -162,8 +162,8 @@ class eeSFL_UploadClass {
 				return FALSE;
 			}
 
-			// Enforce AllowUploads policy for non-admin callers
-			if( !current_user_can('manage_options') ) {
+			// Enforce AllowUploads policy for callers who don't manage the list
+			if( !eeSFL_UserManagesList($eeListID, get_current_user_id()) ) {
 				$eeAllowUploads = $eeObject->eeListSettings['AllowUploads'] ?? 'NO';
 				if( $eeAllowUploads === 'USER' && !get_current_user_id() ) {
 					return FALSE;
@@ -545,8 +545,8 @@ class eeSFL_UploadClass {
 
 		// Enforce AllowUploads policy on every request.
 		// SECURITY: is_admin() returns TRUE on admin-ajax.php and cannot guard frontend AJAX uploads.
-		// Admins (manage_options) are always permitted; all other callers go through the policy check.
-		if( !current_user_can('manage_options') ) {
+		// The list's managers are always permitted; all other callers go through the policy check.
+		if( !eeSFL_UserManagesList($eeListID, get_current_user_id()) ) {
 
 			eeSFL_Debug_Log("Checking upload permissions for non-admin caller...", 'Upload', $eeObject->eeListID);
 			// Who should be uploading?
@@ -568,7 +568,7 @@ class eeSFL_UploadClass {
 					return 'ERROR 97';
 			}
 		} else {
-			eeSFL_Debug_Log("Upload allowed: user has manage_options", 'Upload', $eeObject->eeListID);
+			eeSFL_Debug_Log("Upload allowed: user manages the list", 'Upload', $eeObject->eeListID);
 		}
 
 		$eeFileUploadDir = $eeObject->eeListSettings['FileListDir'];
@@ -627,8 +627,17 @@ class eeSFL_UploadClass {
 				// Store the original sanitized filename for hash key consistency
 				$eeOriginalSanitizedFileName = $eeFileName;
 
+				// Overwrite only files this user may read: never replace a file restricted to others
+				$eeMayOverwrite = $eeObject->eeListSettings['AllowOverwrite'] == 'YES';
+				if( $eeMayOverwrite ) {
+					$eeExisting = eeSFL_ListedItem(get_option('eeSFL_FileList_' . $eeListID), $eeFileName);
+					if( $eeExisting && !eeSFL_UserCanReadFile($eeListID, $eeObject->eeListSettings, $eeExisting, get_current_user_id()) ) {
+						$eeMayOverwrite = FALSE;
+					}
+				}
+
 				// Check if it already exists and get the renamed filename
-				if($eeObject->eeListSettings['AllowOverwrite'] == 'NO') {
+				if( !$eeMayOverwrite ) {
 					$eeRenamedFilePath = $eeObject->eeSFL_CheckForDuplicateFile($eeFileUploadDir . $eeFileName);
 					$eeRenamedFileName = basename($eeRenamedFilePath);
 					if($eeRenamedFileName != $eeFileName) {

@@ -233,6 +233,10 @@ Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/
 * New: Per-file access under "File Access": a file can be limited to users, roles or groups within the list's audience. Grants made with the old File Access Manager add-on are honoured.
 * New: Groups from an LDAP directory ("Groups" tab), looked up by user name or e-mail address and cached for 15 minutes. The bind password can be set in wp-config.php as EESFL_LDAP_BIND_PASSWORD. Other plugins can supply groups through the `simple_file_list_user_groups` filter.
 * Security: Protected files that could run scripts in the browser (HTML, SVG and the like) are always sent as downloads. ZIP downloads and sent links only include files the user may open.
+* Security: Front-end management (edit, rename, delete and bulk actions) only reaches files the visitor may read, and only in lists they may see. It never touches items outside the list, such as the folder's .htaccess.
+* Security: An upload never overwrites a file the uploader may not read; it is saved under a new name instead.
+* Security: The .htaccess for unprotected lists now blocks every configured file type (the first type in the list was skipped).
+* Fix: Users who manage a list through its "Admin Role" (not only administrators) can now edit, rename, delete and upload files in it.
 
 = 6.3.12 =
 * Security Fix: Escaped file names, descriptions, submitter metadata, and column labels across Table, Flex, and Tiles display templates to prevent Stored XSS.

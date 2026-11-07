@@ -49,5 +49,7 @@ final class HtaccessAndListedItemTest extends TestCase {
 		$this->assertFalse(eeSFL_IsListedItem($eeFiles, 'DOC.pdf'));
 		$this->assertFalse(eeSFL_IsListedItem($eeFiles, ''));
 		$this->assertFalse(eeSFL_IsListedItem(false, 'doc.pdf'));
+		$this->assertSame(array('FilePath' => 'doc.pdf'), eeSFL_ListedItem($eeFiles, 'doc.pdf'));
+		$this->assertSame(array(), eeSFL_ListedItem($eeFiles, '.htaccess'));
 	}
 }

@@ -894,16 +894,22 @@ function eeSFL_HtaccessFileTypes($eeFileFormats) {
  * @return bool
  */
 function eeSFL_IsListedItem($eeAllFiles, $eeName) {
+	return eeSFL_ListedItem($eeAllFiles, $eeName) !== array();
+}
 
-	if( !is_array($eeAllFiles) || !is_string($eeName) || $eeName === '' ) { return FALSE; }
+
+// The stored entry of a listed item, or an empty array when it is not in the list.
+function eeSFL_ListedItem($eeAllFiles, $eeName) {
+
+	if( !is_array($eeAllFiles) || !is_string($eeName) || $eeName === '' ) { return array(); }
 
 	foreach( $eeAllFiles as $eeThisFileArray ) {
 		if( isset($eeThisFileArray['FilePath']) && rtrim($eeThisFileArray['FilePath'], '/') === $eeName ) {
-			return TRUE;
+			return $eeThisFileArray;
 		}
 	}
 
-	return FALSE;
+	return array();
 }
 
 
@@ -1399,9 +1405,9 @@ function eeSFL_FileEditor() {
 
 	// Check if we should be doing this
 	// Note: is_admin() is NOT a user-identity check — it is TRUE for ALL admin-ajax.php requests,
-	// including unauthenticated nopriv ones. Use current_user_can() for authorization.
-	// When AllowFrontManage = YES the gate is intentionally open to all page visitors (by design).
-	if( !current_user_can('manage_options') AND ($eeSFL->eeListSettings['AllowFrontManage'] ?? 'NO') != 'YES' ) {
+	// including unauthenticated nopriv ones. Authorise the user, per item below.
+	// List managers may always act; with AllowFrontManage = YES, visitors may act on items they may read.
+	if( !eeSFL_UserManagesList($eeSFL->eeListID, get_current_user_id()) AND ($eeSFL->eeListSettings['AllowFrontManage'] ?? 'NO') != 'YES' ) {
 		eeSFL_Debug_Log("ERROR: Front manage not allowed", 'Admin', $eeSFL->eeListID);
 		return;
 	}
@@ -1437,6 +1443,13 @@ function eeSFL_FileEditor() {
 	// protects it (".htaccess" -> "x.htaccess" passes the extension check in eeSFL_RenameFile()).
 	if( !eeSFL_IsListedItem($eeSFL->eeAllFiles, $eeFileName) ) {
 		eeSFL_Debug_Log("ERROR: File is not in the list: " . $eeFileName, 'Admin', $eeSFL->eeListID);
+		return "File Not Found";
+	}
+
+	// SECURITY: Front-end management never reaches items the user may not read (list or per-file access).
+	// Answer as for an unlisted item, so restricted names are not confirmed.
+	if( !eeSFL_UserCanChangeFile($eeSFL->eeListID, $eeSFL->eeListSettings, eeSFL_ListedItem($eeSFL->eeAllFiles, $eeFileName), get_current_user_id()) ) {
+		eeSFL_Debug_Log("ERROR: No access to file: " . $eeFileName, 'Admin', $eeSFL->eeListID);
 		return "File Not Found";
 	}
 

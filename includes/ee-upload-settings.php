@@ -170,7 +170,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 		} else {
 
 			 $eeOutput .= '<p>' . __('This setting has moved to the List Access Settings tab.', 'simple-file-list') . '</p>
-			<a class="button" href="' . $eeSFL->eeSFL_GetThisURL(FALSE) . '?page=ee-simple-file-list-pro&tab=settings&subtab=list_access&eeListID=' . $eeSFL->eeListID . '">' . __('Go There', 'simple-file-list') . '</a>';
+			<a class="button" href="' . $eeSFL->eeSFL_GetThisURL(FALSE) . '?page=' . eeSFL_PluginSlug . '&tab=settings&subtab=list_access&eeListID=' . $eeSFL->eeListID . '">' . __('Go There', 'simple-file-list') . '</a>';
 		}
 
 		 $eeOutput .= '</div>

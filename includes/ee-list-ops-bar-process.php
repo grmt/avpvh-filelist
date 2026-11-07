@@ -57,7 +57,7 @@ if( isset($_POST['eeSFL_ListOpsBarGo']) ) {
 
 	// SECURITY: A valid nonce only proves the form came from this site, not that the visitor may manage files.
 	// Front-end visitors may only download (when bulk download is enabled) unless front-end management is on.
-	if($eeProceed && !$eeAdmin && !current_user_can('manage_options')) {
+	if($eeProceed && !$eeAdmin && !eeSFL_UserManagesList($eeSFL->eeListID, get_current_user_id())) {
 		$eeCanManage = $eeSFL->eeListSettings['AllowFrontManage'] == 'YES';
 		$eeCanDownload = $eeCanManage || $eeSFL->eeListSettings['AllowBulkFileDownload'] == 'YES'
 			|| ( isset($_POST['eeSFL_DownloadFolderForm']) && ($eeSFL->eeListSettings['AllowFolderDownload'] ?? '') == 'YES' );
@@ -167,6 +167,12 @@ if( isset($_POST['eeSFL_ListOpsBarGo']) ) {
 								// The full path
 							$eeSiteRoot = defined('eeSFL_WP_ROOT') ? eeSFL_WP_ROOT : ABSPATH;
 							$eePath = $eeSiteRoot . $eeSFL->eeListSettings['FileListDir'] . $eeFileArray['FilePath'];
+								// Never change an item this user may not read or manage (list and per-file access)
+								if( $fileOpsAction != 'Download' && !eeSFL_UserCanChangeFile($eeSFL->eeListID, $eeSFL->eeListSettings, $eeFileArray, get_current_user_id()) ) {
+									eeSFL_Debug_Log("Bulk '" . $fileOpsAction . "' skipped, no access: " . $eeFileArray['FilePath'], 'OpsProcess', $eeSFL->eeListID);
+									continue;
+								}
+
 								if($fileOpsAction == 'Download') {
 
 									// Never zip a file this user may not open
