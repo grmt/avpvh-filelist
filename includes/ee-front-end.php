@@ -9,7 +9,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	}
 
 	global $eeSFL, $eeSFL_UploadFormRun, $eeSFL_VarsForJS;
-    global $eeSFLF, $eeSFLU, $eeSFLS, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
+    global $eeSFLU, $eeSFLE, $eeSFLM; // Extensions
 
     eeSFL_Debug_Log("Shortcode Function Loading ...", 'Shortcode');
 	eeSFL_Debug_Log('URL: ' . $eeSFL->eeSFL_GetThisURL(), 'Shortcode', $eeSFL->eeListID);
@@ -40,6 +40,9 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 			'hidename' => '', // Hide the name matches
 			'getdesc' => '', // YES or NO to show the upload description input
 			'getinfo' => '', // YES or NO to show the upload user info inputs
+			'search' => '', // YES or NO to show the search form
+			'filecount' => '', // Files per page; 0 shows all
+			'paged' => '', // NO to show all files on one page
 		), $atts );
 
 	// Extract attributes into variables
@@ -102,6 +105,9 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		if($showactions) { $eeSFL->eeListSettings['ShowFileActions'] = strtoupper($showactions); }
 		if($getdesc !== '') { $eeSFL->eeListSettings['GetUploaderDesc'] = strtoupper($getdesc); }
 		if($getinfo !== '') { $eeSFL->eeListSettings['GetUploaderInfo'] = strtoupper($getinfo); }
+		if($search !== '') { $eeSFL->eeListSettings['ShowSearch'] = strtoupper($search) == 'YES' ? 'YES' : 'NO'; }
+		if($filecount !== '') { $eeSFL->eeListSettings['FilesPerPage'] = min(500, absint($filecount)); }
+		if(strtoupper($paged) == 'NO') { $eeSFL->eeListSettings['FilesPerPage'] = 0; }
 
 		// Force a re-sort of the file list array if a shortcode attribute was used
 		if($sortby OR $sortorder) {
@@ -181,23 +187,12 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 
 	}
 
-	// Extension Check
-	if($eeSFLA) {
-	    eeSFL_Debug_Log('- Current User ID: ' . $eeSFL->eeEnvironment['wpUserID'], 'Shortcode', $eeSFL->eeListID);
-
-	    // Initialize the variable to prevent undefined variable warnings
-	    $eeSFLA_ShowTheList = TRUE; // Default to show list
-
-	    if( !$showlist ) { // Shortcode setting over-rides access
-			include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_FrontsideFirewall.php');
-		}
-	}
 	// Begin Front-End List Display ==================================================================
 
 
 	$eeShowUploadForm = FALSE;
 
-	if(!$eeSFL_Uploaded AND $eeSFL->eeListSettings['AllowUploads'] != 'NO' AND !$eeSFL_UploadFormRun AND !(isset($_POST['eeSFLS_Searching']) && sanitize_text_field(wp_unslash($_POST['eeSFLS_Searching'])) && wp_verify_nonce(isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '', 'ee-search-form'))) {
+	if(!$eeSFL_Uploaded AND $eeSFL->eeListSettings['AllowUploads'] != 'NO' AND !$eeSFL_UploadFormRun) {
 
 		eeSFL_Debug_Log("Upload form enabled - AllowUploads: " . $eeSFL->eeListSettings['AllowUploads'], 'Shortcode', $eeSFL->eeListID);
 		wp_enqueue_style('ee-simple-file-list-css-upload');
@@ -206,27 +201,15 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		$eeShowUploadForm = TRUE;
 	}
 
-	// Resolve the current folder before rendering the upload form so uploads go to the
-	// correct folder regardless of UploadPosition (Above or Below).
-	if($eeSFLF) { $eeSFLF->eeSFL_ResolveCurrentFolder(); }
-
 	if($eeShowUploadForm AND $eeSFL->eeListSettings['UploadPosition'] == 'Above') {
 		 $eeOutput .= $eeSFLU->eeSFL_UploadForm();
 	}
 
-	// Extension Check
-	if($eeSFLA) {
-		if($eeSFLA_ShowTheList === FALSE) {
-			$eeSFL->eeListSettings['ShowList'] = 'NO'; // We cannot go on.
-		}
-	}
 
 	// Who Can View the List?
 	switch ($eeSFL->eeListSettings['ShowList']) {
 	    case 'YES':
 	        break; // Show It
-	    case 'RESTRICTED':
-	        break; // Show It By File (eeSFLA)
 	    case 'GRANTED':
 	        // Only the users, roles and groups in the list's grant
 	        if( eeSFL_UserCanSeeList($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) { break; }
@@ -251,7 +234,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 			$eeSFLE = new eeSFLE_class();
 		}
 
-		eeSFL_Debug_Log("Displaying frontend list - Mode: " . ($eeSFL->eeListSettings['Mode'] ?? 'Unknown'), 'Shortcode', $eeSFL->eeListID);
+		eeSFL_Debug_Log("Displaying frontend list - ShowList: " . $eeSFL->eeListSettings['ShowList'], 'Shortcode', $eeSFL->eeListID);
 		include($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-list-display.php'); // The List is Loaded Here -------------
 	} else {
 		eeSFL_Debug_Log("List display blocked (ShowList = NO)", 'Shortcode', $eeSFL->eeListID);

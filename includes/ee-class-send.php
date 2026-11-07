@@ -1,6 +1,6 @@
 <?php
-// Simple File List - File Sending - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - File Sending - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
@@ -97,11 +97,7 @@ class eeSFLE_class {
 				if(is_array($eeSFL->eeAllFiles)) {
 					foreach( $eeSFL->eeAllFiles as $eeKey => $eeFileArray) {
 
-						$eeFileNameDisplay = $eeFileArray['FilePath'];						if($eeSFL->eeCurrentFolder) {
-							if( strpos($eeFileArray['FilePath'], $eeSFL->eeCurrentFolder) === 0 ) {
-								$eeFileNameDisplay = str_replace($eeSFL->eeCurrentFolder, '', $eeFileArray['FilePath']); // Remove this folder's name from the display
-							}
-						}
+						$eeFileNameDisplay = $eeFileArray['FilePath'];
 
 						if($eeFileArray['FileExt'] != 'folder') { // We can't send folders, yet.
 
@@ -146,7 +142,7 @@ class eeSFLE_class {
 		// Nonce Check
 		if( !check_ajax_referer( 'eeSFL_SendNonce', 'eeSecurity', FALSE ) ) { return 'ERROR 98 - Send Files Ajax'; }
 
-		global $eeSFL, $eeSFLA;
+		global $eeSFL;
 
 		$eeFilesArray = FALSE;
 		$eeFileLinks = '';
@@ -174,20 +170,9 @@ class eeSFLE_class {
 			return __('File sending is not enabled', 'simple-file-list');
 		}
 
-		// Enforce ShowList access rules for non-admin callers
-		if( !current_user_can('manage_options') ) {
-			switch ($eeSFL->eeListSettings['ShowList'] ?? 'NO') {
-				case 'YES':
-				case 'RESTRICTED':
-					break;
-				case 'USER':
-					if( !get_current_user_id() ) {
-						return __('File sending is not enabled', 'simple-file-list');
-					}
-					break;
-				default: // 'ADMIN', 'NO', or unknown
-					return __('File sending is not enabled', 'simple-file-list');
-			}
+		// Only people who may see the list may send its files
+		if( !eeSFL_UserCanSeeList($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) {
+			return __('File sending is not enabled', 'simple-file-list');
 		}
 
 		// Rate limit email sending per IP / user (max 10 emails per 15 minutes)

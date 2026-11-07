@@ -40,6 +40,30 @@ wp user create piet piet@example.net --role=subscriber --user_pass=pw-piet --por
 wp user create kees kees@example.net --role=subscriber --user_pass=pw-kees --porcelain >/dev/null
 wp user create redacteur redacteur@example.net --role=editor --user_pass=pw-redacteur --porcelain >/dev/null
 wp plugin activate simple-file-list >/dev/null
+# A stand-in for the old File Access Manager add-on, still active, and list 1 left on its
+# "show by file" setting. The stand-in only sets the global the old hooks looked for. The
+# first-run setup is done before the setting is changed, or the first page load would reset it.
+$DC exec -T -u www-data wordpress bash -c '
+	set -e
+	D=/var/www/html/wp-content/plugins/ee-simple-file-list-access
+	mkdir -p "$D"
+	cat > "$D/ee-simple-file-list-access.php" <<"PHP"
+<?php
+/* Plugin Name: File Access Manager (test stand-in for the old add-on) */
+define("eeSFLA_Version", "0-test");
+add_action("plugins_loaded", function () {
+	$GLOBALS["eeSFLA"] = new class {
+		public $eeSFLA_FirstRun = TRUE;
+		public $eeSFLA_IsListOwner = TRUE;
+		public $eeSFLA_Slug = "ee-simple-file-list-access";
+		public $eeSFLA_Settings = array("BCC" => "YES");
+		public function __call($name, $args) { return FALSE; }
+	};
+});
+PHP
+'
+wp plugin activate ee-simple-file-list-access >/dev/null
+wp eval 'eeSFL_VersionCheck(); $s = get_option("eeSFL_Settings_1"); if (!is_array($s)) { exit(1); } $s["ShowList"] = "RESTRICTED"; $s["Mode"] = "RESTRICTED"; update_option("eeSFL_Settings_1", $s);'
 PAGE=$(wp post create --post_type=page --post_status=publish --post_title=Files --post_content='[eeSFL]' --porcelain)
 
 # Directory: jan gets an e-mail address (matched by mail), piet is matched by uid; bestuur = piet
@@ -70,6 +94,7 @@ $DC exec -T -u www-data wordpress bash -c '
 	printf "hallo\n" > publiek.txt
 	printf "<script>alert(1)</script>\n" > evil.html
 	head -c 300000 /dev/urandom > video.mp4
+	mkdir -p oud && printf "%%PDF-1.4 in a subfolder\n" > oud/archief.pdf
 '
 
 # Logged-out visitors all share one nonce per action, so WP-CLI (no user) produces theirs

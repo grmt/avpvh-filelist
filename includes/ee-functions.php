@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -459,13 +459,11 @@ function eeSFL_AppendProperUrlOp($eeURL) {
 
 
 
-// Check for the Upload Folder, Create if Needed. A newly created folder gets a copy of the
-// manual as a first file, unless $eeCopyManual is FALSE (lists created from the admin).
-function eeSFL_FileListDirCheck($eeFileListDir, $eeCopyManual = TRUE) {
+// Check for the Upload Folder, Create if Needed
+function eeSFL_FileListDirCheck($eeFileListDir) {
 
 	global $eeSFL;
 	static $eeReportedDirErrors = array(); // Prevent duplicate error messages across repeated calls
-	$eeCopyManualFile = FALSE;
 
 	if(!$eeFileListDir OR substr($eeFileListDir, 0, 1) == '/' OR strpos($eeFileListDir, '../') ) {
 
@@ -531,8 +529,6 @@ function eeSFL_FileListDirCheck($eeFileListDir, $eeCopyManual = TRUE) {
 
 		} else {
 
-			$eeCopyManualFile = TRUE;
-
 			eeSFL_Debug_Log("The File List Dir Has Been Created!", 'General');
 			eeSFL_Debug_Log($eeFileListDir, 'General', $eeSFL->eeListID);
 		}
@@ -565,14 +561,6 @@ function eeSFL_FileListDirCheck($eeFileListDir, $eeCopyManual = TRUE) {
 					$eeSFL->eeUserMessages['warnings'][] = $eeSiteRoot . $eeFileListDir;
 				}
 			}
-		}
-
-		if($eeCopyManualFile === TRUE && $eeCopyManual) {
-
-			// Copy the Manual to the new directory, so there's at least one file.
-			$eeCopyFrom = $eeSFL->eeEnvironment['pluginDir'] . 'Simple-File-List.pdf';
-			$eeCopyTo = $eeSiteRoot . $eeFileListDir . 'Simple-File-List.pdf';
-			eeSFL_FileSystem('copy', array('from' => $eeCopyFrom, 'to' => $eeCopyTo));
 		}
 	}
 
@@ -629,27 +617,6 @@ function eeSFL_GetFileSize($eeSFL_File) {
         return $bytes . ' B';
     }
 }
-
-
-function eeSFL_NormalizeSlashes($eePath) {
-
-	if(empty($eePath)) { return ''; }
-
-	// Normalize Windows backslashes to forward slashes
-	$eePath = str_replace('\\', '/', $eePath);
-
-	// Ensure there is no leading slash
-	$eePath = ltrim($eePath, '/');
-
-	// Ensure there is a single trailing slash
-	$eePath = rtrim($eePath, '/') . '/';
-
-	// Find/Replace // with /
-	$eePath = str_replace('//', '/', $eePath);
-
-	return $eePath;
-}
-
 
 
 function eeSFL_SanitizeFolderName($eeFolderName) {
@@ -887,10 +854,10 @@ function eeSFL_HtaccessFileTypes($eeFileFormats) {
 
 /**
  * Is $eeName an item in the stored file list? The free version lists only the root
- * directory, so a listed item's FilePath is its bare name (folders may carry a trailing slash).
+ * directory, so a listed item's FilePath is its bare name (folders left by the old Pro version carry a trailing slash).
  *
  * @param mixed  $eeAllFiles The stored file list array
- * @param string $eeName     The bare file or folder name
+ * @param string $eeName     The bare file name
  * @return bool
  */
 function eeSFL_IsListedItem($eeAllFiles, $eeName) {
@@ -995,29 +962,26 @@ function eeSFL_LimitDirAccess($eeMode) {
 // ============================================================================
 
 /**
- * Delete a file or folder
+ * Delete a file
  *
- * @param string $eeFileName The name of the file/folder to delete
- * @param string|false $eeSubFolder The subfolder path (or FALSE if in root)
+ * @param string $eeFileName The name of the file to delete
  * @return string 'SUCCESS' or error message
  */
-function eeSFL_DeleteFile($eeFileName, $eeSubFolder = FALSE) {
+function eeSFL_DeleteFile($eeFileName) {
 
-	global $eeSFL, $eeSFLF;
+	global $eeSFL;
 
 	eeSFL_Debug_Log("DELETE: Starting delete operation for '$eeFileName'", 'FileOps', $eeSFL->eeListID);
 
-	// Normalize subfolder - convert '/' or FALSE to empty string
-	$eeSubFolderPath = ($eeSubFolder && $eeSubFolder !== '/') ? $eeSubFolder : '';
 
 	$eeMessages = array('Deleting File');
 
 	// Construct full file path
-	$eeFilePath = eeSFL_WP_ROOT . $eeSFL->eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileName;
+	$eeFilePath = eeSFL_WP_ROOT . $eeSFL->eeListSettings['FileListDir'] . $eeFileName;
 	eeSFL_Debug_Log("DELETE: Full path: '$eeFilePath'", 'FileOps', $eeSFL->eeListID);
 
 	// Confinement check — ensure the resolved path stays within the list directory.
-	// Guards against path traversal in both $eeSubFolder (Pro) and $eeFileName.
+	// Guards against path traversal in $eeFileName.
 	$eeBaseDir = realpath(eeSFL_WP_ROOT . $eeSFL->eeListSettings['FileListDir']);
 	$eeRealPath = realpath($eeFilePath);
 	if( $eeBaseDir && $eeRealPath ) {
@@ -1044,27 +1008,15 @@ function eeSFL_DeleteFile($eeFileName, $eeSubFolder = FALSE) {
 
 		// Remove from array
 		foreach( $eeSFL->eeAllFiles as $eeKey => $eeThisFileArray) {
-			if($eeThisFileArray['FilePath'] == $eeSubFolderPath . $eeFileName) {
+			if($eeThisFileArray['FilePath'] == $eeFileName) {
 				unset($eeSFL->eeAllFiles[$eeKey]);
 				eeSFL_Debug_Log("DELETE: Removed file from array at key: $eeKey", 'FileOps', $eeSFL->eeListID);
 				break;
 			}
 		}
 
-		// Reduce the parent folder's item count
-		if($eeSubFolderPath) {
-			foreach( $eeSFL->eeAllFiles as $eeKey => $eeThisFileArray) {
-				if($eeThisFileArray['FilePath'] == $eeSubFolderPath) {
-					$eeSFL->eeAllFiles[$eeKey]['ItemCount'] = $eeThisFileArray['ItemCount'] - 1;
-					eeSFL_Debug_Log("DELETE: Updated parent folder item count", 'FileOps', $eeSFL->eeListID);
-					break;
-				}
-			}
-		}
-
-
 		$eeSFL->eeSFL_UpdateMainFileArray(false);
-		$eeSFL->eeSFL_UpdateThumbnail($eeSubFolderPath . $eeFileName, FALSE, $eeSFL->eeListID);
+		$eeSFL->eeSFL_UpdateThumbnail($eeFileName, FALSE, $eeSFL->eeListID);
 
 		// Custom Hook
 		$eeMessages[] = 'File Deleted';
@@ -1078,38 +1030,6 @@ function eeSFL_DeleteFile($eeFileName, $eeSubFolder = FALSE) {
 			return __('File Delete Failed', 'simple-file-list') . ':' . $eeFileName;
 		}
 
-	} elseif( eeSFL_FileSystem('is_dir', array('path' => $eeFilePath))['data'] ) {
-
-	// Delete Folder
-	eeSFL_Debug_Log("DELETE: Item is a folder, proceeding with folder deletion", 'FileOps', $eeSFL->eeListID);
-
-	if($eeSFLF && $eeSFLF->eeSFLF_DeleteFolder($eeFilePath) ) {
-
-		eeSFL_Debug_Log("DELETE: Folder deleted successfully from disk", 'FileOps', $eeSFL->eeListID);			// Remove from the array
-			$eeFilePathArray = $eeSubFolderPath . $eeFileName . '/';
-
-			foreach( $eeSFL->eeAllFiles as $eeKey => $eeThisFileArray ) {
-			if( strpos($eeThisFileArray['FilePath'], $eeFilePathArray) === 0 ) {
-				unset($eeSFL->eeAllFiles[$eeKey]);
-			}
-		}
-
-		// Update the counts and sizes in the array
-		if($eeSFLF) {
-			$eeSFLF->eeSFLF_UpdateFolderSizes($eeSubFolderPath);
-		}
-		$eeSFL->eeSFL_UpdateMainFileArray(false);			// Custom Hook
-			$eeMessages[] = 'Folder Deleted';
-			do_action('eeSFL_Hook_Deleted', $eeMessages);
-
-			eeSFL_Debug_Log("DELETE: Folder deletion completed successfully", 'FileOps', $eeSFL->eeListID);
-			return 'SUCCESS';
-
-		} else {
-			eeSFL_Debug_Log("DELETE: Folder delete failed: " . $eeFilePath, 'FileOps', $eeSFL->eeListID);
-			return __('Folder Delete Failed', 'simple-file-list') . ':' . $eeFilePath;
-		}
-
 	} else {
 		eeSFL_Debug_Log("DELETE: Item not found or unknown type: " . $eeFilePath, 'FileOps', $eeSFL->eeListID);
 		return __('Unknown Item', 'simple-file-list') . ':' . $eeFilePath;
@@ -1121,23 +1041,18 @@ function eeSFL_DeleteFile($eeFileName, $eeSubFolder = FALSE) {
  * Update file nice name
  *
  * @param string $eeFileName The file name
- * @param string|false $eeSubFolder The subfolder path
  * @param string $eeFileNiceNameNew The new nice name
  * @return string Success message or empty string
  */
-function eeSFL_UpdateFileNiceName($eeFileName, $eeSubFolder, $eeFileNiceNameNew) {
+function eeSFL_UpdateFileNiceName($eeFileName, $eeFileNiceNameNew) {
 
 	global $eeSFL;
-
-	// Normalize subfolder path
-	$eeSubFolderPath = ($eeSubFolder && $eeSubFolder !== '/') ? $eeSubFolder : '';
-	eeSFL_Debug_Log("EDIT NICE NAME: Normalized subfolder from '$eeSubFolder' to '$eeSubFolderPath'", 'FileOps', $eeSFL->eeListID);
 
 	$eeFileNiceNameNew = trim(sanitize_text_field($eeFileNiceNameNew)); // sanitize_text_field only — esc_textarea() is for HTML output, not DB storage
 
 	if(strlen($eeFileNiceNameNew) < 1) { $eeFileNiceNameNew = ''; }
 
-	$eeSFL->eeSFL_UpdateFileDetail($eeSubFolderPath . $eeFileName, 'FileNiceName', $eeFileNiceNameNew);
+	$eeSFL->eeSFL_UpdateFileDetail($eeFileName, 'FileNiceName', $eeFileNiceNameNew);
 
 	eeSFL_Debug_Log("EDIT: Updated nice name to: '$eeFileNiceNameNew'", 'FileOps', $eeSFL->eeListID);
 
@@ -1149,24 +1064,18 @@ function eeSFL_UpdateFileNiceName($eeFileName, $eeSubFolder, $eeFileNiceNameNew)
  * Update file description
  *
  * @param string $eeFileName The file name
- * @param string|false $eeSubFolder The subfolder path
  * @param string $eeFileDescriptionNew The new description
  * @return string Success message or empty string
  */
-function eeSFL_UpdateFileDescription($eeFileName, $eeSubFolder, $eeFileDescriptionNew) {
+function eeSFL_UpdateFileDescription($eeFileName, $eeFileDescriptionNew) {
 
 	global $eeSFL;
-
-	// Normalize subfolder path
-	$eeSubFolderPath = ($eeSubFolder && $eeSubFolder !== '/') ? $eeSubFolder : '';
-	eeSFL_Debug_Log("EDIT DESC: Normalized subfolder from '$eeSubFolder' to '$eeSubFolderPath'", 'FileOps', $eeSFL->eeListID);
 
 	$eeFileDescriptionNew = trim(sanitize_text_field($eeFileDescriptionNew)); // sanitize_text_field only — esc_textarea() is for HTML output, not DB storage
 
 	if(strlen($eeFileDescriptionNew) < 1) { $eeFileDescriptionNew = ''; }
-	if(!strpos($eeFileName, '.')) { $eeFileName .= '/'; } // Folder
 
-	$eeSFL->eeSFL_UpdateFileDetail($eeSubFolderPath . $eeFileName, 'FileDescription', $eeFileDescriptionNew);
+	$eeSFL->eeSFL_UpdateFileDetail($eeFileName, 'FileDescription', $eeFileDescriptionNew);
 
 	eeSFL_Debug_Log("EDIT: Updated description to: '$eeFileDescriptionNew'", 'FileOps', $eeSFL->eeListID);
 
@@ -1178,18 +1087,13 @@ function eeSFL_UpdateFileDescription($eeFileName, $eeSubFolder, $eeFileDescripti
  * Update file date added
  *
  * @param string $eeFileName The file name
- * @param string|false $eeSubFolder The subfolder path
  * @param string $eeDate The new date (YYYY-MM-DD format)
  * @param array $eeListSettings The list settings
  * @return array Array with 'success' boolean, 'message' string, and optional 'additionalData' string
  */
-function eeSFL_UpdateFileDateAdded($eeFileName, $eeSubFolder, $eeDate, $eeListSettings) {
+function eeSFL_UpdateFileDateAdded($eeFileName, $eeDate, $eeListSettings) {
 
 	global $eeSFL;
-
-	// Normalize subfolder path
-	$eeSubFolderPath = ($eeSubFolder && $eeSubFolder !== '/') ? $eeSubFolder : '';
-	eeSFL_Debug_Log("EDIT DATE ADDED: Normalized subfolder from '$eeSubFolder' to '$eeSubFolderPath'", 'FileOps', $eeSFL->eeListID);
 
 	if(strlen($eeDate) < 1) {
 		return array('success' => true, 'message' => '');
@@ -1206,7 +1110,7 @@ function eeSFL_UpdateFileDateAdded($eeFileName, $eeSubFolder, $eeDate, $eeListSe
 	}
 
 	// Update the Database
-	$eeSFL->eeSFL_UpdateFileDetail($eeSubFolderPath . $eeFileName, 'FileDateAdded', $eeDate . ' 00:00:00' );
+	$eeSFL->eeSFL_UpdateFileDetail($eeFileName, 'FileDateAdded', $eeDate . ' 00:00:00' );
 
 	eeSFL_Debug_Log("EDIT: Updated date added to: $eeDate", 'FileOps', $eeSFL->eeListID);
 
@@ -1223,18 +1127,13 @@ function eeSFL_UpdateFileDateAdded($eeFileName, $eeSubFolder, $eeDate, $eeListSe
  * Update file date changed
  *
  * @param string $eeFileName The file name
- * @param string|false $eeSubFolder The subfolder path
  * @param string $eeDate The new date (YYYY-MM-DD format)
  * @param array $eeListSettings The list settings
  * @return array Array with 'success' boolean, 'message' string, and optional 'additionalData' string
  */
-function eeSFL_UpdateFileDateChanged($eeFileName, $eeSubFolder, $eeDate, $eeListSettings) {
+function eeSFL_UpdateFileDateChanged($eeFileName, $eeDate, $eeListSettings) {
 
 	global $eeSFL;
-
-	// Normalize subfolder path
-	$eeSubFolderPath = ($eeSubFolder && $eeSubFolder !== '/') ? $eeSubFolder : '';
-	eeSFL_Debug_Log("EDIT DATE CHANGED: Normalized subfolder from '$eeSubFolder' to '$eeSubFolderPath'", 'FileOps', $eeSFL->eeListID);
 
 	if(strlen($eeDate) < 1) {
 		return array('success' => true, 'message' => '');
@@ -1252,7 +1151,7 @@ function eeSFL_UpdateFileDateChanged($eeFileName, $eeSubFolder, $eeDate, $eeList
 
 	// Update the File
 	$eeDateTime = strtotime($eeDate);
-	$eeFilePath = eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileName;
+	$eeFilePath = eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeFileName;
 	$eeFileCheck = eeSFL_FileSystem('exists', array('file' => $eeFilePath));
 
 	if($eeFileCheck['success'] && $eeFileCheck['data'] && $eeDateTime) {
@@ -1261,7 +1160,7 @@ function eeSFL_UpdateFileDateChanged($eeFileName, $eeSubFolder, $eeDate, $eeList
 		$eeTouchResult = eeSFL_FileSystem('touch', array('file' => $eeFilePath, 'time' => $eeDateTime));
 
 		// Update the Database
-		$eeSFL->eeSFL_UpdateFileDetail($eeSubFolderPath . $eeFileName, 'FileDateChanged', $eeDate . ' 00:00:00' );
+		$eeSFL->eeSFL_UpdateFileDetail($eeFileName, 'FileDateChanged', $eeDate . ' 00:00:00' );
 
 		eeSFL_Debug_Log("EDIT: Updated date changed to: $eeDate", 'FileOps', $eeSFL->eeListID);
 
@@ -1281,18 +1180,13 @@ function eeSFL_UpdateFileDateChanged($eeFileName, $eeSubFolder, $eeDate, $eeList
  * Rename a file
  *
  * @param string $eeFileName The current file name
- * @param string|false $eeSubFolder The subfolder path
  * @param string $eeFileNameNew The new file name
  * @param array $eeListSettings The list settings
  * @return array Array with 'success' boolean and 'message' string
  */
-function eeSFL_RenameFile($eeFileName, $eeSubFolder, $eeFileNameNew, $eeListSettings) {
+function eeSFL_RenameFile($eeFileName, $eeFileNameNew, $eeListSettings) {
 
 	global $eeSFL;
-
-	// Normalize subfolder path
-	$eeSubFolderPath = ($eeSubFolder && $eeSubFolder !== '/') ? $eeSubFolder : '';
-	eeSFL_Debug_Log("EDIT RENAME: Normalized subfolder from '$eeSubFolder' to '$eeSubFolderPath'", 'FileOps', $eeSFL->eeListID);
 
 	eeSFL_Debug_Log("EDIT: Rename requested from '$eeFileName' to '$eeFileNameNew'", 'FileOps', $eeSFL->eeListID);
 
@@ -1307,29 +1201,22 @@ function eeSFL_RenameFile($eeFileName, $eeSubFolder, $eeFileNameNew, $eeListSett
 		);
 	}
 
-	if(strpos($eeFileName, '.') === FALSE) { // Folder
-		$eeFileNameNew = str_replace('.', '_', $eeFileNameNew); // Prevent adding an extension
-		eeSFL_Debug_Log("EDIT: Renaming folder", 'FileOps', $eeSFL->eeListID);
-	} else {
-		// Prevent changing file extension
-		$eePathParts = pathinfo($eeFileName);
-		$eeOldExtension = strtolower($eePathParts['extension']);
-		$eePathParts = pathinfo($eeFileNameNew);
-		$eeNewExtension = strtolower($eePathParts['extension']);
-		if($eeOldExtension != $eeNewExtension) {
-			eeSFL_Debug_Log("EDIT: Rename blocked - extension change not allowed", 'FileOps', $eeSFL->eeListID);
-			return array(
-				'success' => false,
-				'message' => __('Changing the File Extension is Not Allowed', 'simple-file-list')
-			);
-		}
+	// Prevent changing file extension
+	$eeOldExtension = strtolower(pathinfo($eeFileName, PATHINFO_EXTENSION));
+	$eeNewExtension = strtolower(pathinfo($eeFileNameNew, PATHINFO_EXTENSION));
+	if($eeOldExtension != $eeNewExtension) {
+		eeSFL_Debug_Log("EDIT: Rename blocked - extension change not allowed", 'FileOps', $eeSFL->eeListID);
+		return array(
+			'success' => false,
+			'message' => __('Changing the File Extension is Not Allowed', 'simple-file-list')
+		);
 	}
 
 	// Security check for path traversal
-	$eeSFL->eeSFL_DetectUpwardTraversal($eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileNameNew );
+	$eeSFL->eeSFL_DetectUpwardTraversal($eeListSettings['FileListDir'] . $eeFileNameNew );
 
 	// Check for duplicate file
-	if(eeSFL_FileSystem('is_file', array('file' => eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileNameNew))['data']) {
+	if(eeSFL_FileSystem('is_file', array('file' => eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeFileNameNew))['data']) {
 		eeSFL_Debug_Log("EDIT: Rename blocked - duplicate name found", 'FileOps', $eeSFL->eeListID);
 		return array(
 			'success' => false,
@@ -1338,11 +1225,11 @@ function eeSFL_RenameFile($eeFileName, $eeSubFolder, $eeFileNameNew, $eeListSett
 	}
 
 	// SECURITY: the old name comes straight from POST — it must stay inside the list directory as well.
-	$eeSFL->eeSFL_DetectUpwardTraversal($eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileName );
+	$eeSFL->eeSFL_DetectUpwardTraversal($eeListSettings['FileListDir'] . $eeFileName );
 
 	// Rename file on disk
-	$eeFilePathOld = eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileName;
-	$eeFilePathNew = eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileNameNew;
+	$eeFilePathOld = eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeFileName;
+	$eeFilePathNew = eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeFileNameNew;
 
 	$eeOldFileCheck = eeSFL_FileSystem('exists', array('file' => $eeFilePathOld));
 	if(!($eeOldFileCheck['success'] && $eeOldFileCheck['data'])) {
@@ -1362,7 +1249,7 @@ function eeSFL_RenameFile($eeFileName, $eeSubFolder, $eeFileNameNew, $eeListSett
 	}
 
 	// Update database
-	$eeSFL->eeSFL_UpdateFileDetail($eeSubFolderPath . $eeFileName, 'FilePath', $eeSubFolderPath . $eeFileNameNew);
+	$eeSFL->eeSFL_UpdateFileDetail($eeFileName, 'FilePath', $eeFileNameNew);
 	eeSFL_Debug_Log("EDIT: Rename successful", 'FileOps', $eeSFL->eeListID);
 
 	return array(
@@ -1430,7 +1317,7 @@ function eeSFL_FileEditor() {
 		return "Missing the File Name";
 	}
 
-	// SECURITY: The free version lists only the root directory, so a file name never contains a path.
+	// SECURITY: A list holds only the files directly in its folder, so a file name never contains a path.
 	// Reject separators and dot entries: the Edit actions (dates, nice name, description) build
 	// FileListDir . $eeFileName without a traversal check, so "../x" would reach files outside the list.
 	if( strpbrk($eeFileName, '/\\') !== FALSE || $eeFileName === '.' || $eeFileName === '..' ) {
@@ -1453,14 +1340,7 @@ function eeSFL_FileEditor() {
 		return "File Not Found";
 	}
 
-	// Subfolder support is a Pro feature — the free version always operates on the root directory.
-	// The eeSubFolder POST parameter is intentionally ignored here to eliminate the path traversal
-	// attack surface entirely (CVE-2026-11911). Pro: apply path traversal sanitization wherever
-	// eeSubFolder is read from POST — strip ../ sequences and validate the resolved path stays
-	// within FileListDir using realpath() before passing to eeSFL_DeleteFile() / eeSFL_RenameFile().
-	$eeSubFolder = FALSE;
-
-	eeSFL_Debug_Log("Action: $eeFileAction, File: $eeFileName, SubFolder: " . ($eeSubFolder ? $eeSubFolder : 'ROOT'), 'Admin', $eeSFL->eeListID);
+	eeSFL_Debug_Log("Action: $eeFileAction, File: $eeFileName", 'Admin', $eeSFL->eeListID);
 
 	// ===== DISPATCHER =====
 	// Route to appropriate specialized function
@@ -1468,7 +1348,7 @@ function eeSFL_FileEditor() {
 	if($eeFileAction == 'Delete') {
 
 		eeSFL_Debug_Log("Routing to eeSFL_DeleteFile()", 'Admin', $eeSFL->eeListID);
-		return eeSFL_DeleteFile($eeFileName, $eeSubFolder);
+		return eeSFL_DeleteFile($eeFileName);
 
 	} elseif($eeFileAction == 'Edit') {
 
@@ -1480,21 +1360,21 @@ function eeSFL_FileEditor() {
 		// Nice Name
 		if(isset($_POST['eeFileNiceNameNew']) && $_POST['eeFileNiceNameNew'] != 'false') {
 			$eeFileNiceNameNew = trim(sanitize_text_field(wp_unslash($_POST['eeFileNiceNameNew']))); // sanitize_text_field only — esc_textarea() is for HTML output, not DB storage
-			$eeResult = eeSFL_UpdateFileNiceName($eeFileName, $eeSubFolder, $eeFileNiceNameNew);
+			$eeResult = eeSFL_UpdateFileNiceName($eeFileName, $eeFileNiceNameNew);
 			if($eeResult) { $eeMessages[] = $eeResult; }
 		}
 
 		// Description
 		if(isset($_POST['eeFileDescNew']) && $_POST['eeFileDescNew'] != 'false') {
 			$eeFileDescriptionNew = trim(sanitize_text_field(wp_unslash($_POST['eeFileDescNew']))); // sanitize_text_field only — esc_textarea() is for HTML output, not DB storage
-			$eeResult = eeSFL_UpdateFileDescription($eeFileName, $eeSubFolder, $eeFileDescriptionNew);
+			$eeResult = eeSFL_UpdateFileDescription($eeFileName, $eeFileDescriptionNew);
 			if($eeResult) { $eeMessages[] = $eeResult; }
 		}
 
 		// Date Added
 		if(isset($_POST['eeFileDateAdded'])) {
 			$eeDate = preg_replace("/[^0-9-]/", "", sanitize_text_field(wp_unslash($_POST['eeFileDateAdded'])));
-			$eeResult = eeSFL_UpdateFileDateAdded($eeFileName, $eeSubFolder, $eeDate, $eeSFL->eeListSettings);
+			$eeResult = eeSFL_UpdateFileDateAdded($eeFileName, $eeDate, $eeSFL->eeListSettings);
 			if(!$eeResult['success']) {
 				return $eeResult['message'];
 			}
@@ -1506,7 +1386,7 @@ function eeSFL_FileEditor() {
 		// Date Changed
 		if(isset($_POST['eeFileDateChanged'])) {
 			$eeDate = preg_replace("/[^0-9-]/", "", sanitize_text_field(wp_unslash($_POST['eeFileDateChanged'])));
-			$eeResult = eeSFL_UpdateFileDateChanged($eeFileName, $eeSubFolder, $eeDate, $eeSFL->eeListSettings);
+			$eeResult = eeSFL_UpdateFileDateChanged($eeFileName, $eeDate, $eeSFL->eeListSettings);
 			if(!$eeResult['success']) {
 				return $eeResult['message'];
 			}
@@ -1518,7 +1398,7 @@ function eeSFL_FileEditor() {
 		// Rename (do last)
 		if( isset($_POST['eeFileNameNew']) && strlen(sanitize_text_field(wp_unslash($_POST['eeFileNameNew']))) >= 1 ) {
 			$eeFileNameNew = sanitize_text_field(wp_unslash($_POST['eeFileNameNew']));
-			$eeResult = eeSFL_RenameFile($eeFileName, $eeSubFolder, $eeFileNameNew, $eeSFL->eeListSettings);
+			$eeResult = eeSFL_RenameFile($eeFileName, $eeFileNameNew, $eeSFL->eeListSettings);
 			if(!$eeResult['success']) {
 				return $eeResult['message'];
 			}
@@ -1589,9 +1469,6 @@ function eeSFL_VersionCheck() {
 				update_option('eeSFL_Settings_1', $eeSettings);
 				update_option('eeSFL_Version', eeSFL_Version);
 
-				// Add First File - The Documentation
-				$eeCopyFrom = dirname(dirname(__FILE__)) . '/Simple-File-List.pdf';
-				$eeCopyTo = $eeSFL->eeSFL_GetRootPath() . $eeSettings['FileListDir'] . 'Simple-File-List.pdf';
 				return TRUE;
 
 			} else {
@@ -1887,7 +1764,7 @@ function eeSFL_UploadCompletedAdmin() {
 // Admin <head>
 function eeSFL_AdminHead($eeHook) {
 
-	global $eeSFL, $eeSFL_VarsForJS, $eeSFLA;
+	global $eeSFL, $eeSFL_VarsForJS;
 
 	$deps = array('jquery');
 
@@ -1941,16 +1818,6 @@ function eeSFL_AdminHead($eeHook) {
 		wp_localize_script( 'ee-simple-file-list-js-media', 'eeSFLM_Vars', $eeSFLM_VarsForJS );
 
 
-		if($eeSFLA) {
-
-			$eeSFLA_URL = plugins_url() . '/'. $eeSFLA->eeSFLA_Slug . '/';
-
-			// exit($eeSFLA_URL);
-
-			wp_enqueue_style( 'eesfla-style', plugins_url( $eeSFLA_URL . 'css/style.css', __DIR__ ), '', eeSFLA_Version );
-			wp_enqueue_script('eesfla-head-js', plugins_url( $eeSFLA_URL . 'js/eeSFLA_scripts-head.js', __DIR__), $deps, eeSFLA_Version, false );
-			wp_enqueue_script('eesfla-footer-js', plugins_url( $eeSFLA_URL . 'js/eeSFLA_scripts-footer.js', __DIR__), $deps, eeSFLA_Version, true );
-		}
 
 
     }
@@ -1961,7 +1828,7 @@ function eeSFL_AdminHead($eeHook) {
 // Admin Pages
 function eeSFL_AdminMenu() {
 
-	global $eeSFL, $eeSFLA;
+	global $eeSFL;
 
 	// Only include when accessing the plugin admin pages
 	if( isset($_GET['page']) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page param for admin menu routing, not form submission

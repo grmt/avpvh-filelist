@@ -1,5 +1,5 @@
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 // Used in front-side and back-side file list display
@@ -13,7 +13,6 @@ jQuery(document).ready(function() {
 
 	console.log('eeSFL Document Ready');
 
-	jQuery('#eeSFL_MoveToFolder').hide();
 	jQuery('.eeSFL_BulkDownloadBar').hide();
 
 	window.addEventListener('touchstart', function() {
@@ -28,36 +27,26 @@ jQuery(document).ready(function() {
 
 	// The File Operations Bar -----------------
 
-	// Get the initial selected action (will be 'Folder' if folders enabled, 'Description' if not)
+	// Get the initial selected action
 	var eeSFL_InitialAction = jQuery('#eeSFL_FileOpsAction').val();
 
 	// Get translated text items
-	var eeSFL_NewFolderNamePlaceholder = jQuery('#eeSFL_NewFolderNamePlaceholder').text();
 	var eeSFL_ZipFileName = jQuery('#eeSFL_ZipFileName').text();
 	var eeSFL_DeleteText = jQuery('#eeSFL_DeleteText').text();
 	var eeSFL_DescriptionPlaceholder = jQuery('#eeSFL_DescriptionPlaceholder').html();
 
 	// Set the initial placeholder based on what's selected
-	if(eeSFL_InitialAction == 'Folder') {
-		jQuery('#eeSFL_FileOpsActionInput').attr('placeholder', eeSFL_NewFolderNamePlaceholder);
-	} else if(eeSFL_InitialAction == 'Description') {
+	if(eeSFL_InitialAction == 'Description') {
 		jQuery('#eeSFL_FileOpsActionInput').attr('placeholder', eeSFL_DescriptionPlaceholder);
 	}
 
 	// Required Inputs per Action
 	jQuery('#eeSFL_FileOpsAction').on('change', function() {
 
-		if(jQuery(this).val() == 'GetProFolder') {
-			var getProURL = jQuery('#eeSFL_GetProURL').text();
-			if(getProURL) { window.location.href = getProURL; }
-			return;
-		}
-
 		if(jQuery(this).val() == 'Delete') {
 
 			console.log('Deleting Files');
 
-			jQuery('#eeSFL_MoveToFolder').hide();
 			jQuery('#eeSFL_FileOpsActionInput').show();
 			jQuery('#eeSFL_FileOpsActionInput').attr('name', 'eeSFL_DeletingFiles');
 			jQuery('#eeSFL_FileOpsActionInput').attr('value', '');
@@ -65,19 +54,10 @@ jQuery(document).ready(function() {
 			jQuery('#eeSFL_FileOpsActionInput').attr('disabled', 'disabled');
 			jQuery('#eeSFL_FileOpsActionInput').removeAttr('required');
 
-		} else if(jQuery(this).val() == 'Move') {
-
-			console.log('Moving Files');
-
-			jQuery('#eeSFL_FileOpsActionInput').removeAttr('required');
-			jQuery('#eeSFL_FileOpsActionInput').hide();
-			jQuery('#eeSFL_MoveToFolder').show();
-
 		} else if(jQuery(this).val() == 'Description') {
 
 			console.log('Adding Description');
 
-			jQuery('#eeSFL_MoveToFolder').hide();
 			jQuery('#eeSFL_FileOpsActionInput').show();
 			jQuery('#eeSFL_FileOpsActionInput').attr('name', 'eeSFL_Description');
 			jQuery('#eeSFL_FileOpsActionInput').attr('value', '');
@@ -89,22 +69,12 @@ jQuery(document).ready(function() {
 
 			console.log('Downloading Files');
 
-			jQuery('#eeSFL_MoveToFolder').hide();
 			jQuery('#eeSFL_FileOpsActionInput').show();
 			jQuery('#eeSFL_FileOpsActionInput').attr('name', 'eeSFL_ZipFileName');
 			jQuery('#eeSFL_FileOpsActionInput').attr('value', eeSFL_ZipFileName + '.zip');
 			jQuery('#eeSFL_FileOpsActionInput').attr('required', 'required');
 			jQuery('#eeSFL_FileOpsActionInput').removeAttr('disabled');
 
-		} else { // Create Folder
-
-			jQuery('#eeSFL_MoveToFolder').hide();
-			jQuery('#eeSFL_FileOpsActionInput').show();
-			jQuery('#eeSFL_FileOpsActionInput').attr('name', 'eeSFL_NewFolderName');
-			jQuery('#eeSFL_FileOpsActionInput').attr('value', '');
-			jQuery('#eeSFL_FileOpsActionInput').attr('placeholder', eeSFL_NewFolderNamePlaceholder);
-			jQuery('#eeSFL_FileOpsActionInput').attr('required', 'required');
-			jQuery('#eeSFL_FileOpsActionInput').removeAttr('disabled');
 		}
 
 	});
@@ -213,28 +183,6 @@ function eeSFL_CopyLinkToClipboard(eeSFL_FileURL) {
 
 
 
-function eeSFL_DownloadFolder(eeSFL_FolderID, eeSFL_FolderName) {
-
-	var eeToday = new Date();
-	var eeDay = String(eeToday.getDate()).padStart(2, '0');
-	var eeMonth = String(eeToday.getMonth() + 1).padStart(2, '0'); //January is 0!
-	var eeYear = eeToday.getFullYear();
-
-	jQuery('#eeSFL_FolderToDownload').val(eeSFL_FolderID);
-	jQuery('#eeSFL_FolderDownloadZipFileName').val(eeSFL_FolderName + '_' + eeYear + '-' + eeMonth + '-' + eeDay);
-
-	// Disable all the links to prevent re-clicks
-	jQuery('#eeSFL_RowID-' + eeSFL_FolderID + ' a.eeSFL_FolderDownload').css('color', '#666');
-	jQuery('#eeSFL_RowID-' + eeSFL_FolderID + ' a.eeSFL_FolderDownload').text(eesfl_vars['eePleaseWaitText'] + ' ......');
-	jQuery('a.eeSFL_FolderDownload').removeAttr('href'); // All of them
-
-	jQuery('#eeSFL_DownloadFolderForm').submit();
-}
-
-
-
-
-
 function eeSFL_EditFile(eeSFL_FileID) {
 
 	event.preventDefault(); // Don't follow the link
@@ -274,40 +222,6 @@ function eeSFL_Delete(eeSFL_FileID) {
 
 }
 
-
-
-
-
-// Extract an Archive
-function eeSFL_ExtractArchive(FolderName) {
-
-	var response = confirm(eesfl_vars.eeExtractConfirm1 + "\n" + eesfl_vars.eeExtractConfirm2 + "\n" + FolderName + "\n" + eesfl_vars.eeExtractConfirm3);
-
-	if (response != true) {
-
-	    // Do No-thing, uuuu NOTHING!
-	    event.preventDefault();
-
-	} else {
-
-		// Guard against clickity-clickers
-		jQuery('a.eeSFL_ExtractArchive').hide();
-	}
-}
-
-
-
-
-// Confirm or cancel folder delete
-function eeSFLF_ConfirmFolderDelete() {
-
-    var response = confirm("Are You Sure?\nAll Contents Will Be Deleted");
-
-	if (response != true) {
-
-	    event.preventDefault();
-	}
-}
 
 
 

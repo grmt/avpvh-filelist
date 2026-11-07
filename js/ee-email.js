@@ -1,18 +1,12 @@
-// Simple File List - File Sending - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - File Sending - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 function eeSFLE_SendFile(eeSFL_FileID) {
 
 	event.preventDefault(); // Don't follow the link
 
-	var eeFileName = '';
-
-	if(eeSFL_SubFolder.length > 1) { // Will be "/" if home
-		eeFileName = eeSFL_SubFolder;
-	}
-
-    eeFileName = eeFileName + jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' .eeSFL_RealFileName').text(); // Get the File Name
+    var eeFileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' .eeSFL_RealFileName').text(); // Get the File Name
 
     jQuery('#eeSFLE_SendTheseFilesList em').text(eeFileName); // Add it to the list view
 
@@ -72,14 +66,6 @@ function eeSFLE_Send_AddTheseFiles() {
 		if( jQuery(this).is(':checked') ) {
 
 			var eeFileName = decodeURIComponent( jQuery(this).val() ); // Decode
-
-			if(eeSFL_SubFolder.length >= 1 ) {
-
-				if( eeFileName.indexOf(eeSFL_SubFolder) === 0 ) {
-
-					eeFileName = eeFileName.replace(eeSFL_SubFolder, '');
-				}
-			}
 
 			eeArray.push(eeFileName);
 		}

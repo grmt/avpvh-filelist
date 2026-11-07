@@ -1,29 +1,10 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
-// Pre-filter files for RESTRICTED/USER mode to check if any will be displayed
-$eeSFLA_HasAccessibleFiles = false;
-if($eeSFLA && !is_admin() &&
-   isset($eeSFL->eeListSettings['Mode']) &&
-   ($eeSFL->eeListSettings['Mode'] == 'RESTRICTED' || $eeSFL->eeListSettings['Mode'] == 'USER')) {
-
-    // Check if at least one file passes the firewall
-    foreach($eeSFL->eeDisplayFiles as $eeFileArray) {
-        if($eeSFLA->eeSFLA_FileFirewall($eeFileArray) !== FALSE) {
-            $eeSFLA_HasAccessibleFiles = true;
-            break;
-        }
-    }
-
-    // If no accessible files, don't render the table at all
-    if(!$eeSFLA_HasAccessibleFiles) {
-        return;
-    }
-}
 
 // TABLE HEAD ==================================================================================================
 
@@ -98,15 +79,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 	// Populate our class properties for this file
 	if( $eeSFL->eeSFL_ProcessFileArray($eeFileArray, $eeSFL_HideName, $eeSFL_HideType) ) {
 
-		// Extension Check
-		if($eeSFLA AND !is_admin() ) {
-			if( $eeSFLA->eeSFLA_FileFirewall($eeFileArray) === FALSE ) { continue; } // Skip this file if FALSE
-		}
 
-		// Extension Check
-		if(!$eeListPosition AND $eeListPosition !== 0) { // eeSFLS Pagination
-			// $eeListPosition = $eeFileID; // Get the first key
-		}
 
 		// Start The List --------------------------------------------------------------
 
@@ -131,7 +104,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 			if($eeSFL->eeFileThumbURL) {  $eeOutput .= '<a href="' . esc_url($eeSFL->eeFileURL) .  '"';
 
-				if($eeSFL->eeIsFile === TRUE) {  $eeOutput .= ' target="_blank"'; }
+				$eeOutput .= ' target="_blank"';
 
 				 $eeOutput .= '><img src="' . esc_url($eeSFL->eeFileThumbURL) . '" width="64" height="64" alt="Thumb" /></a>'; }
 
@@ -145,46 +118,18 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 		if($eeSFL->eeFileURL) {
 
-			if($eeSFL->eeIsFolder) {
-				 $eeOutput .= '
-				<span class="eeSFL_FilePath eeSFL_IsFolder eeHide">' . esc_html($eeSFL->eeFilePath) . '</span>';
-			}
 
-			// Proper Path for Search Results
-			if(isset($_POST['eeSFLS_Searching'])) {
-				// Verify nonce for search form submission (Missing nonce security)
-				if (!wp_verify_nonce(isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '', 'ee-search-form') && !is_admin()) {
-					// Skip search result path display if nonce verification fails
-				} else {
-					$eePathInfo = pathinfo($eeSFL->eeFilePath);
-					$eePath = $eePathInfo['dirname'];
-					if($eePath != '.') {
-						 $eeOutput .= '
-						<span class="eeSFL_RealFilePath eeHide">' . esc_html($eePath . '/') . '</span>';
-					}
-				}
-			}
 
 			 $eeOutput .= '
 			<span class="eeSFL_RealFileName eeHide">' . esc_html($eeSFL->eeRealFileName) . '</span>
 			<span class="eeSFL_FileNiceName eeHide">' . esc_html($eeSFL->eeFileNiceName) . '</span><p class="eeSFL_FileLink">
 			<span class="eeSFL_FileMimeType eeHide">' . esc_html($eeSFL->eeFileMIME) . '</span>';
 
-			if($eeSFL->eeListSettings['ShowFileThumb'] == 'NO' AND $eeSFL->eeIsFolder) {  $eeOutput .= '&#128193; '; }
 
-			// Extension Check
-			if( isset($_POST['eeSFLS_Searching']) ) {
-				// Verify nonce for search form submission (Missing nonce security)
-				if (!wp_verify_nonce(isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '', 'ee-search-form') && !is_admin()) {
-					// Skip search path display if nonce verification fails
-				} else {
-					 $eeOutput .= $eeSFLS->eeSFLS_DisplaySearchPath($eeSFL->eeFilePath);
-				}
-			}
 
 			 $eeOutput .= '<a class="eeSFL_FileName" href="' . esc_url($eeSFL->eeFileURL) .  '"';
 
-			if($eeSFL->eeIsFile === TRUE) {  $eeOutput .= ' target="_blank"'; }
+			$eeOutput .= ' target="_blank"';
 
 			 $eeOutput .= '>' . esc_html(stripslashes($eeSFL->eeFileName)) . '</a>';
 
@@ -236,15 +181,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 			 $eeOutput .= '
 			<td class="eeSFL_FileSize">';
 
-			if($eeSFL->eeIsFile) {
-
-				 $eeOutput .= $eeSFL->eeFileSize;
-
-			} else {
-
-				 $eeOutput .= '<span class="eeSFL_Count">' . $eeSFL->eeItemCount . '</span> ' . __('Items', 'simple-file-list');
-				if($eeSFL->eeListSettings['ShowFolderSize'] == 'YES') {  $eeOutput .= '<br />' . $eeSFL->eeFileSize; }
-			}
+			 $eeOutput .= $eeSFL->eeFileSize;
 
 			 $eeOutput .= '</td>';
 		}

@@ -1,6 +1,6 @@
 /*
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 */
 
@@ -10,41 +10,6 @@
 	box-sizing: border-box;
 	clear: both;
 }
-
-
-/* BREADCRUMB TRAIL */
-.eeSFL_BreadCrumb {
-	width: 100%;
-	padding: .25em;
-	margin-bottom: .5em;
-}
-.eeSFL_BreadCrumb span.eeSFL_Crumb {
-	display: block;
-	float: left;
-	margin-right: .5em;
-	margin-bottom: .5em;
-}
-
-.eeSFL_BreadCrumb .eeSFL_Crumb a {
-	display: block;
-	padding: .5em .75em;
-	background-color: var(--ee-color-action-link-background);
-	border: 1px solid var(--ee-color-table-border);
-	border-radius: 3px;
-	text-decoration: none;
-	color: var(--ee-color-action-link-text);
-}
-.eeSFL_BreadCrumb .eeSFL_Crumb a:hover {
-	text-decoration: none;
-	background-color: var(--ee-color-action-link-background-hover);
-	color: var(--ee-color-action-link-text-hover);
-}
-.eeSFL_BreadCrumb .eeSFL_Crumb:last-child {
-	background-color: var(--ee-color-action-link-background);
-	border: 1px solid var(--ee-color-action-link-background);
-	padding: .5em .75em;
-}
-
 
 
 /* FILE OPS BAR  */
@@ -82,8 +47,7 @@
 }
 
 .eeSFL .eeSFL_ListOpsBar input[type=text],
-.eeSFL .eeSFL_BulkDownloadBar input[type=text],
-.eeSFL #eeSFL_MoveToFolder {
+.eeSFL .eeSFL_BulkDownloadBar input[type=text] {
 	flex: 5;
 	margin-right: .5em;
 	max-width: none;
@@ -321,3 +285,48 @@
 	vertical-align: middle;
 }
 
+
+
+/* SEARCH AND PAGES */
+.eeSFL .eeSFL_SearchForm {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	align-items: center;
+	margin-bottom: 1em;
+}
+.eeSFL .eeSFL_SearchForm input[type="search"] {
+	flex: 1 1 12em;
+	min-width: 0;
+}
+.eeSFL .eeSFL_SearchResults {
+	margin: 0 0 1em;
+}
+.eeSFL .eeSFL_Pagination {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .25em;
+	justify-content: center;
+	margin: 1em 0;
+}
+.eeSFL .eeSFL_Pagination a,
+.eeSFL .eeSFL_Pagination span {
+	padding: .35em .7em;
+	border: 1px solid var(--ee-color-table-border);
+	border-radius: 3px;
+	text-decoration: none;
+}
+.eeSFL .eeSFL_Pagination a {
+	background-color: var(--ee-color-action-link-background);
+	color: var(--ee-color-action-link-text);
+}
+.eeSFL .eeSFL_Pagination a:hover {
+	background-color: var(--ee-color-action-link-background-hover);
+	color: var(--ee-color-action-link-text-hover);
+}
+.eeSFL .eeSFL_Pagination .eeSFL_PageCurrent {
+	font-weight: bold;
+}
+.eeSFL .eeSFL_Pagination .eeSFL_PageGap {
+	border-color: transparent;
+}

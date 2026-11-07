@@ -1,9 +1,8 @@
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 var eeBaseShortcode = 'eeSFL';
-var eeSFL_SubFolder = '';
 var eeSFL_FileID = 0;
 var eeAttsObject = new Object();
 var eeOption = '';
@@ -211,9 +210,6 @@ jQuery(document).ready(function() {
 	if(eeSFL_ListID > 1) {
 		eeBaseShortcode = eeBaseShortcode + ' list=\'' + eeSFL_ListID + '\'';
 	}
-
-	// Shortcode Snippet Display
-	if(eeSFL_SubFolder && eeSFL_SubFolder != '/') { eeBaseShortcode += ' folder=\'' + eeSFL_SubFolder.slice(0, -1) + '\''; }
 
 	jQuery('#eeSFL_ShortCode').val('[' + eeBaseShortcode + ']');
 
