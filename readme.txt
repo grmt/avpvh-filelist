@@ -222,6 +222,18 @@ Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/
 
 == Changelog ==
 
+= Unreleased =
+* New: Multiple file lists. Create, rename and remove lists under "All File Lists" and "Create List"; each list has its own folder, settings and `[eeSFL list="N"]` shortcode. Lists left by the old File Access Manager add-on are picked up automatically.
+* New: A list switcher in wp-admin, and per-list admin access based on each list's "Admin Role" setting.
+* Change: A new list starts visible to admins only, without uploads, until its settings are reviewed. Two lists can never share or nest folders.
+* Fix: Shortcode attributes (style, sorting, visibility) no longer carry over to the next shortcode on the same page.
+* Fix: A failed folder change keeps the current folder instead of switching to the default one.
+* New: "Protect files" per list. Files are then served by WordPress, which checks access on every download (with Range support for media, and an optional nginx X-Accel-Redirect). Apache gets a deny-all .htaccess for the folder; for nginx the settings show the location block to add.
+* New: Show a list to specific users, roles or directory groups ("Show To: Specific Users, Roles or Groups").
+* New: Per-file access under "File Access": a file can be limited to users, roles or groups within the list's audience. Grants made with the old File Access Manager add-on are honoured.
+* New: Groups from an LDAP directory ("Groups" tab), looked up by user name or e-mail address and cached for 15 minutes. The bind password can be set in wp-config.php as EESFL_LDAP_BIND_PASSWORD. Other plugins can supply groups through the `simple_file_list_user_groups` filter.
+* Security: Protected files that could run scripts in the browser (HTML, SVG and the like) are always sent as downloads. ZIP downloads and sent links only include files the user may open.
+
 = 6.3.12 =
 * Security Fix: Escaped file names, descriptions, submitter metadata, and column labels across Table, Flex, and Tiles display templates to prevent Stored XSS.
 * Security Fix: Removed broken `&& !is_admin()` guard in settings input processors and enforced `manage_options` capability across all settings tabs.

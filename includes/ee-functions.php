@@ -459,8 +459,9 @@ function eeSFL_AppendProperUrlOp($eeURL) {
 
 
 
-// Check for the Upload Folder, Create if Needed
-function eeSFL_FileListDirCheck($eeFileListDir) {
+// Check for the Upload Folder, Create if Needed. A newly created folder gets a copy of the
+// manual as a first file, unless $eeCopyManual is FALSE (lists created from the admin).
+function eeSFL_FileListDirCheck($eeFileListDir, $eeCopyManual = TRUE) {
 
 	global $eeSFL;
 	static $eeReportedDirErrors = array(); // Prevent duplicate error messages across repeated calls
@@ -566,7 +567,7 @@ function eeSFL_FileListDirCheck($eeFileListDir) {
 			}
 		}
 
-		if($eeCopyManualFile === TRUE) {
+		if($eeCopyManualFile === TRUE && $eeCopyManual) {
 
 			// Copy the Manual to the new directory, so there's at least one file.
 			$eeCopyFrom = $eeSFL->eeEnvironment['pluginDir'] . 'Simple-File-List.pdf';
@@ -869,6 +870,8 @@ function eeSFL_ProcessEmailString($eeString) {
 function eeSFL_LimitDirAccess($eeMode) {
 
 	global $eeSFL;
+
+	if( eeSFL_ListIsProtected($eeSFL->eeListSettings) ) { return eeSFL_ProtectListDir(); } // Files go through the download handler
 
 	// Delete and Start Over
 	$eeFile = $eeSFL->eeSFL_GetRootPath() . $eeSFL->eeListSettings['FileListDir'] . '.htaccess';
@@ -1905,37 +1908,8 @@ function eeSFL_AdminMenu() {
 
 	}
 
-	// Admin Menu Visibility
-	if($eeSFLA) {
-
-		 $eeCapability = 'activate_plugins';
-
-	} else {
-
-		if(!isset($eeSFL->eeListSettings['AdminRole'])) { // First Run
-			$eeSFL->eeListSettings['AdminRole'] = 5;
-		}
-
-		switch ($eeSFL->eeListSettings['AdminRole']) {
-		    case 1:
-		        $eeCapability = 'read';
-		        break;
-		    case 2:
-		        $eeCapability = 'edit_posts';
-		        break;
-		    case 3:
-		        $eeCapability = 'publish_posts';
-		        break;
-		    case 4:
-		        $eeCapability = 'edit_others_pages';
-		        break;
-		    case 5:
-		        $eeCapability = 'activate_plugins';
-		        break;
-			default:
-				$eeCapability = 'edit_posts';
-		}
-	}
+	// Admin Menu Visibility: anyone who may manage at least one list
+	$eeCapability = eeSFL_MenuCapability();
 
 	// Publish capability as a global so companion plugins (e.g. Tools) can use it
 	global $eeSFL_Capability;
@@ -1973,27 +1947,9 @@ function eeSFL_SetAdminTitle() {
 // ADMIN DASHBOARD WIDGET
 // =============================================================================
 
-// Returns the WP capability string that matches the AdminRole setting for List 1,
-// mirroring the same switch used in eeSFL_AdminMenu().
+// The capability for managing list 1 (its AdminRole setting).
 function eeSFL_GetAdminCapability() {
-
-	global $eeSFLA;
-
-	if ( $eeSFLA ) {
-		return 'activate_plugins';
-	}
-
-	$settings  = get_option( 'eeSFL_Settings_1', array() );
-	$admin_role = isset($settings['AdminRole']) ? (int) $settings['AdminRole'] : 5;
-
-	switch ( $admin_role ) {
-		case 1: return 'read';
-		case 2: return 'edit_posts';
-		case 3: return 'publish_posts';
-		case 4: return 'edit_others_pages';
-		case 5: return 'activate_plugins';
-		default: return 'edit_posts';
-	}
+	return eeSFL_ListAdminCapability(1);
 }
 
 

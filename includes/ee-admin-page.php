@@ -71,52 +71,33 @@ function eeSFL_BackEnd() {
 
 	<span class="nav-tab-wrapper-left">';
 
-	// Extension Check
-    if($eeSFLA) {
-		 $eeOutput .= '<a href="?page=' . eeSFL_PluginSlug . '&tab=access" id="eeSFL_TabAllFileLists" class="nav-tab ';
-		if($active_tab == 'access') { $eeOutput .= ' eeActiveTab '; }
-		$active_tab == 'access' ? 'nav-tab-active' : '';
-		 $eeOutput .= $active_tab . '">' . __('All File Lists', 'simple-file-list') . '</a>';
+	$eeMultipleLists = count(eeSFL_ManageableListIDs()) > 1;
+	$eeListName = $eeMultipleLists ? esc_html(stripslashes($eeSFL->eeListSettings['ListTitle'] ?? '')) : __('File List', 'simple-file-list');
+
+	// All File Lists
+	if(current_user_can('manage_options')) {
+		$eeOutput .= '<a href="?page=' . eeSFL_PluginSlug . '&tab=lists" id="eeSFL_TabAllFileLists" class="nav-tab' . ($active_tab == 'lists' ? ' eeActiveTab' : '') . '">' . __('All File Lists', 'simple-file-list') . '</a>';
 	}
 
+	// This List
+	$eeOutput .= '
+	<a href="?page=' . eeSFL_PluginSlug . '&tab=list&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileList" class="nav-tab' . ($active_tab == 'list' ? ' eeActiveTab' : '') . '">' . $eeListName . '</a>';
 
-	if($active_tab == 'list' OR $active_tab == 'settings' OR $active_tab == 'getpro') {
+	// Who may open which file of this list
+	$eeOutput .= '
+	<a href="?page=' . eeSFL_PluginSlug . '&tab=access&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileAccess" class="nav-tab' . ($active_tab == 'access' ? ' eeActiveTab' : '') . '">' . __('File Access', 'simple-file-list') . '</a>';
 
-		 $eeOutput .= '
+	// Settings
+	if(current_user_can('manage_options')) {
+		$eeOutput .= '
+		<a href="?page=' . eeSFL_PluginSlug . '&tab=settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabSettings" class="nav-tab' . ($active_tab == 'settings' ? ' eeActiveTab' : '') . '">' . __('List Settings', 'simple-file-list') . '</a>';
 
-		<a href="?page=' . eeSFL_PluginSlug . '&tab=list&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileList" class="nav-tab ';
-		if($active_tab == 'list') { $eeOutput .= ' eeActiveTab '; }
-	    $active_tab == 'list' ? 'nav-tab-active' : '';
-	     $eeOutput .= $active_tab . '">';
+		$eeOutput .= '
+		<a href="?page=' . eeSFL_PluginSlug . '&tab=create" id="eeSFL_TabCreate" class="nav-tab' . ($active_tab == 'create' ? ' eeActiveTab' : '') . '">' . __('Create List', 'simple-file-list') . '</a>';
 
-	    if($eeSFLA) {  $eeOutput .= stripslashes($eeSFL->eeListSettings['ListTitle']); }
-	    	else {  $eeOutput .= __('File List', 'simple-file-list'); }
-
-	     $eeOutput .= '</a>';
-
-
-	    // Settings
-	    if(current_user_can('manage_options')) {
-		     $eeOutput .= '
-		    <a href="?page=' . eeSFL_PluginSlug . '&tab=settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabSettings" class="nav-tab ';
-			if($active_tab == 'settings') { $eeOutput .= ' eeActiveTab '; }
-		    $active_tab == 'settings' ? 'nav-tab-active' : '';
-		     $eeOutput .= $active_tab . '">' . __('List Settings', 'simple-file-list') . '</a>';
-	    }
-
-
-    } elseif($eeSFLA) {
-
-	     $eeOutput .= '<a href="?page=' . eeSFL_PluginSlug . '&tab=create" id="eeSFL_TabCreate" class="nav-tab ';
-		if($active_tab == 'create') { $eeOutput .= ' eeActiveTab '; }
-		$active_tab == 'create' ? 'nav-tab-active' : '';
-		 $eeOutput .= $active_tab . '">' . __('Create List', 'simple-file-list') . '</a>';
-
-	     $eeOutput .= '<a href="?page=' . eeSFL_PluginSlug . '&tab=access_settings" id="eeSFL_TabAccessSettings" class="nav-tab ';
-		if($active_tab == 'access_settings') { $eeOutput .= ' eeActiveTab '; }
-		$active_tab == 'access_settings' ? 'nav-tab-active' : '';
-		 $eeOutput .= $active_tab . '">' . __('Access Settings', 'simple-file-list') . '</a>';
-    }
+		$eeOutput .= '
+		<a href="?page=' . eeSFL_PluginSlug . '&tab=groups" id="eeSFL_TabGroups" class="nav-tab' . ($active_tab == 'groups' ? ' eeActiveTab' : '') . '">' . __('Groups', 'simple-file-list') . '</a>';
+	}
 
 
      $eeOutput .= '
@@ -141,35 +122,29 @@ function eeSFL_BackEnd() {
 
 	 $eeOutput .= '</h2>'; // END Main Tabs
 
-    if($eeSFLA AND $active_tab == 'settings') {
-	     $eeOutput .= '<p id="eeSFLA_ListSettingsTitle">'. stripslashes($eeSFL->eeListSettings['ListTitle']) . ' | ' . __('Settings', 'simple-file-list') . '</p>';
+    if($eeMultipleLists AND $active_tab == 'settings') {
+	     $eeOutput .= '<p id="eeSFLA_ListSettingsTitle">'. $eeListName . ' | ' . __('Settings', 'simple-file-list') . '</p>';
     }
 
     // Tab Content =============================================================
 
-	if($active_tab == 'access') { // Extension Check
+	if($active_tab == 'lists' && current_user_can('manage_options')) {
 
-		eeSFL_Debug_Log("Access tab requested - eeSFLA status: " . ($eeSFLA ? 'ACTIVE' : 'INACTIVE'), 'Admin');
+		include_once($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-lists-admin.php');
+		$eeOutput .= eeSFL_AllListsPage();
 
-		if($eeSFLA) {
-		    eeSFL_Debug_Log("Including eeSFLA_AllLists.php", 'Admin');
-		    include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_AllLists.php');
-		} else {
-		    eeSFL_Debug_Log("eeSFLA is not active - cannot show access tab", 'Admin');
-		}
+	} elseif($active_tab == 'create' && current_user_can('manage_options')) {
 
-	} elseif($active_tab == 'create') {
+		include_once($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-lists-admin.php');
+		$eeOutput .= eeSFL_CreateListPage();
 
-		if($eeSFLA) {
-		    include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_CreateListDisplay.php');
-		}
+	} elseif($active_tab == 'access') {
 
+		$eeOutput .= eeSFL_FileAccessPage(); // Checks the list's admin capability itself
 
-	} elseif($active_tab == 'access_settings') {
+	} elseif($active_tab == 'groups' && current_user_can('manage_options')) {
 
-		if($eeSFLA) {
-		    include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_GeneralSettings.php');
-		}
+		$eeOutput .= eeSFL_GroupsPage();
 
 	} elseif($active_tab == 'list') {
 
@@ -239,9 +214,8 @@ function eeSFL_BackEnd() {
 					 $eeOutput .= '
 					<small>';
 
-				if($eeSFLA) {
-						 $eeOutput .= '<strong>' . $eeSFL->eeListSettings['ListTitle'] . '</strong><br />';
-						 $eeOutput .= __('List Mode', 'simple-file-list') . ': ' . (isset($eeSFL->eeListSettings['Mode']) ? $eeSFL->eeListSettings['Mode'] : 'NOT SET') . '<br />';
+				if($eeMultipleLists) {
+						 $eeOutput .= '<strong>' . $eeListName . '</strong><br />';
 					}
 
 					 $eeOutput .= $eeSFL->eeFileCount . ' ' . __('Files', 'simple-file-list') . ' &amp; ' . $eeSFL->eeFolderCount . ' ' . __('Folders', 'simple-file-list') .  ' - ' . __('Sorted by', 'simple-file-list') . ' ' . ucwords($eeSFL->eeListSettings['SortBy']);

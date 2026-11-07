@@ -33,7 +33,14 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 
 			$eeFileListDir = eeSFL_ValidateFileListDir($new_directory); // Sanitize and Validate the Path
 
-			if($eeFileListDir) {
+			$eeOverlap = $eeFileListDir ? eeSFL_FindOverlappingList($eeFileListDir, $eeSFL->eeListID) : 0;
+
+			if($eeOverlap) {
+
+				/* translators: %d: ID of the other file list */
+				$eeSFL->eeUserMessages['warnings'][] = sprintf(__('Not saved: this folder overlaps the folder of list %d. Each list needs its own folder.', 'simple-file-list'), $eeOverlap);
+
+			} elseif($eeFileListDir) {
 
 				if( eeSFL_FileListDirCheck($eeFileListDir) ) { // Check / Create the Dir
 
@@ -42,19 +49,24 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 
 				} else {
 
-					$eeSFL->eeUserMessages['warnings'][] = $eeSFL_DirCheck;
-					$eeSFL->eeUserMessages['warnings'][] = __('Cannot create the file directory. Reverting to default.', 'simple-file-list');
-					$eeSFL->eeListSettings['FileListDir'] = $eeSFL->eeEnvironment['FileListDefaultDir'];
+					$eeSFL->eeUserMessages['warnings'][] = __('Cannot create the file directory. The folder was not changed.', 'simple-file-list');
 				}
 
 			} else {
 
 				$eeSFL->eeUserMessages['warnings'][] = __('Not Saved', 'simple-file-list');
 				$eeSFL->eeUserMessages['warnings'][] = __('Choose a different file list directory.', 'simple-file-list');
-				$eeSFL->eeListSettings['FileListDir'] = $eeSFL->eeEnvironment['FileListDefaultDir'];
 			}
 		}
 
+
+		// Who may see the list when "Show To" is "Specific users, roles or groups"
+		list($eeListGrant, $eeGrantErrors) = eeSFL_GrantFromPost('eeListAccess');
+		$eeSFL->eeListSettings['ListAccess'] = $eeListGrant;
+		foreach( $eeGrantErrors as $eeError ) { $eeSFL->eeUserMessages['warnings'][] = $eeError; }
+
+		// Serve files through the download handler (set before eeSFL_LimitDirAccess() below)
+		$eeSFL->eeListSettings['ProtectFiles'] = eeSFL_ProcessCheckboxInput('ProtectFiles');
 
 		if(isset($_POST['eeShowList'])) {
 
@@ -62,8 +74,13 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 
 			if($eeShowList == 'YES') { $eeSFL->eeListSettings['ShowList'] = 'YES'; }
 				elseif($eeShowList == 'USER') { $eeSFL->eeListSettings['ShowList'] = 'USER'; } // Show only to logged in users
-				 elseif($eeShowList == 'ADMIN') { $eeSFL->eeListSettings['ShowList'] = 'ADMIN'; } // Show only to logged in Admins
+				 elseif($eeShowList == 'GRANTED') { $eeSFL->eeListSettings['ShowList'] = 'GRANTED'; } // Show only to the users, roles and groups in ListAccess
+				  elseif($eeShowList == 'ADMIN') { $eeSFL->eeListSettings['ShowList'] = 'ADMIN'; } // Show only to logged in Admins
 					else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
+
+			if( $eeSFL->eeListSettings['ShowList'] == 'GRANTED' && eeSFL_GrantIsEmpty($eeListGrant) ) {
+				$eeSFL->eeUserMessages['warnings'][] = __('No users, roles or groups are chosen, so only the people who manage this list can see it.', 'simple-file-list');
+			}
 
 			eeSFL_LimitDirAccess($eeSFL->eeListSettings['ShowList']);
 		}
@@ -342,6 +359,12 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 
 				 $eeOutput .= '>' . __('Only Logged in Users', 'simple-file-list') . '</option>
 
+				<option value="GRANTED"';
+
+				if($eeSFL->eeListSettings['ShowList'] == 'GRANTED') {  $eeOutput .= ' selected'; }
+
+				 $eeOutput .= '>' . __('Specific Users, Roles or Groups', 'simple-file-list') . '</option>
+
 				<option value="ADMIN"';
 
 				if($eeSFL->eeListSettings['ShowList'] == 'ADMIN') {  $eeOutput .= ' selected'; }
@@ -356,6 +379,25 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 
 			</select></div>
 			<div class="eeNote">' . __('Determine who you will show the front-side list to.', 'simple-file-list') . '</div>
+
+			<div id="eeSFL_ListAccessPicker"' . ($eeSFL->eeListSettings['ShowList'] == 'GRANTED' ? '' : ' style="display:none"') . '>'
+				. eeSFL_GrantPicker('eeListAccess', $eeSFL->eeListSettings['ListAccess'] ?? array()) . '
+			</div>
+			<script>
+			document.getElementById("eeShowList").addEventListener("change", function() {
+				document.getElementById("eeSFL_ListAccessPicker").style.display = this.value === "GRANTED" ? "" : "none";
+			});
+			</script>
+
+			</fieldset>
+			<fieldset>
+
+			<legend>' . __('Protect Files', 'simple-file-list') . '</legend>
+
+			<div><label for="eeProtectFiles">' . __('Protect', 'simple-file-list') . '</label>
+			<input type="checkbox" name="eeProtectFiles" value="YES" id="eeProtectFiles"' . (eeSFL_ListIsProtected($eeSFL->eeListSettings) ? ' checked="checked"' : '') . ' /></div>
+
+			<div class="eeNote">' . __('Serve files through WordPress, which checks on every download who may open the file. Needed for "Show To" and per-file access to protect the files themselves, not just the list. The folder must then be blocked for direct access: done automatically on Apache, the settings page shows what to add for nginx.', 'simple-file-list') . '</div>
 
 			</fieldset>
 			<fieldset>

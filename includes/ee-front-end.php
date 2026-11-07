@@ -24,6 +24,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
     // Over-Riding Shortcode Attributes
 	// Always merge with defaults even if no atts provided
 	$atts = shortcode_atts( array( // Use lowercase att names only
+			'list' => '', // List ID, default 1
 			'showlist' => '', // YES, ADMIN, USER or NO
 			'style' => '', // TABLE, TILES or FLEX
 			'theme' => '', // LIGHT, DARK or NONE
@@ -44,6 +45,14 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	// Extract attributes into variables
 	extract($atts); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- keys are limited to the shortcode_atts() whitelist above
 
+	// Which list: [eeSFL list="2"]. The settings are reloaded for every shortcode, so one
+	// shortcode's list or attribute overrides never carry over to the next one on the page.
+	$eeShortcodeListID = absint($list) ?: 1;
+	if( !eeSFL_ListExists($eeShortcodeListID) || !$eeSFL->eeSFL_GetSettings($eeShortcodeListID) ) {
+		return current_user_can('manage_options') ? '[' . esc_html__('List Not Found', 'simple-file-list') . ']' : '';
+	}
+	$eeSFL->eeListID = $eeShortcodeListID;
+
 	if($atts && array_filter($atts)) { // Only log if actual attributes were provided
 
 		// Show the Shortcode in the Log
@@ -58,66 +67,29 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 
 		extract($atts); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- keys are limited to the shortcode_atts() whitelist above
 
-		eeSFL_Debug_Log("Frontend shortcode processing - List: $list", 'Shortcode', $list);
+		eeSFL_Debug_Log("Frontend shortcode processing - List: $eeShortcodeListID", 'Shortcode', $eeShortcodeListID);
 
 		// SECURITY: Shortcode overrides for showlist/allowuploads.
 		// Overrides that are equally or more restrictive than the stored setting always apply.
 		// Overrides that would expand access beyond the stored setting require manage_options,
 		// preventing Author-level users from exposing restricted content.
-		// Access levels: YES=3, USER=2, ADMIN=1, NO=0
-		$eeAccessLevels = ['YES' => 3, 'USER' => 2, 'ADMIN' => 1, 'NO' => 0];
+		// Access levels: YES=4, USER=3, GRANTED=2, ADMIN=1, NO=0
+		$eeAccessLevels = ['YES' => 4, 'USER' => 3, 'GRANTED' => 2, 'ADMIN' => 1, 'NO' => 0];
 
-		if($eeSFLA) {
-
-			// Get the correct file list config if not main list
-			if($list != $eeSFL->eeListID) {
-				$eeSFL->eeListSettings = $eeSFL->eeSFL_GetSettings($list);
-				$eeSFL->eeListID = $list;
-				if( empty($eeSFL->eeListSettings) ) { return '[' . __('List Not Found', 'simple-file-list') . ']'; }
-				eeSFL_Debug_Log("Frontend loaded List ID: $list", 'Shortcode', $list);
+		if($showlist) {
+			$eeShowlistUpper = strtoupper($showlist);
+			$eeCurrentLevel = $eeAccessLevels[$eeSFL->eeListSettings['ShowList']] ?? 3;
+			$eeOverrideLevel = $eeAccessLevels[$eeShowlistUpper] ?? 0;
+			if($eeOverrideLevel <= $eeCurrentLevel || current_user_can('manage_options')) {
+				$eeSFL->eeListSettings['ShowList'] = $eeShowlistUpper;
 			}
-
-			// (Access levels defined above, shared with the else branch)
-			if(isset($eeSFL->eeListSettings['Mode']) && $eeSFL->eeListSettings['Mode'] == 'NORMAL') {
-				if($showlist) {
-					$eeShowlistUpper = strtoupper($showlist);
-					$eeCurrentLevel = $eeAccessLevels[$eeSFL->eeListSettings['ShowList']] ?? 3;
-					$eeOverrideLevel = $eeAccessLevels[$eeShowlistUpper] ?? 0;
-					if($eeOverrideLevel <= $eeCurrentLevel || current_user_can('manage_options')) {
-						$eeSFL->eeListSettings['ShowList'] = $eeShowlistUpper;
-					}
-				}
-				if($allowuploads) {
-					$eeAllowuploadsUpper = strtoupper($allowuploads);
-					$eeCurrentLevel = $eeAccessLevels[$eeSFL->eeListSettings['AllowUploads']] ?? 3;
-					$eeOverrideLevel = $eeAccessLevels[$eeAllowuploadsUpper] ?? 0;
-					if($eeOverrideLevel <= $eeCurrentLevel || current_user_can('manage_options')) {
-						$eeSFL->eeListSettings['AllowUploads'] = $eeAllowuploadsUpper;
-					}
-				}
-			}
-
-		} elseif($list > 1) { // If eeSFLA is deactivated, other lists won't error
-
-			return;
-
-		} else {
-
-			if($showlist) {
-				$eeShowlistUpper = strtoupper($showlist);
-				$eeCurrentLevel = $eeAccessLevels[$eeSFL->eeListSettings['ShowList']] ?? 3;
-				$eeOverrideLevel = $eeAccessLevels[$eeShowlistUpper] ?? 0;
-				if($eeOverrideLevel <= $eeCurrentLevel || current_user_can('manage_options')) {
-					$eeSFL->eeListSettings['ShowList'] = $eeShowlistUpper;
-				}
-			}
-			if($allowuploads) {
-				$eeAllowuploadsUpper = strtoupper($allowuploads);
-				$eeCurrentLevel = $eeAccessLevels[$eeSFL->eeListSettings['AllowUploads']] ?? 3;
-				$eeOverrideLevel = $eeAccessLevels[$eeAllowuploadsUpper] ?? 0;
-				if($eeOverrideLevel <= $eeCurrentLevel || current_user_can('manage_options')) {
-					$eeSFL->eeListSettings['AllowUploads'] = $eeAllowuploadsUpper;
-				}
+		}
+		if($allowuploads) {
+			$eeAllowuploadsUpper = strtoupper($allowuploads);
+			$eeCurrentLevel = $eeAccessLevels[$eeSFL->eeListSettings['AllowUploads']] ?? 3;
+			$eeOverrideLevel = $eeAccessLevels[$eeAllowuploadsUpper] ?? 0;
+			if($eeOverrideLevel <= $eeCurrentLevel || current_user_can('manage_options')) {
+				$eeSFL->eeListSettings['AllowUploads'] = $eeAllowuploadsUpper;
 			}
 		}
 
@@ -261,6 +233,11 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	        break; // Show It
 	    case 'RESTRICTED':
 	        break; // Show It By File (eeSFLA)
+	    case 'GRANTED':
+	        // Only the users, roles and groups in the list's grant
+	        if( eeSFL_UserCanSeeList($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) { break; }
+	        $eeSFL->eeListSettings['ShowList'] = 'NO';
+	        break;
 	    case 'USER':
 	        // Show It If...
 	        if( get_current_user_id() ) { break; } else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }

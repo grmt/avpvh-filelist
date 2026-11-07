@@ -156,8 +156,10 @@ class eeSFL_UploadClass {
 			global $eeSFL;
 			$eeObject = $eeSFL;
 
-			if(isset($_POST['eeListID'])) {
-				$eeListID = absint(wp_unslash($_POST['eeListID']));
+			// Only the list shown here: its settings are the ones checked below
+			$eeListID = isset($_POST['eeListID']) ? absint(wp_unslash($_POST['eeListID'])) : 1;
+			if( $eeListID !== (int) $eeObject->eeListID ) {
+				return FALSE;
 			}
 
 			// Enforce AllowUploads policy for non-admin callers
@@ -446,7 +448,7 @@ class eeSFL_UploadClass {
 
 						// Notification Info
 						// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Email notifications use direct links to avoid email client censoring
-						$eeFileURL = $eeObject->eeListSettings['FileListURL'] . $eeFile;
+						$eeFileURL = eeSFL_FileURL($eeObject->eeListID, $eeObject->eeListSettings, $eeFile);
 
 						$eeUploadJob .=  $eeFile . " (" . $eeObject->eeSFL_FormatFileSize($eeNewFileArray['FileSize']) . ")" . PHP_EOL;
 						$eeUploadJob .=  $eeFileURL . PHP_EOL . PHP_EOL;

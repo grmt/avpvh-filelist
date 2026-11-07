@@ -3,12 +3,6 @@
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-if ( ! function_exists('get_option') ) {
-	function get_option($eeName, $eeDefault = false) { return $GLOBALS['eeTestOptions'][$eeName] ?? $eeDefault; }
-}
-if ( ! function_exists('update_option') ) {
-	function update_option($eeName, $eeValue, $eeAutoload = null) { $GLOBALS['eeTestOptions'][$eeName] = $eeValue; return true; }
-}
 require_once dirname(__DIR__) . '/includes/ee-class.php';
 
 /**
