@@ -70,6 +70,7 @@ $DC exec -T -u www-data wordpress bash -c '
 	printf "hallo\n" > publiek.txt
 	printf "<script>alert(1)</script>\n" > evil.html
 	head -c 300000 /dev/urandom > video.mp4
+	mkdir -p oud && printf "%%PDF-1.4 in a subfolder\n" > oud/archief.pdf
 '
 
 # Logged-out visitors all share one nonce per action, so WP-CLI (no user) produces theirs

@@ -5,7 +5,7 @@
 // console.log('ee-edit-file.js v7 Loaded');
 
 // Shared with ee-head.js / ee-back.js and the inline list scripts
-var eeSFL_SubFolder, eeSFL_FileID, eeSFL_ListID, eeSFL_FileDateAdded, eeSFL_FileDateChanged;
+var eeSFL_FileID, eeSFL_ListID, eeSFL_FileDateAdded, eeSFL_FileDateChanged;
 
 // Carried from the edit modal to the save and AJAX handlers
 var eeSFL_FileNameOld, eeSFL_FileNiceNameOld, eeSFL_FileDescriptionOld;
@@ -14,154 +14,6 @@ var eeSFL_FileDateChangedYearOld, eeSFL_FileDateChangedMonthOld, eeSFL_FileDateC
 var eeSFL_FileNameNew, eeSFL_FileNiceNameNew, eeSFL_FileDescriptionNew;
 var eeSFL_FileDateAddedNew, eeSFL_FileDateChangedNew;
 
-// Move File Action ----
-
-// Populate the Select Input
-function eeSFL_OpenMoveFileModal(eeSFL_FileID) {
-
-	event.preventDefault(); // Don't follow the link
-
-	// Use eeSFL_RealFilePath if Searching
-	var eeSFL_RealFilePath = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFilePath').text();
-	if(eeSFL_RealFilePath) { eeSFL_SubFolder = eeSFL_RealFilePath; }
-
-	var eeSFL_RealFileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text();
-
-	jQuery('#eeSFL_Modal_FileID').text(eeSFL_FileID);
-	jQuery('#eeSFL_Modal_MoveFile .eeSFL_ModalFilePath').text(eeSFL_RealFileName);
-
-	jQuery('#eeSFL_Destination').html('<option value="">' + eesfl_vars['eeChooseFolderText'] + '</option>'); // Reset / Clear
-
-	if(eeSFL_SubFolder != '/' && eeSFL_ShortcodeFolder != eeSFL_SubFolder) {
-		jQuery('#eeSFL_Destination').append('<option value="/">' + eesfl_vars['eeMainFolderText'] + '</option>');
-	}
-
-	var eeSFL_Destinations = eeSFL_FolderDestinations.split('|');
-
-	var eeThisFilePath = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_FilePath').text();
-	var eeThisItem = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text();
-
-	eeSFL_Destinations.forEach(function(element) {
-
-		var eeSkip = false;
-
-		if(eeThisFilePath == element) { eeSkip = true; } // Can't move to self
-		if(element.indexOf(eeThisItem) == 0) { eeSkip = true; } // or sub-dir of self
-		if(element == eeSFL_SubFolder) { eeSkip = true; } // Or parent
-
-		if(eeSkip == false) {
-
-			var eeDisplay = element;
-
-			if(eeSFL_ShortcodeFolder != '/') {
-
-				eeDisplay = eeDisplay.replace(eeSFL_ShortcodeFolder, ''); // Remove parent folder name
-			}
-
-
-			eeDisplay = eeDisplay.slice(0, -1); // Strip trailng slash
-
-			console.log(eeThisItem + ' --> ' + eeThisFilePath + ' --> ' + element);
-
-			// Build Options HTML
-			jQuery('#eeSFL_Destination').append('<option value="' + element + '">' + eeDisplay + '</option>');
-
-		}
-	});
-
-	jQuery('#eeSFL_Modal_MoveFile').show();
-}
-
-
-
-// AJAX Post to File Moving Engine
-function eeSFL_FileDoMove() {
-
-	event.preventDefault(); // Don't submit
-
-	// The Move Engine
-	var eeSFL_MoveEngine = eesfl_vars.ajaxurl;
-
-	console.log('Calling: ' + eeSFL_MoveEngine);
-
-	eeSFL_FileID = jQuery('#eeSFL_Modal_FileID').text();
-
-	// The File Name
-	var eeSFL_FileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text(); // Current File Name
-
-	// Where are we going?
-	var eeSFL_Destination = jQuery('#eeSFL_Destination').val();
-
-	if(eeSFL_Destination) {
-
-		console.log('Moving File: ' + eeSFL_FileID + ' to ' + eeSFL_Destination);
-
-		var eeSourceFullPath = eeSFL_FileListDir + eeSFL_SubFolder + eeSFL_FileName;
-		var eeDestinationFullPath = eeSFL_FileListDir + eeSFL_Destination + eeSFL_FileName;
-
-
-		var eeSFL_FormData = {
-			'eeID': eeSFL_ListID,
-			'eeSource': eeSourceFullPath,
-			'eeDestination': eeDestinationFullPath,
-			'eeSecurity': eeSFL_MoveNonce,
-			'action': 'simplefilelistpro_move_job'
-		};
-
-		console.log(eeSFL_FormData);
-
-		jQuery.post(eeSFL_MoveEngine, eeSFL_FormData, function(response) {
-
-			console.log(response);
-
-			if(response == 'SUCCESS') {
-
-				jQuery('#eeSFL_FileID-' + eeSFL_FileID).hide();
-
-				// Update Destination Folder Item Count Display
-				var eeSFL_DestinationID = false;
-
-				// Loop through file list display to get ID of the destination folder
-				jQuery('table.eeFiles').find('tr').each(function() {
-
-					var eeThisID = jQuery(this).attr('id');
-
-					if(eeThisID) {
-
-						eeThisID = eeThisID.replace(/\D/g, ''); // Get just the ID number
-
-						var eeThisName = jQuery('#eeSFL_FileID-' + eeThisID + ' span.eeSFL_RealFileName').text();
-
-						if(eeSFL_Destination.indexOf(eeThisName) == 0 || eeSFL_Destination.indexOf(eeThisName) > 1) {
-
-							var eeSFL_DestinationID = eeThisID;
-
-							var eeItemCount = jQuery('#eeSFL_FileID-' + eeSFL_DestinationID + ' span.eeSFL_ItemCount').text();
-
-							jQuery('#eeSFL_FileID-' + eeSFL_DestinationID + ' span.eeSFL_ItemCount').text(parseInt(eeItemCount) + 1);
-
-						}
-					}
-				});
-
-				// Hide the Modal
-				jQuery('.eeSFL_Modal').hide();
-
-			} else {
-
-				alert(response);
-			}
-		});
-	}
-}
-
-
-
-
-
-
-
-
 // Delete Click Handler
 function eeSFL_DeleteFile(eeSFL_FileID) {
 
@@ -169,9 +21,6 @@ function eeSFL_DeleteFile(eeSFL_FileID) {
 
 	console.log('Deleting File: ' + eeSFL_FileID);
 
-	// Use eeSFL_RealFilePath if Searching
-	var eeSFL_RealFilePath = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFilePath').text();
-	if(eeSFL_RealFilePath) { eeSFL_SubFolder = eeSFL_RealFilePath; }
 
 	// Get the File Name
     var eeSFL_FileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' .eeSFL_RealFileName').text();
@@ -195,9 +44,6 @@ function eeSFL_OpenEditModal(eeSFL_FileID) {
 
 	console.log('Editing File: ' + eeSFL_FileID);
 
-	// Use eeSFL_RealFilePath if Searching
-	var eeSFL_RealFilePath = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFilePath').text();
-	if(eeSFL_RealFilePath) { eeSFL_SubFolder = eeSFL_RealFilePath; }
 
 	var eeSFL_RealFileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text();
 	jQuery('#eeSFL_Modal_EditFile .eeSFL_ModalFilePath').text(eeSFL_RealFileName);
@@ -305,7 +151,7 @@ function eeSFL_FileEditSaved() {
 				eeSFL_FileNameNew = eeFileNameNew + '.' + eeExt;
 			}
 
-		} else { // Folder
+		} else { // A name without an extension keeps none
 
 			// Disallow removing extension
 			if(eeSFL_FileNameNew.indexOf('.') > 1) { return false; } // Can't add dots
@@ -415,7 +261,6 @@ function eeSFL_EditFileAction(eeSFL_FileID, eeSFL_FileAction) {
 			'action': 'simplefilelist_edit_job',
 			'eeSFL_ID': eeSFL_ListID,
 			'eeFileName': eeSFL_FileNameOld,
-			'eeSubFolder': eeSFL_SubFolder,
 			'eeFileNameNew': eeSFL_FileNameNew,
 			'eeFileNiceNameNew': eeSFL_FileNiceNameNew,
 			'eeFileDescNew': eeSFL_FileDescriptionNew,
@@ -434,7 +279,6 @@ function eeSFL_EditFileAction(eeSFL_FileID, eeSFL_FileAction) {
 			'action': 'simplefilelist_edit_job',
 			'eeSFL_ID': eeSFL_ListID,
 			'eeFileName': eeSFL_FileName,
-			'eeSubFolder': eeSFL_SubFolder,
 			'eeFileAction': 'Delete',
 			'eeSecurity': eeSFL_ActionNonce
 		};
@@ -463,46 +307,24 @@ function eeSFL_EditFileAction(eeSFL_FileID, eeSFL_FileAction) {
 
 					jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text(eeSFL_FileNameNew);
 
-					if( eeSFL_FileNameOld.indexOf('.') == -1 ) { // Folder
+					console.log('File: ' + eeSFL_FileNameOld);
+					console.log('Renamed To: ' + eeSFL_FileNameNew);
 
-						console.log('Folder: ' + eeSFL_FileNameOld);
-						console.log('Renamed To: ' + eeSFL_FileNameNew);
+					// Update hrefs by swapping the old filename for the new one in the existing URL.
+					// This preserves the full URL format including site URL, subfolder, and any query params (e.g. SFLA ee-get-file URLs).
+					var eeOldFileURL = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileName').attr('href');
+					if(eeOldFileURL) { jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileName').attr('href', eeOldFileURL.replace(eeSFL_FileNameOld, eeSFL_FileNameNew)); }
 
-						if(eeSFL_SubFolder == '/') { eeSFL_SubFolder = ''; }
+					var eeOldThumbURL = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' td.eeSFL_Thumbnail a').attr('href');
+					if(eeOldThumbURL) { jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' td.eeSFL_Thumbnail a').attr('href', eeOldThumbURL.replace(eeSFL_FileNameOld, eeSFL_FileNameNew)); }
 
-						var eeSFL_URL = new URL(eeSFL_ThisURL);
-						var eeSFL_Parameter = eeSFL_URL.searchParams;
+					var eeOldOpenURL = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileOpen').attr('href');
+					if(eeOldOpenURL) { jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileOpen').attr('href', eeOldOpenURL.replace(eeSFL_FileNameOld, eeSFL_FileNameNew)); }
 
-						eeSFL_Parameter.set('eeFolder', eeSFL_SubFolder + eeSFL_FileNameNew);
+					var eeOldDownloadURL = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileDownload').attr('href');
+					if(eeOldDownloadURL) { jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileDownload').attr('href', eeOldDownloadURL.replace(eeSFL_FileNameOld, eeSFL_FileNameNew)); }
 
-						eeSFL_URL.search = eeSFL_Parameter.toString();
-
-						var eeSFL_NewURL = eeSFL_URL.toString();
-
-						jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileName').attr('href', eeSFL_NewURL);
-						jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' td.eeSFL_Thumbnail a').attr('href', eeSFL_NewURL);
-						jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileOpen').attr('href', eeSFL_NewURL);
-
-					} else {
-
-						console.log('File: ' + eeSFL_FileNameOld);
-						console.log('Renamed To: ' + eeSFL_FileNameNew);
-
-						// Update hrefs by swapping the old filename for the new one in the existing URL.
-						// This preserves the full URL format including site URL, subfolder, and any query params (e.g. SFLA ee-get-file URLs).
-						var eeOldFileURL = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileName').attr('href');
-						if(eeOldFileURL) { jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileName').attr('href', eeOldFileURL.replace(eeSFL_FileNameOld, eeSFL_FileNameNew)); }
-
-						var eeOldThumbURL = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' td.eeSFL_Thumbnail a').attr('href');
-						if(eeOldThumbURL) { jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' td.eeSFL_Thumbnail a').attr('href', eeOldThumbURL.replace(eeSFL_FileNameOld, eeSFL_FileNameNew)); }
-
-						var eeOldOpenURL = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileOpen').attr('href');
-						if(eeOldOpenURL) { jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileOpen').attr('href', eeOldOpenURL.replace(eeSFL_FileNameOld, eeSFL_FileNameNew)); }
-
-						var eeOldDownloadURL = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileDownload').attr('href');
-						if(eeOldDownloadURL) { jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' a.eeSFL_FileDownload').attr('href', eeOldDownloadURL.replace(eeSFL_FileNameOld, eeSFL_FileNameNew)); }
-
-					}
+				
 
 					eeFileNameDisplay = eeSFL_FileNameNew;
 					eeFileNameActual = eeSFL_FileNameNew;

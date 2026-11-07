@@ -299,7 +299,6 @@ function eeSFL_UploadFile(eeSFL_File) { // Pass in file object
     // Initial values are set in ee-upload-form.php
     eeFormData.append("file", eeSFL_File);
     eeFormData.append("eeSFL_ID", eeSFL_ListID);
-    eeFormData.append("eeSFL_FileUploadDir", eeSFL_FileUploadDir);
     eeFormData.append("ee-simple-file-list-upload", eeSFL_Nonce);
 
     // File modification date/time

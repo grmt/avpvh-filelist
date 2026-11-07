@@ -77,15 +77,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 				<input class="eeFlex3" type="text" name="eeSFL_ShortCode" value="[eeSFL';
 
 			if((int) $eeSFL->eeListID !== 1) {  $eeOutput .= ' list=\'' . (int) $eeSFL->eeListID . '\''; }
-			if(isset($_GET['eeFolder'])) {
-				// Verify nonce for folder navigation (Recommended security practice)
-				$eeFolderNonceValid = isset($_GET['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'ee-admin-navigation');
-				if (!$eeFolderNonceValid) {
-					eeSFL_Debug_Log("Admin folder navigation nonce verification failed for security logging", 'Admin');
-				}
-				$eeShortcodeFolder = esc_js(sanitize_text_field(wp_unslash($_GET['eeFolder'])));
-				 $eeOutput .= ' showfolder=\'' . $eeShortcodeFolder . '\'';
-			}				 $eeOutput .= ']" id="eeSFL_ShortCode"><button id="eeCopytoClipboard" class="button eeFlex1">' . __('Copy', 'simple-file-list') . '</button>
+			 $eeOutput .= ']" id="eeSFL_ShortCode"><button id="eeCopytoClipboard" class="button eeFlex1">' . __('Copy', 'simple-file-list') . '</button>
 
 			</div>
 

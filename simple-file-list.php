@@ -50,7 +50,6 @@ $eeSFL_HideType = FALSE;
 $eeSFL_VarsForJS = array(); // Translated strings we pass to JavaScript
 $eeSFL_StartTime = 0;
 $eeSFL_MemoryUsedStart = 0;
-$eeSFLF = FALSE; // Folder Support Object — initialised by pro/ee-ini.php when Pro is active
 $eeSFLS = FALSE; // Search Object — initialised by ee-simple-file-list-search when active
 $eeSFLA = FALSE; // Access Object — initialised by ee-simple-file-list-access when active
 $eeSFL_Extensions = array();

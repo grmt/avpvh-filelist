@@ -12,41 +12,6 @@
 }
 
 
-/* BREADCRUMB TRAIL */
-.eeSFL_BreadCrumb {
-	width: 100%;
-	padding: .25em;
-	margin-bottom: .5em;
-}
-.eeSFL_BreadCrumb span.eeSFL_Crumb {
-	display: block;
-	float: left;
-	margin-right: .5em;
-	margin-bottom: .5em;
-}
-
-.eeSFL_BreadCrumb .eeSFL_Crumb a {
-	display: block;
-	padding: .5em .75em;
-	background-color: var(--ee-color-action-link-background);
-	border: 1px solid var(--ee-color-table-border);
-	border-radius: 3px;
-	text-decoration: none;
-	color: var(--ee-color-action-link-text);
-}
-.eeSFL_BreadCrumb .eeSFL_Crumb a:hover {
-	text-decoration: none;
-	background-color: var(--ee-color-action-link-background-hover);
-	color: var(--ee-color-action-link-text-hover);
-}
-.eeSFL_BreadCrumb .eeSFL_Crumb:last-child {
-	background-color: var(--ee-color-action-link-background);
-	border: 1px solid var(--ee-color-action-link-background);
-	padding: .5em .75em;
-}
-
-
-
 /* FILE OPS BAR  */
 .eeSFL_ListOpsBar,
 .eeSFL_BulkDownloadBar {
@@ -82,8 +47,7 @@
 }
 
 .eeSFL .eeSFL_ListOpsBar input[type=text],
-.eeSFL .eeSFL_BulkDownloadBar input[type=text],
-.eeSFL #eeSFL_MoveToFolder {
+.eeSFL .eeSFL_BulkDownloadBar input[type=text] {
 	flex: 5;
 	margin-right: .5em;
 	max-width: none;

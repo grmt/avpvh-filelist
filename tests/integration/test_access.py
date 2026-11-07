@@ -334,10 +334,19 @@ def step_front_manage(admin):
     check('bulk delete: jan\'s readable files are gone', content('admin', 'publiek.txt') == 404, content('admin', 'publiek.txt'))
 
 
+def step_no_folders(admin):
+    """Lists hold only the files directly in their folder; there is no folder feature left."""
+    page = admin.text(ADMIN + '&tab=list&eeListID=1')
+    check('no folders: a subfolder is not listed', 'archief.pdf' not in page and 'eeSFL_FileID' in page)
+    check('no folders: bulk actions offer no folder actions', not re.search(r'value="(Folder|Move|GetProFolder)"', page), re.findall(r'<option value="([^"]+)"', page))
+    check('no folders: a file in a subfolder is not served', admin.get(handler('oud/archief.pdf'), follow=False)[0] == 404)
+
+
 def main():
     if not PAGE:
         raise SystemExit('SFL_IT_PAGE is not set; start the tests with run.sh')
     admin = Browser('admin')
+    step_no_folders(admin)
     step_ldap_settings(admin)
     step_list_settings(admin)
     step_file_access(admin)

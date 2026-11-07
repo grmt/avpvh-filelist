@@ -131,7 +131,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 			if($eeSFL->eeFileThumbURL) {  $eeOutput .= '<a href="' . esc_url($eeSFL->eeFileURL) .  '"';
 
-				if($eeSFL->eeIsFile === TRUE) {  $eeOutput .= ' target="_blank"'; }
+				$eeOutput .= ' target="_blank"';
 
 				 $eeOutput .= '><img src="' . esc_url($eeSFL->eeFileThumbURL) . '" width="64" height="64" alt="Thumb" /></a>'; }
 
@@ -145,10 +145,6 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 		if($eeSFL->eeFileURL) {
 
-			if($eeSFL->eeIsFolder) {
-				 $eeOutput .= '
-				<span class="eeSFL_FilePath eeSFL_IsFolder eeHide">' . esc_html($eeSFL->eeFilePath) . '</span>';
-			}
 
 			// Proper Path for Search Results
 			if(isset($_POST['eeSFLS_Searching'])) {
@@ -170,7 +166,6 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 			<span class="eeSFL_FileNiceName eeHide">' . esc_html($eeSFL->eeFileNiceName) . '</span><p class="eeSFL_FileLink">
 			<span class="eeSFL_FileMimeType eeHide">' . esc_html($eeSFL->eeFileMIME) . '</span>';
 
-			if($eeSFL->eeListSettings['ShowFileThumb'] == 'NO' AND $eeSFL->eeIsFolder) {  $eeOutput .= '&#128193; '; }
 
 			// Extension Check
 			if( isset($_POST['eeSFLS_Searching']) ) {
@@ -184,7 +179,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 			 $eeOutput .= '<a class="eeSFL_FileName" href="' . esc_url($eeSFL->eeFileURL) .  '"';
 
-			if($eeSFL->eeIsFile === TRUE) {  $eeOutput .= ' target="_blank"'; }
+			$eeOutput .= ' target="_blank"';
 
 			 $eeOutput .= '>' . esc_html(stripslashes($eeSFL->eeFileName)) . '</a>';
 
@@ -236,15 +231,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 			 $eeOutput .= '
 			<td class="eeSFL_FileSize">';
 
-			if($eeSFL->eeIsFile) {
-
-				 $eeOutput .= $eeSFL->eeFileSize;
-
-			} else {
-
-				 $eeOutput .= '<span class="eeSFL_Count">' . $eeSFL->eeItemCount . '</span> ' . __('Items', 'simple-file-list');
-				if($eeSFL->eeListSettings['ShowFolderSize'] == 'YES') {  $eeOutput .= '<br />' . $eeSFL->eeFileSize; }
-			}
+			 $eeOutput .= $eeSFL->eeFileSize;
 
 			 $eeOutput .= '</td>';
 		}

@@ -17,11 +17,10 @@ class eeSFL_MainClass {
 
     public $eeDynamicVideoThumbFormats = array('avi', 'flv', 'm4v', 'mov', 'mp4', 'webm', 'wmv');
 
-    public $eeDefaultThumbFormats = array('3gp', 'ai', 'aif', 'aiff', 'apk', 'avi', 'bmp', 'cr2', 'dmg', 'doc', 'docx', 'eps', 'flv', 'gz', 'indd', 'iso', 'jpeg', 'jpg', 'm4v', 'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'pps', 'ppsx', 'ppt', 'pptx', 'psd', 'tar', 'tgz', 'tif', 'tiff', 'txt', 'wav', 'wma', 'wmv', 'xls', 'xlsx', 'zip', 'folder');
+    public $eeDefaultThumbFormats = array('3gp', 'ai', 'aif', 'aiff', 'apk', 'avi', 'bmp', 'cr2', 'dmg', 'doc', 'docx', 'eps', 'flv', 'gz', 'indd', 'iso', 'jpeg', 'jpg', 'm4v', 'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'pps', 'ppsx', 'ppt', 'pptx', 'psd', 'tar', 'tgz', 'tif', 'tiff', 'txt', 'wav', 'wma', 'wmv', 'xls', 'xlsx', 'zip');
 
-	public $eeOpenableFileFormats = array('aif', 'aiff', 'avi', 'bmp', 'flv', 'jpeg', 'jpg', 'gif', 'm4v', 'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'txt', 'wav', 'wma', 'wmv', 'folder');
+	public $eeOpenableFileFormats = array('aif', 'aiff', 'avi', 'bmp', 'flv', 'jpeg', 'jpg', 'gif', 'm4v', 'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'txt', 'wav', 'wma', 'wmv');
 
-	public $eeFolderIcon = '&#128193;'; // Used when thumbnails are off.
 
     // END Customizable Properties -----------------------------
 
@@ -169,12 +168,8 @@ class eeSFL_MainClass {
 		'AllowFrontManage' => 'NO', // Allow front-side users to manage files (YES or NO)
 		'SmoothScroll' => 'YES', // Use the awesome and cool JavaScript smooth scroller after an upload or folder click
 
-		// Folders
-		'AllowFolderDownload' => 'NO', // Allow front-end users to download a folder as a ZIP file
+		// Downloads
 		'AllowBulkFileDownload' => 'NO', // Allow front-end users to download more than one file at a time
-		'ShowBreadCrumb' => 'YES', // Navigation above the list
-		'FoldersFirst' => 'YES', // Group folders together at the top
-		'ShowFolderSize' => 'YES', // Calculate the size of each folder
 
 		// Upload Settings
 		'AllowUploads' => 'NO', // Allow File Uploads (YES, ADMIN, USER, NO); front-end uploads are an explicit opt-in
@@ -234,19 +229,12 @@ class eeSFL_MainClass {
 
 		$this->eeListSettings['FileListURL'] = $this->eeEnvironment['wpSiteURL'] . $this->eeListSettings['FileListDir']; // The Full URL
 
-		// Remove folder-related settings if folder support is disabled (free version)
-		global $eeSFLF;
-		if(!$eeSFLF) {
-			unset($this->eeListSettings['ShowBreadCrumb']);
-			unset($this->eeListSettings['FoldersFirst']);
-			unset($this->eeListSettings['AllowFolderDownload']);
-			unset($this->eeListSettings['ShowFolderSize']);
-			eeSFL_Debug_Log("Folder settings removed (folder support disabled)", 'Settings');
-		}
+		// Folder settings from the old Pro version (there are no subfolders)
+		unset($this->eeListSettings['ShowBreadCrumb'], $this->eeListSettings['FoldersFirst'], $this->eeListSettings['AllowFolderDownload'], $this->eeListSettings['ShowFolderSize']);
 
 		// Set up temp directory constants (path only — no disk write).
-		// Always initialized here because admins always have folder/bulk download available
-		// regardless of the AllowFolderDownload / AllowBulkFileDownload settings.
+		// Always initialized here because admins always have bulk download available
+		// regardless of the AllowBulkFileDownload setting.
 		// Actual directory creation is deferred to eeSFL_EnsureTempDirectory() at point of use.
 		$this->eeSFL_TempDirectory();
 		$this->eeSFL_EnsureTempDirectory(); // Create on every list load — not just on rescan or download
@@ -389,7 +377,7 @@ class eeSFL_MainClass {
 	 */
 	public function eeSFL_EnsureTempDirectory() {
 
-		// eeTempDirectory may be empty if AllowFolderDownload/AllowBulkFileDownload were
+		// eeTempDirectory may be empty if AllowBulkFileDownload was
 		// both NO when settings loaded (e.g. admin triggering a folder download on a list
 		// that hasn't enabled the feature). Initialize it now so we have a valid path.
 		if(empty($this->eeTempDirectory)) { $this->eeSFL_TempDirectory(); }
@@ -442,16 +430,9 @@ class eeSFL_MainClass {
 	// Original and Sanitized Names
 	public $eeSanitizedFiles = array();
 
-	// The path defined within the shortcode
-	public $eeShortcodeFolder = FALSE;
-
-	// The Current Sub-Folder We are Within
-	public $eeCurrentFolder = ''; // Home Folder. String = Relative to FileListDir
-
 	// The Current File to Consider
 	public $eeFileArray = array();
 	public $eeIsFile = FALSE;
-	public $eeIsFolder = FALSE;
 	public $eeFilePath = FALSE;
 	public $eeFileURL = FALSE;
 	public $eeFileThumbURL = FALSE;
@@ -475,7 +456,6 @@ class eeSFL_MainClass {
 
 	// Total Counts
 	public $eeFileCount = 0;
-	public $eeFolderCount = 0;
 	public $eeItemCount = 0;
 
 
@@ -506,7 +486,7 @@ class eeSFL_MainClass {
 
     public function eeSFL_GetFileList($eeForceSort = FALSE) {
 
-	    global $eeSFLF, $eeURL;
+	    global $eeURL;
 
 		if(!empty($eeURL)) {
 			$eeURL = remove_query_arg('eeReScan', $eeURL);
@@ -538,10 +518,6 @@ class eeSFL_MainClass {
 		// even after an edit that only updates the DB without re-sorting.
 		$this->eeSFL_SortFiles($this->eeListSettings['SortBy'], $this->eeListSettings['SortOrder']);
 
-		if($eeSFLF) { // Folder support check
-			$eeSFLF->eeSFLF_GetListOfFolders(); // Create a list of all folders
-		}
-
 		return TRUE;
 	}
 
@@ -551,7 +527,7 @@ class eeSFL_MainClass {
 
     public function eeSFL_ReturnFileActions($eeFileID, $eeFileArray) {
 
-		global $eeSFLF, $eeSFLA, $eeSFLE;
+		global $eeSFLA, $eeSFLE;
 
 		$eeAdmin = is_admin();
 
@@ -567,41 +543,28 @@ class eeSFL_MainClass {
 				 $eeOutput .= '
 				<a class="eeSFL_FileOpen" href="' . esc_url($this->eeFileURL) . '" ';
 
-				if($this->eeIsFile) {  $eeOutput .= 'target="_blank"'; }
+				$eeOutput .= 'target="_blank"';
 
 				 $eeOutput .= '>' . __('Open', 'simple-file-list') . '</a>';
 			}
 		}
 
-		if($this->eeIsFolder) {
+		// File Download
+		if($eeAdmin OR $this->eeListSettings['ShowFileDownload'] == 'YES') {
 
-			// Folder Download
-			if(($eeAdmin OR $this->eeListSettings['AllowFolderDownload'] == 'YES') AND $this->eeListRun == 1) {
+			// A protected list's handler sends the file as a download itself
+			$eeDownloadURL = eeSFL_FileURL($this->eeListID, $this->eeListSettings, $this->eeFilePath, array('download' => TRUE));
 
-				// Javascript function submits to eeSFL_ListOpsBar() form processor as if this folder was the only one checked. Brilliant!
-				 $eeOutput .= '
-				<a class="eeSFL_FileDownload eeSFL_FolderDownload" href="#" onclick="eeSFL_DownloadFolder(' . absint($eeFileID) . ', \'' . esc_js(basename($this->eeFileName)) . '\')">' . __('Download Zip', 'simple-file-list') . '</a>';
-			}
+			 $eeOutput .= '
+			<a class="eeSFL_FileDownload" href="' . esc_url($eeDownloadURL) . '" download="' . esc_attr($this->eeRealFileName) . '">' . __('Download', 'simple-file-list') . '</a>';
 
-		} else {
+		}
 
-			// File Download
-			if($eeAdmin OR $this->eeListSettings['ShowFileDownload'] == 'YES') {
+		// Copy Link Action
+		if($eeAdmin OR $this->eeListSettings['ShowFileCopyLink'] == 'YES') {
 
-				// A protected list's handler sends the file as a download itself
-				$eeDownloadURL = eeSFL_FileURL($this->eeListID, $this->eeListSettings, $this->eeFilePath, array('download' => TRUE));
-
-				 $eeOutput .= '
-				<a class="eeSFL_FileDownload" href="' . esc_url($eeDownloadURL) . '" download="' . esc_attr($this->eeRealFileName) . '">' . __('Download', 'simple-file-list') . '</a>';
-
-			}
-
-			// Copy Link Action
-			if($eeAdmin OR $this->eeListSettings['ShowFileCopyLink'] == 'YES') {
-
-				 $eeOutput .= '
-				<a class="eeSFL_CopyLinkToClipboard" onclick="eeSFL_CopyLinkToClipboard(\''  . esc_js($this->eeFileURL) .   '\')" href="#">' . __('Copy Link', 'simple-file-list') . '</a>';
-			}
+			 $eeOutput .= '
+			<a class="eeSFL_CopyLinkToClipboard" onclick="eeSFL_CopyLinkToClipboard(\''  . esc_js($this->eeFileURL) .   '\')" href="#">' . __('Copy Link', 'simple-file-list') . '</a>';
 		}
 
 
@@ -620,48 +583,10 @@ class eeSFL_MainClass {
 		// Front-End Manage or Admin
 		if( ($eeAdmin OR $this->eeListSettings['AllowFrontManage'] == 'YES') AND $this->eeListRun == 1) {
 
-			// Archive can be Extracted — Pro only (creates a folder; requires folder support)
-			if($eeSFLF AND in_array($this->eeFileExt, $this->eeArchiveFileTypes)) {
-
-				// Use proper WordPress admin URL for extract functionality
-				if(is_admin()) {
-					$eeBaseURL = admin_url('admin.php?page=' . eeSFL_PluginSlug);
-				} else {
-					$eeBaseURL = $this->eeSFL_GetThisURL(FALSE); // Get URL without query string
-				}
-
-				$eeURLstring = add_query_arg(array(
-					'eeSFL_ArchivePath' => $this->eeFilePath,
-					'eeSFL_ArchiveListID' => $this->eeListID,
-					'_wpnonce' => wp_create_nonce('ee-file-action')
-				), $eeBaseURL);
-
-				$eePathInfo = pathinfo($this->eeFilePath);
-
-				 $eeOutput .= '
-				<a href="' . $eeURLstring . '" onclick="eeSFL_ExtractArchive(\'' . $eePathInfo['filename'] . '\')" class="eeSFL_ExtractArchive">' . __('Extract', 'simple-file-list') . '</a>';
-			}
-
 			 $eeOutput .= '
 			<a href="#" onclick="eeSFL_OpenEditModal(' . $eeFileID . ')">' . __('Edit', 'simple-file-list') . '</a>
 			<a href="#" onclick="eeSFL_DeleteFile(' . $eeFileID . ')">' . __('Delete', 'simple-file-list') . '</a>';
 
-			// Move
-			if($this->eeFolderCount >= 1) { // Need at least one folder to move to.
-
-				$eeMoveLink = '
-				<a href="#" onclick="eeSFL_OpenMoveFileModal(' . $eeFileID . ')">' . __('Move', 'simple-file-list') . '</a>';
-
-				if($this->eeIsFolder) {
-
-					// Don't show in main folder if only one folder
-					if($this->eeCurrentFolder OR $this->eeFolderCount > 1) {  $eeOutput .= $eeMoveLink; }
-
-				} else {
-
-					 $eeOutput .= $eeMoveLink; // Always show for files
-				}
-			}
 		}
 
 
@@ -743,75 +668,28 @@ class eeSFL_MainClass {
     // Update the details of an item - Accepts a referenced array or list ID
     public function eeSFL_UpdateFileDetail($eeFilePath, $eeDetail, $eeNewInfo) {  // FilePath, What's changing, New Info
 
-	    global $eeSFLF;
-	    $eeUpdateChildren = FALSE; // Update sub-items or not
-
-	    if($eeDetail == 'FilePath') { // A move or rename
-
-		    // Look for folders
-		    if(strpos($eeFilePath, '.') === FALSE) {
-
-			    $eeUpdateChildren = TRUE;
-
-			    if(substr($eeFilePath, -1) != '/') { // If last char is not a slash
-				    $eeFilePath .= '/'; // Need to add the slash for folders
-				    $eeNewInfo .= '/';
-			    }
-			}
-
-	    }
-
-	    // Ensure trailing slash to match folders
-	    if( !strpos($eeFilePath, '.') AND substr($eeFilePath, -1) != '/' ) { $eeFilePath .= '/'; }
-
 	    foreach( $this->eeAllFiles as $eeKey => $eeFileArray ) {
-
 			if( $eeFileArray['FilePath'] == $eeFilePath) { // Look for this file
-
 				$this->eeAllFiles[$eeKey][$eeDetail] = $eeNewInfo; // Update this detail
 			}
-
-			if($eeUpdateChildren) { // Loop thru the list and update each item with the new path.
-
-				if(strpos($eeFileArray['FilePath'], $eeFilePath) === 0) {
-
-					$eeFilePathNew = str_replace($eeFilePath, $eeNewInfo, $eeFileArray['FilePath']);
-					$this->eeAllFiles[$eeKey]['FilePath'] = $eeFilePathNew;
-
-					$this->eeSFL_UpdateThumbnail($eeFileArray['FilePath'], $eeFilePathNew);
-				}
-			}
 		}
-
-/*
-		if(count($this->eeAllFiles) < 1) {
-			trigger_error('File Array Not Populated', E_USER_NOTICE);
-			return FALSE;
-		}
-*/
 
 		// Update the Database
 		$this->eeSFL_UpdateMainFileArray(false);
 
-	// Adjust folder the counts and sizes.
-	if($eeDetail == 'FilePath') {
-
-		if($eeSFLF) {
-			$eeSFLF->eeSFLF_UpdateFolderSizes();
+		// A rename moves the thumbnail along
+		if($eeDetail == 'FilePath') {
+			$this->eeSFL_UpdateThumbnail($eeFilePath, $eeNewInfo);
 		}
-
-		$this->eeSFL_UpdateThumbnail($eeFilePath, $eeNewInfo);		}
 
 		return TRUE;
 	}
 
 
 
-
-
     public function eeSFL_ProcessFileArray($eeFileArray, $eeHideName = FALSE, $eeHideType = FALSE) {
 
-	    global $eeSFLF, $eeSFLA;
+	    global $eeSFLA;
 
 	    if( is_admin() ) { $eeAdmin = TRUE; } else { $eeAdmin = FALSE; }
 
@@ -844,7 +722,6 @@ class eeSFL_MainClass {
 
 			// Reset These
 			$this->eeIsFile = FALSE;
-			$this->eeIsFolder = FALSE;
 			$this->eeFileNiceName = FALSE;
 			$this->eeFileDescription = FALSE;
 			$this->eeFileSubmitterComments = FALSE;
@@ -860,7 +737,6 @@ class eeSFL_MainClass {
 			if($eeHideName) { // Expecting a comma delimited string of file names
 				$eeArray = explode(',', $eeHideName);
 				foreach( $eeArray as $eeKey => $eeValue ) {
-					if( $eeValue . '/' == $this->eeFilePath ) { return FALSE; } // Folder
 					if($eeValue == $this->eeFilePath) { return FALSE; } // File
 				}
 			}
@@ -916,31 +792,6 @@ class eeSFL_MainClass {
 					$this->eeFileThumbURL = $this->eeEnvironment['pluginURL'] . 'images/thumbnails/' . $eeDefaultThumb;
 
 				}
-
-			} elseif( $eeFileArray['FileExt'] == 'folder' ) { // This is a Folder
-
-			if($this->eeListRun > 1) { return FALSE; } // Only the first list shows folders
-
-			$this->eeIsFolder = TRUE;
-
-			if($eeSFLF) {
-				$this->eeFileURL = $eeSFLF->eeSFLF_GetFolderURL($this->eeFilePath);
-			}
-
-			if( strpos($this->eeFileURL, 'eeListID') ) {
-				$this->eeFileURL = remove_query_arg('eeListID', $this->eeFileURL);
-			}				// Secure folder navigation URL with nonce protection
-				$this->eeFileURL = add_query_arg(array(
-					'eeListID' => $this->eeListID,
-					'ee' => '1',
-					'_wpnonce' => wp_create_nonce('ee-nav')
-				), $this->eeFileURL);
-
-				$this->eeFileThumbURL = $this->eeEnvironment['pluginURL'] . 'images/thumbnails/folder.svg';
-
-				$this->eeItemCount = $eeFileArray['ItemCount']; // Files and folders within
-
-				$this->eeFolderCount++; // Bump the folder count
 
 			} else {
 
@@ -1056,8 +907,7 @@ class eeSFL_MainClass {
 			if(isset($eePathParts['extension'])) {
 				$eeExt = strtolower($eePathParts['extension']);
 			} else {
-				$eeExt = 'folder';
-				$eeFileArray['ItemCount'] = '0';
+				$eeExt = '';
 			}
 			$eeFileArray['FileExt'] = $eeExt; // The file extension
 
@@ -1153,7 +1003,7 @@ class eeSFL_MainClass {
     // Scan the real files and create or update array as needed.
     public function eeSFL_UpdateFileListArray() {
 
-	    global $eeSFLF, $eeSFLU, $eeSFL_Tasks, $eeSFLA;
+	    global $eeSFLU, $eeSFL_Tasks, $eeSFLA;
 
 		$start_memory = memory_get_usage();
 		$peak_memory = memory_get_peak_usage();
@@ -1194,32 +1044,18 @@ class eeSFL_MainClass {
 	    $this->eeAllFiles = get_option('eeSFL_FileList_' . $this->eeListID);
 	    if(!is_array($this->eeAllFiles)) { $this->eeAllFiles = array(); }
 
-	    // List the actual files on the disk and fill $eeSFLF->eeSFLF_FileScanArray
-	    if($eeSFLF) { $eeSFLF->eeSFLF_IndexFileDirectory(); }
-
-		// Build a unified scan array: use the folder extension's results or fall back to a flat directory listing
-		if($eeSFLF) {
-			$eeSFL_FileScanArray = $eeSFLF->eeSFLF_FileScanArray;
-		} else {
-			$eeSFL_FileScanArray = array();
-			$eeSiteRoot = $this->eeSFL_GetRootPath();
-			$dir_result = eeSFL_FileSystem('dirlist', array('path' => $eeSiteRoot . $this->eeListSettings['FileListDir'], 'include_hidden' => false, 'recursive' => false));
-			if($dir_result['success'] && is_array($dir_result['data'])) {
-				foreach($dir_result['data'] as $eeEntryName => $eeEntryInfo) {
-					if(isset($eeEntryInfo['type']) && $eeEntryInfo['type'] === 'f' && $eeEntryName !== 'index.html') {
-						$eeSFL_FileScanArray[] = $eeEntryName;
-					}
+		// The files in the list folder (no subfolders)
+		$eeSFL_FileScanArray = array();
+		$eeSiteRoot = $this->eeSFL_GetRootPath();
+		$dir_result = eeSFL_FileSystem('dirlist', array('path' => $eeSiteRoot . $this->eeListSettings['FileListDir'], 'include_hidden' => false, 'recursive' => false));
+		if($dir_result['success'] && is_array($dir_result['data'])) {
+			foreach($dir_result['data'] as $eeEntryName => $eeEntryInfo) {
+				if(isset($eeEntryInfo['type']) && $eeEntryInfo['type'] === 'f' && $eeEntryName !== 'index.html') {
+					$eeSFL_FileScanArray[] = $eeEntryName;
 				}
 			}
-			eeSFL_Debug_Log("Flat directory scan found " . count($eeSFL_FileScanArray) . " file(s)", 'ReIndexing');
 		}
-
-		if($eeSFLF && !count($eeSFL_FileScanArray)) {
-			eeSFL_Debug_Log("No Files Found", 'General');
-			$this->eeAllFiles = array(); // Clear the array
-			$this->eeSFL_UpdateMainFileArray(false); // Save the cleared array
-			return FALSE; // Quit and leave DB alone
-		}
+		eeSFL_Debug_Log("Directory scan found " . count($eeSFL_FileScanArray) . " file(s)", 'ReIndexing');
 
 		// No List in the DB, Creating New...
 	    if( !count($this->eeAllFiles) ) {
@@ -1227,8 +1063,6 @@ class eeSFL_MainClass {
 			eeSFL_Debug_Log("No List Found! Creating from scratch...", 'General');
 
 			if(count($eeSFL_FileScanArray)) {
-
-				$eeHasFolders = FALSE;
 
 				foreach( $eeSFL_FileScanArray as $eeKey => $eeFilePath) {
 
@@ -1266,19 +1100,7 @@ class eeSFL_MainClass {
 						// LEGACY as of 6.0 - Remove this down the road
 						if(isset($this->eeAllFiles[$eeKey]['ItemCount'])) { unset($this->eeAllFiles[$eeKey]['ItemCount']); }
 
-					} elseif( eeSFL_FileSystem('is_dir', array('path' => $eeFile))['data'] ) {
-
-						if($this->eeListSettings['ShowFolderSize'] == 'YES') { // How Big?
-							$eeDirPath = $eeSiteRoot . $this->eeListSettings['FileListDir'] . $eeFileSet['FilePath'];
-							$eeSizeResult = eeSFL_FileSystem('dirsize', array('path' => $eeDirPath));
-							if(isset($this->eeAllFiles[$eeKey]) && is_array($this->eeAllFiles[$eeKey])) {
-								$this->eeAllFiles[$eeKey]['FileSize'] = $eeSizeResult['success'] ? $eeSizeResult['data'] : 0;
-							}
-						}
-
-						$eeFile .= '/'; // Need trailing dot to get actual folder mod time.
-
-					} else { // Get rid of it
+					} else { // Get rid of it (also folders left by the old Pro version)
 
 						eeSFL_Debug_Log("Removing: " . $eeFile, 'General');
 
@@ -1358,11 +1180,6 @@ class eeSFL_MainClass {
 
 			// Sort - Passing a reference to the file array
 		    $this->eeSFL_SortFiles($this->eeListSettings['SortBy'], $this->eeListSettings['SortOrder']);
-
-		    // Folder Sizes and Counts
-		    if($eeSFLF) {
-		    	$eeSFLF->eeSFLF_UpdateFolderSizes();
-		    }
 
 		    // Remove any duplicates
 			$this->eeAllFiles = array_map("unserialize", array_unique(array_map("serialize", $this->eeAllFiles)));
@@ -1884,8 +1701,6 @@ class eeSFL_MainClass {
 	// Move the sort item to the array key and then sort. Preserve the key (File ID) in a new element
 	public function eeSFL_SortFiles($eeSortBy, $eeSortOrder) {
 
-		global $eeSFLF;
-
 		if(empty($this->eeAllFiles)) { return; }
 
 		$file_count = count($this->eeAllFiles);
@@ -1926,29 +1741,6 @@ class eeSFL_MainClass {
 		$eeFileCount = count($this->eeAllFiles);
 		if( count($eeArray1) === $eeFileCount && count($eeArray2) === $eeFileCount ) {
 			array_multisort($eeArray1, $eeOrder, SORT_NATURAL|SORT_FLAG_CASE, $eeArray2, SORT_ASC, $this->eeAllFiles);
-		}
-
-		// Sort Folders First?
-		if( ! empty( $this->eeListSettings['FoldersFirst'] ) && $this->eeListSettings['FoldersFirst'] == 'YES') {
-
-			$eeJustFolders = array();
-			$eeJustFiles = array();
-
-			foreach( $this->eeAllFiles as $eeKey => $eeFileArray) {
-
-				if(!is_array($eeFileArray)) { continue; } // Skip any non-array entries (e.g. legacy sentinel data)
-
-				if($eeFileArray['FileExt'] == 'folder') {
-
-					$eeJustFolders[] = $eeFileArray;
-
-				} else {
-
-					$eeJustFiles[] = $eeFileArray;
-				}
-			}
-
-			$this->eeAllFiles = array_merge($eeJustFolders, $eeJustFiles);
 		}
 
 		$sort_execution_time = round((microtime(true) - $sort_start_time) * 1000, 2);

@@ -9,7 +9,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	}
 
 	global $eeSFL, $eeSFL_UploadFormRun, $eeSFL_VarsForJS;
-    global $eeSFLF, $eeSFLU, $eeSFLS, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
+    global $eeSFLU, $eeSFLS, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
 
     eeSFL_Debug_Log("Shortcode Function Loading ...", 'Shortcode');
 	eeSFL_Debug_Log('URL: ' . $eeSFL->eeSFL_GetThisURL(), 'Shortcode', $eeSFL->eeListID);
@@ -205,10 +205,6 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		$eeSFL_UploadFormRun = TRUE;
 		$eeShowUploadForm = TRUE;
 	}
-
-	// Resolve the current folder before rendering the upload form so uploads go to the
-	// correct folder regardless of UploadPosition (Above or Below).
-	if($eeSFLF) { $eeSFLF->eeSFL_ResolveCurrentFolder(); }
 
 	if($eeShowUploadForm AND $eeSFL->eeListSettings['UploadPosition'] == 'Above') {
 		 $eeOutput .= $eeSFLU->eeSFL_UploadForm();

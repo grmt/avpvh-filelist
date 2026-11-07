@@ -125,10 +125,6 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 		$eeSFL->eeListSettings[$eeTerm] = eeSFL_ProcessCheckboxInput($eeTerm);
 	}
 
-	if ( function_exists( 'eeSFL_Pro_FolderSettingsProcess' ) ) {
-		eeSFL_Pro_FolderSettingsProcess( $eeSFL );
-	}
-
 	$eeTextInputs = array(
 		'LabelThumb'
 		,'LabelName'
@@ -813,10 +809,6 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 	<!-- Right Column -->
 
 	<div class="eeColRight">';
-
-	if ( function_exists( 'eeSFL_Pro_FolderSettingsMarkup' ) ) {
-		$eeOutput .= eeSFL_Pro_FolderSettingsMarkup( $eeSFL );
-	}
 
 	$eeOutput .= '
 

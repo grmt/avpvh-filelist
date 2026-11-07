@@ -237,6 +237,7 @@ Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/
 * Security: An upload never overwrites a file the uploader may not read; it is saved under a new name instead.
 * Security: The .htaccess for unprotected lists now blocks every configured file type (the first type in the list was skipped).
 * Fix: Users who manage a list through its "Admin Role" (not only administrators) can now edit, rename, delete and upload files in it.
+* Removed: The leftover code for sub-folders from the old Pro version (create, move, folder download, breadcrumbs, archive extraction). It could never run. A list shows the files directly in its folder; folders and their contents are ignored.
 
 = 6.3.12 =
 * Security Fix: Escaped file names, descriptions, submitter metadata, and column labels across Table, Flex, and Tiles display templates to prevent Stored XSS.

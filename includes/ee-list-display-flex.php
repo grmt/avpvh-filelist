@@ -35,10 +35,6 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 		<article id="eeSFL_FileID-' . esc_attr($eeFileID) . '" class="eeSFL_Item">';
 
-		if($eeSFL->eeIsFolder) {
-			 $eeOutput .= '
-			<span class="eeSFL_FilePath eeHide">' . esc_html($eeSFL->eeFilePath) . '</span>';
-		}
 
 		// Proper Path for Search Results
 		if(isset($_POST['eeSFLS_Searching'])) {
@@ -88,7 +84,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 		 $eeOutput .= '<a class="eeSFL_FileName" href="' . esc_url($eeSFL->eeFileURL) .  '"';
 
-		if($eeSFL->eeIsFile === TRUE) {  $eeOutput .= ' target="_blank"'; }
+		$eeOutput .= ' target="_blank"';
 
 		 $eeOutput .= '>' . esc_html(stripslashes($eeSFL->eeFileName)) . '</a>';
 
@@ -132,15 +128,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 			 $eeOutput .= '<span class="eeSFL_FileSize">';
 
-			if($eeSFL->eeIsFile) {
-
-				 $eeOutput .= $eeSFL->eeFileSize;
-
-			} else {
-
-				 $eeOutput .= $eeSFL->eeItemCount . ' ' . __('Items', 'simple-file-list');
-				if($eeSFL->eeListSettings['ShowFolderSize'] == 'YES') {  $eeOutput .= ' - ' . $eeSFL->eeFileSize; }
-			}
+			 $eeOutput .= $eeSFL->eeFileSize;
 
 			 $eeOutput .= '</span>';
 

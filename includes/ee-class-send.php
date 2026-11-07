@@ -97,11 +97,7 @@ class eeSFLE_class {
 				if(is_array($eeSFL->eeAllFiles)) {
 					foreach( $eeSFL->eeAllFiles as $eeKey => $eeFileArray) {
 
-						$eeFileNameDisplay = $eeFileArray['FilePath'];						if($eeSFL->eeCurrentFolder) {
-							if( strpos($eeFileArray['FilePath'], $eeSFL->eeCurrentFolder) === 0 ) {
-								$eeFileNameDisplay = str_replace($eeSFL->eeCurrentFolder, '', $eeFileArray['FilePath']); // Remove this folder's name from the display
-							}
-						}
+						$eeFileNameDisplay = $eeFileArray['FilePath'];
 
 						if($eeFileArray['FileExt'] != 'folder') { // We can't send folders, yet.
 

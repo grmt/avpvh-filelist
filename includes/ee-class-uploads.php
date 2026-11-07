@@ -95,7 +95,6 @@ class eeSFL_UploadClass {
 
 		<script>
 		var eeSFL_ListID = "' . intval($eeListID) . '";
-		var eeSFL_FileUploadDir = "' . esc_js(urlencode($eeObject->eeCurrentFolder)) . '";
 		var eeSFL_FileLimit = ' . intval($eeObject->eeListSettings['UploadLimit']) . ';
 		var eeSFL_UploadMaxFileSize = ' . intval(($eeObject->eeListSettings['UploadMaxFileSize']*1024)*1024) . ';
 		var eeSFL_FileFormats = "' . esc_js(str_replace(' ' , '', $eeObject->eeListSettings['FileFormats'])) . '";
@@ -208,10 +207,8 @@ class eeSFL_UploadClass {
 	// Process an Upload Job, Update the DB as Needed and Return the Results in a Nice Message
 	public function eeSFL_ProcessUploadJob($eeListID) {
 
-		global $eeSFL, $eeSFLF, $eeSFLA, $eeSFL_Tasks;
+		global $eeSFL, $eeSFLA, $eeSFL_Tasks;
 		$eeObject = $eeSFL;
-
-		$eeUploadFolder = FALSE;
 
 		$eeObject->eeUserMessages['notice'][] = 'Processing the Upload Job...';
 
@@ -228,9 +225,6 @@ class eeSFL_UploadClass {
 
 		// Get the File Count
 		$eeFileCount = count($eeFileListArray);
-
-		// Use the current folder context (already normalized with trailing slash or FALSE)
-		$eeUploadFolder = $eeObject->eeCurrentFolder;
 
 		$eeObject->eeUserMessages['notice'][] = '' . $eeFileCount . ' Files Uploaded';
 
@@ -271,7 +265,7 @@ class eeSFL_UploadClass {
 					continue; // Skip this file
 				}
 
-				$eeFile = urlencode($eeUploadFolder . $eeFile); // Tack on any sub-folder of FileListDir
+				$eeFile = urlencode($eeFile);
 
 				// Check if Name was Sanitized using hashed transient key
 				$eeFileOriginal = FALSE; // Transient is named using hash of original file name
@@ -280,10 +274,9 @@ class eeSFL_UploadClass {
 				// FIX: Use sanitized filename for hash key to match upload phase
 				eeSFL_Debug_Log("Processing phase filename extraction:", 'Upload', $eeObject->eeListID);
 				eeSFL_Debug_Log("Raw eeFile: " . $eeFile, 'Upload', $eeObject->eeListID);
-				eeSFL_Debug_Log("eeUploadFolder: " . $eeUploadFolder, 'Upload', $eeObject->eeListID);
 
-				// Extract just the filename part, removing any folder path
-				$eeOriginalFileName = urldecode(str_replace($eeUploadFolder, '', $eeFile));
+				// Extract just the filename part
+				$eeOriginalFileName = urldecode($eeFile);
 
 				// If there's still a folder path in the filename, extract just the basename
 				if (strpos($eeOriginalFileName, '/') !== false) {
@@ -412,21 +405,6 @@ class eeSFL_UploadClass {
 							$eeObject->eeUserMessages['errors'][] = 'Failed to add file to array: ' . $eeFile;
 						}
 
-					// If in a folder, update the folder dates
-					if($eeUploadFolder) {
-
-						$eePathPieces = explode('/', $eeUploadFolder);
-						$eePartPaths = '';
-						if(is_array($eePathPieces)) {
-							foreach( $eePathPieces as $eePart ) {
-								if($eePart) {
-									$eePartPaths .= $eePart . '/';
-									$eeObject->eeSFL_UpdateFileDetail($eePartPaths, 'FileDateChanged', wp_date("Y-m-d H:i:s") );
-								}
-							}
-						}
-					}
-
 					// Create thumbnail if needed
 						// Create thumbnail if needed
 						if(isset($eeSFL_Tasks) AND $eeObject->eeListSettings['ShowFileThumb'] == 'YES') {
@@ -464,9 +442,6 @@ class eeSFL_UploadClass {
 				}
 
 			$eeObject->eeSFL_SortFiles($eeObject->eeListSettings['SortBy'], $eeObject->eeListSettings['SortOrder']);
-
-			// If uploading into a folder, increment the counts and sizes.
-			if($eeSFLF && $eeUploadFolder) { $eeSFLF->eeSFLF_UpdateFolderSizes(); }
 
 			// Save the sorted array (safeguard method saved individual files, but sorting changed the order)
 			$eeObject->eeSFL_UpdateMainFileArray(false);				$eeObject->eeUserMessages['messages'][] = __('File Upload Complete', 'simple-file-list');
@@ -511,7 +486,7 @@ class eeSFL_UploadClass {
 	// File Upload Engine
 	public function eeSFL_FileUploader() {
 
-		global $eeSFL, $eeSFLF, $eeSFLA, $eeSFL_Tasks;
+		global $eeSFL, $eeSFLA, $eeSFL_Tasks;
 
 		// return print_r($_POST, FALSE);
 
@@ -573,17 +548,6 @@ class eeSFL_UploadClass {
 
 		$eeFileUploadDir = $eeObject->eeListSettings['FileListDir'];
 
-
-		// Sub-Folder - Relative to FileListDir
-		$eeFileUploadDirRaw = filter_input(INPUT_POST, 'eeSFL_FileUploadDir', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? '';
-		$eePostUploadDir = $eeFileUploadDirRaw ? sanitize_text_field(urldecode($eeFileUploadDirRaw)) : '';
-		if(!empty($eePostUploadDir)) {
-			if(strpos(str_replace('\\', '/', $eePostUploadDir), '..') !== FALSE) {
-				eeSFL_Debug_Log("Upload denied: traversal in sub-folder '" . $eePostUploadDir . "'", 'ERROR', $eeObject->eeListID);
-				return 'ERROR 99';
-			}
-			$eeFileUploadDir .= $eePostUploadDir;
-		}
 
 
 		// Check size

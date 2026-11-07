@@ -12,7 +12,7 @@ function eeSFL_BackEnd() {
 	if(!$eeAdmin) { return FALSE; }
 
 	global $eeSFL, $eeSFL_Tasks;
-	global $eeSFLF, $eeSFLU, $eeSFLS, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
+	global $eeSFLU, $eeSFLS, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
 
 	eeSFL_Debug_Log("Loading Back-End Display ...", 'Admin');
 
@@ -158,8 +158,6 @@ function eeSFL_BackEnd() {
 			<section class="eeSFL_Settings">
 			<div id="uploadFilesDiv" class="eeSettingsTile eeAdminUploadForm">';
 
-			// Resolve the current folder before rendering the upload form (always above list in admin)
-			if($eeSFLF) { $eeSFLF->eeSFL_ResolveCurrentFolder(); }
 
 			// The Upload Form
 			 $eeOutput .= $eeSFLU->eeSFL_UploadForm();
@@ -174,7 +172,7 @@ function eeSFL_BackEnd() {
 
 				 $eeOutput .= '
 
-				<a href="' . admin_url() . '?page=' . eeSFL_PluginSlug . '&eeListID=' . $eeSFL->eeListID . '&eeFolder=' . urlencode(rtrim($eeSFL->eeCurrentFolder, '/')) . '" class="button eeButton" id="eeSFL_BacktoFilesButton">&larr; ' . __('Back to the Files', 'simple-file-list') . '</a>';
+				<a href="' . admin_url() . '?page=' . eeSFL_PluginSlug . '&eeListID=' . $eeSFL->eeListID . '" class="button eeButton" id="eeSFL_BacktoFilesButton">&larr; ' . __('Back to the Files', 'simple-file-list') . '</a>';
 
 			} else {
 
@@ -193,16 +191,10 @@ function eeSFL_BackEnd() {
 			// Check Array and Get File Count
 			if( is_array($eeSFL->eeAllFiles) ) {
 
-				// Count Files and Folders
-				if($eeSFLF) {
-					$eeSFLF->eeSFLF_CountFilesAndFolders();
-				} else {
-					foreach($eeSFL->eeAllFiles as $eeFileArray) {
-						if(strpos($eeFileArray['FilePath'], '.')) {
-							$eeSFL->eeFileCount++;
-						} else {
-							$eeSFL->eeFolderCount++;
-						}
+				// Count Files
+				foreach($eeSFL->eeAllFiles as $eeFileArray) {
+					if(strpos($eeFileArray['FilePath'], '.')) {
+						$eeSFL->eeFileCount++;
 					}
 				}
 
@@ -218,7 +210,7 @@ function eeSFL_BackEnd() {
 						 $eeOutput .= '<strong>' . $eeListName . '</strong><br />';
 					}
 
-					 $eeOutput .= $eeSFL->eeFileCount . ' ' . __('Files', 'simple-file-list') . ' &amp; ' . $eeSFL->eeFolderCount . ' ' . __('Folders', 'simple-file-list') .  ' - ' . __('Sorted by', 'simple-file-list') . ' ' . ucwords($eeSFL->eeListSettings['SortBy']);
+					 $eeOutput .= $eeSFL->eeFileCount . ' ' . __('Files', 'simple-file-list') .  ' - ' . __('Sorted by', 'simple-file-list') . ' ' . ucwords($eeSFL->eeListSettings['SortBy']);
 
 					if($eeSFL->eeListSettings['SortOrder'] == 'Ascending') {  $eeOutput .= ' &uarr;'; } else {  $eeOutput .= ' &darr;'; }
 
