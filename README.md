@@ -44,7 +44,7 @@ endorsed by the original developer.
 - **Unit tests:** `composer install && vendor/bin/phpunit` (tests/*.php, WordPress stubbed out).
 - **Integration tests:** `tests/integration/run.sh` needs Docker and Python 3. It starts WordPress (PHP 8.4, with the LDAP extension), MariaDB and OpenLDAP, sets up users, groups, a protected list and a per-file grant through the admin forms, then checks over HTTP who sees which file, the download handler's status codes and headers, blocked direct URLs, path traversal, and that group access fails closed when LDAP is down. It finishes by checking `debug.log` for PHP errors from the plugin. `KEEP=1` leaves the stack running on port 8891 (`SFL_IT_PORT`); `docker compose -f tests/integration/docker-compose.yml down -v` removes it.
 
-Both run in CI on every pull request.
+Both run in CI (`.github/workflows/CI.yml`) on every push and pull request, next to the checks shared with the other own plugins ([grmt/wp-plugin-ci](https://github.com/grmt/wp-plugin-ci): PHP syntax on 8.4 and 8.5, PHP compatibility and WordPress Plugin Check) and the WordPress coding standards. CI builds the plugin with `git archive`, so `.gitattributes` decides what ships; the release workflow runs CI and zips that build.
 
 ## License and attribution
 

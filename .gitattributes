@@ -1,0 +1,13 @@
+# Kept out of `git archive`, which is what CI builds and the release ZIP holds.
+# Everything under wp-content/plugins/ is reachable over the web, so only what
+# the plugin loads at runtime may go there: no tests, tooling, notes or CI.
+/.github                export-ignore
+/tests                  export-ignore
+/*.md                   export-ignore
+/.gitignore             export-ignore
+/.gitattributes         export-ignore
+/.sonarcloud.properties export-ignore
+/composer.json          export-ignore
+/composer.lock          export-ignore
+/phpunit.xml.dist       export-ignore
+/phpcs.xml.dist         export-ignore
