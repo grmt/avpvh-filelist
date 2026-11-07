@@ -138,6 +138,17 @@ ANON_NONCE=$(wp eval 'echo wp_create_nonce("eeSFL_ActionNonce");')
 SFL_IT_URL="$URL" SFL_IT_PAGE="$PAGE" SFL_IT_ANON_NONCE="$ANON_NONCE" python3 -I test_access.py
 if [ "$MIGRATION_FAILS" -gt 0 ]; then echo "FAIL: $MIGRATION_FAILS migration check(s) failed"; exit 1; fi
 
+# A page view adjusts the settings for its visitor (uploads off for someone who may not upload).
+# A rescan in that view may store the server's lower upload maximum, but never the adjustments.
+echo "--- settings after a page view"
+wp eval '$s = get_option("avpvh_flst_settings_1"); $s["ShowList"] = "YES"; $s["AllowUploads"] = "ADMIN"; $s["UseCache"] = "OFF"; $s["UploadMaxFileSize"] = 9999; update_option("avpvh_flst_settings_1", $s);'
+curl -s -o /dev/null "$URL/?page_id=$PAGE"
+expect "page view: uploads for admins stay on" "$(wp eval '$s = get_option("avpvh_flst_settings_1"); echo $s["AllowUploads"] === "ADMIN" ? "yes" : "no";')"
+expect "page view: the maximum follows the server" "$(wp eval '$s = get_option("avpvh_flst_settings_1"); echo (int) $s["UploadMaxFileSize"] > 0 && (int) $s["UploadMaxFileSize"] < 9999 ? "yes" : "no";')"
+wp eval '$s = get_option("avpvh_flst_settings_1"); $s["UploadMaxFileSize"] = 9999; update_option("avpvh_flst_settings_1", $s); do_shortcode("[avpvh_filelist]");' >/dev/null 2>&1
+expect "command line: the server maximum is left alone" "$(wp eval '$s = get_option("avpvh_flst_settings_1"); echo (int) $s["UploadMaxFileSize"] === 9999 && $s["AllowUploads"] === "ADMIN" ? "yes" : "no";')"
+if [ "$MIGRATION_FAILS" -gt 0 ]; then echo "FAIL: $MIGRATION_FAILS check(s) failed"; exit 1; fi
+
 echo "--- debug.log"
 LOG=$($DC exec -T wordpress bash -c 'cat /var/www/html/wp-content/debug.log 2>/dev/null || true')
 if echo "$LOG" | grep -E "PHP (Fatal|Warning|Notice|Deprecated|Parse)" | grep -q "plugins/avpvh-filelist/"; then

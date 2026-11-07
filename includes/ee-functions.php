@@ -360,23 +360,21 @@ function avpvh_flst_ensure_file_list_dir_exists($eeListID = 1) {
 
 
 
-// Update a Settings Option
-function avpvh_flst_update_setting($eeSetting, $eeValue, $eeReturn = FALSE) {
-
-	global $eeSFL;
-
-	if(isset($eeSFL->eeListSettings[$eeSetting])) {
-		$eeSFL->eeListSettings[$eeSetting] = $eeValue;
-		update_option('avpvh_flst_settings_' . $eeSFL->eeListID, $eeSFL->eeListSettings);
-
-		if($eeReturn === TRUE) {
-			return $eeSFL->eeListSettings;
-		}
-
-		return TRUE;
-	}
-
-	return FALSE;
+/**
+ * Change one stored setting of a list. Reads the stored settings rather than saving
+ * $eeSFL->eeListSettings, which a page view adjusts for its visitor (uploads off,
+ * shortcode attributes): those adjustments must never be stored.
+ *
+ * @param int    $eeListID
+ * @param string $eeKey
+ * @param mixed  $eeValue
+ * @return bool
+ */
+function avpvh_flst_save_setting($eeListID, $eeKey, $eeValue) {
+	$eeStored = get_option('avpvh_flst_settings_' . (int) $eeListID);
+	if( !is_array($eeStored) ) { return FALSE; }
+	$eeStored[$eeKey] = $eeValue;
+	return update_option('avpvh_flst_settings_' . (int) $eeListID, $eeStored);
 }
 
 
