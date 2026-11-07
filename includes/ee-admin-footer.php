@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 		'<a href="https://github.com/grmt/avpvh-filelist" target="_blank" rel="noopener">GitHub</a>'
 	) . '</p>
 
-	<p class="ee-plugin-version">' . __('Plugin Version', 'avpvh-filelist') . ': ' . AVPVH_FILELIST_VERSION;
+	<p class="ee-plugin-version">' . __('Plugin Version', 'avpvh-filelist') . ': ' . AVPVH_FLST_VERSION;
 
 
 	if( defined('eeSFLE_Version') ) {  $eeOutput .= '<br />

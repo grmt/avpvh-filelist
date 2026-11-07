@@ -6,7 +6,7 @@
 
 
 
-class Avpvh_Filelist_Uploads {
+class Avpvh_Flst_Uploads {
 
 	public $eeUploadedFiles = array(); // Save the original file names for an upload job
 
@@ -162,7 +162,7 @@ class Avpvh_Filelist_Uploads {
 			}
 
 			// Enforce AllowUploads policy for callers who don't manage the list
-			if( !avpvh_filelist_user_manages_list($eeListID, get_current_user_id()) ) {
+			if( !avpvh_flst_user_manages_list($eeListID, get_current_user_id()) ) {
 				$eeAllowUploads = $eeObject->eeListSettings['AllowUploads'] ?? 'NO';
 				if( $eeAllowUploads === 'USER' && !get_current_user_id() ) {
 					return FALSE;
@@ -174,22 +174,22 @@ class Avpvh_Filelist_Uploads {
 			if( $eeListID >=1 ) { $this->process_upload_job($eeListID); $eeObject->eeListID = $eeListID; }
 
 			$eeMessages[] = 'List ID: ' . $eeListID;
-			$eeMessages[] = isset($_POST['avpvh_filelist_files']) ? sanitize_textarea_field(wp_unslash($_POST['avpvh_filelist_files'])) : 'No file list provided'; // json string
+			$eeMessages[] = isset($_POST['avpvh_flst_files']) ? sanitize_textarea_field(wp_unslash($_POST['avpvh_flst_files'])) : 'No file list provided'; // json string
 
 			// Add Custom Hook
 			if( is_admin() ) {
 				$eeMessages[] = 'Back-End Upload Complete';
-				do_action('avpvh_filelist_admin_uploaded', $eeMessages);
+				do_action('avpvh_flst_admin_uploaded', $eeMessages);
 			} else {
 				$eeMessages[] = 'Front-End Upload Complete';
-				do_action('avpvh_filelist_uploaded', $eeMessages);
+				do_action('avpvh_flst_uploaded', $eeMessages);
 			}
 
 			// Legacy hooks
 			if( is_admin() ) {
-				do_action('avpvh_filelist_upload_completed_admin');
+				do_action('avpvh_flst_upload_completed_admin');
 			} else {
-				do_action('avpvh_filelist_upload_completed');
+				do_action('avpvh_flst_upload_completed');
 			}
 
 			if($eeObject->eeListSettings['UploadConfirm'] == 'YES' OR is_admin() ) { $eeUploaded = TRUE; }
@@ -213,7 +213,7 @@ class Avpvh_Filelist_Uploads {
 		$eeObject->eeUserMessages['notice'][] = 'Processing the Upload Job...';
 
 		// Get a list of the original file names that were uploaded. JSON STRING
-		$eeFileListString = isset($_POST['avpvh_filelist_files']) ? sanitize_textarea_field(wp_unslash($_POST['avpvh_filelist_files'])) : '[]'; // ["Sunset2.jpg","Sunset.jpg","Boats.jpg"]
+		$eeFileListString = isset($_POST['avpvh_flst_files']) ? sanitize_textarea_field(wp_unslash($_POST['avpvh_flst_files'])) : '[]'; // ["Sunset2.jpg","Sunset.jpg","Boats.jpg"]
 		$eeFileListArray = json_decode($eeFileListString);
 
 		if(!is_array($eeFileListArray)) {
@@ -243,12 +243,12 @@ class Avpvh_Filelist_Uploads {
 
 			// Get the existing array
 			if(empty($eeObject->eeAllFiles)) {
-				$eeObject->eeAllFiles = get_option('avpvh_filelist_files_' . $eeListID);
+				$eeObject->eeAllFiles = get_option('avpvh_flst_files_' . $eeListID);
 			}
 
 			// Ensure eeAllFiles is always a valid array (e.g. new install or first upload to a new list)
 			if(!is_array($eeObject->eeAllFiles)) {
-				avpvh_filelist_debug_log("eeAllFiles was not an array for List " . $eeListID . " — initializing to empty array. This is expected on new installs or new lists.", 'Upload', $eeListID);
+				avpvh_flst_debug_log("eeAllFiles was not an array for List " . $eeListID . " — initializing to empty array. This is expected on new installs or new lists.", 'Upload', $eeListID);
 				$eeObject->eeAllFiles = array();
 			}
 
@@ -272,8 +272,8 @@ class Avpvh_Filelist_Uploads {
 
 				// Create the same hash key used during upload
 				// FIX: Use sanitized filename for hash key to match upload phase
-				avpvh_filelist_debug_log("Processing phase filename extraction:", 'Upload', $eeObject->eeListID);
-				avpvh_filelist_debug_log("Raw eeFile: " . $eeFile, 'Upload', $eeObject->eeListID);
+				avpvh_flst_debug_log("Processing phase filename extraction:", 'Upload', $eeObject->eeListID);
+				avpvh_flst_debug_log("Raw eeFile: " . $eeFile, 'Upload', $eeObject->eeListID);
 
 				// Extract just the filename part
 				$eeOriginalFileName = urldecode($eeFile);
@@ -283,21 +283,21 @@ class Avpvh_Filelist_Uploads {
 					$eeOriginalFileName = basename($eeOriginalFileName);
 				}
 
-				avpvh_filelist_debug_log("Extracted original filename: '" . $eeOriginalFileName . "'", 'Upload', $eeObject->eeListID);
+				avpvh_flst_debug_log("Extracted original filename: '" . $eeOriginalFileName . "'", 'Upload', $eeObject->eeListID);
 
 				// FIX: Sanitize the extracted filename to match what upload phase would have used
 				global $eeSFL;
 				$eeSanitizedFileName = $eeSFL->sanitize_file_name($eeOriginalFileName);
-				avpvh_filelist_debug_log("Re-sanitized for hash: '" . $eeSanitizedFileName . "'", 'Upload', $eeObject->eeListID);
+				avpvh_flst_debug_log("Re-sanitized for hash: '" . $eeSanitizedFileName . "'", 'Upload', $eeObject->eeListID);
 
 				// Use the extracted filename (which is actually the sanitized filename) for hash consistency
-				$eeHashKey = 'avpvh_filelist_renamed_' . hash('sha256', $eeSanitizedFileName . $eeListID);					// Debug logging for processing phase
-				avpvh_filelist_debug_log("PROCESSING PHASE - Original: " . $eeOriginalFileName . " | Hash: " . $eeHashKey, 'UPLOAD_HASH');
+				$eeHashKey = 'avpvh_flst_renamed_' . hash('sha256', $eeSanitizedFileName . $eeListID);					// Debug logging for processing phase
+				avpvh_flst_debug_log("PROCESSING PHASE - Original: " . $eeOriginalFileName . " | Hash: " . $eeHashKey, 'UPLOAD_HASH');
 
 				$eeFileSanitized = get_transient($eeHashKey);
 
 				// Debug transient result
-				avpvh_filelist_debug_log("Transient result: " . ($eeFileSanitized ? $eeFileSanitized : 'NOT FOUND'), 'UPLOAD_HASH');
+				avpvh_flst_debug_log("Transient result: " . ($eeFileSanitized ? $eeFileSanitized : 'NOT FOUND'), 'UPLOAD_HASH');
 
 				if($eeFileSanitized) {
 
@@ -418,7 +418,7 @@ class Avpvh_Filelist_Uploads {
 								// Start the background function: eeSFL_Background_GenerateThumbs()
 								if(is_array($eeSFL_Tasks)) {
 									$eeSFL_Tasks[$eeObject->eeListID]['GenerateThumbs'] = 'YES';
-									update_option('avpvh_filelist_tasks', $eeSFL_Tasks);
+									update_option('avpvh_flst_tasks', $eeSFL_Tasks);
 								}
 							}
 						}
@@ -426,7 +426,7 @@ class Avpvh_Filelist_Uploads {
 
 						// Notification Info
 						// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Email notifications use direct links to avoid email client censoring
-						$eeFileURL = avpvh_filelist_file_url($eeObject->eeListID, $eeObject->eeListSettings, $eeFile);
+						$eeFileURL = avpvh_flst_file_url($eeObject->eeListID, $eeObject->eeListSettings, $eeFile);
 
 						$eeUploadJob .=  $eeFile . " (" . $eeObject->format_file_size($eeNewFileArray['FileSize']) . ")" . PHP_EOL;
 						$eeUploadJob .=  $eeFileURL . PHP_EOL . PHP_EOL;
@@ -495,55 +495,55 @@ class Avpvh_Filelist_Uploads {
 		// Verify upload nonce before reading any POST data
 		$eeUploadNonce = isset($_POST['avpvh-filelist-upload']) ? sanitize_text_field(wp_unslash($_POST['avpvh-filelist-upload'])) : '';
 		if(!wp_verify_nonce($eeUploadNonce, 'avpvh-filelist-upload')) {
-			avpvh_filelist_debug_log("Upload nonce verification failed", 'Upload');
+			avpvh_flst_debug_log("Upload nonce verification failed", 'Upload');
 			return __('Security check failed.', 'avpvh-filelist');
 		}
 
 		if(isset($_POST['eeSFL_ID'])) { $eeListID = absint(wp_unslash($_POST['eeSFL_ID'])); } else { $eeListID = 1; };
 
 		// Debug: Upload method entry
-		avpvh_filelist_debug_log("eeSFL_FileUploader() method started", 'Upload', $eeObject->eeListID);
+		avpvh_flst_debug_log("eeSFL_FileUploader() method started", 'Upload', $eeObject->eeListID);
 
 		// The FILE object
-		avpvh_filelist_debug_log("Checking _FILES object. Count: " . count($_FILES), 'Upload', $eeObject->eeListID);
+		avpvh_flst_debug_log("Checking _FILES object. Count: " . count($_FILES), 'Upload', $eeObject->eeListID);
 		if(empty($_FILES)) {
-			avpvh_filelist_debug_log("_FILES object is empty", 'ERROR', $eeObject->eeListID);
+			avpvh_flst_debug_log("_FILES object is empty", 'ERROR', $eeObject->eeListID);
 			return 'The File Object is Empty';
 		}
 
 		// Get this List's Settings before enforcing AllowUploads policy
 		$eeObject->get_settings($eeListID);
 		if( empty($eeObject->eeListSettings['FileListDir']) ) {
-			avpvh_filelist_debug_log("Upload denied: unknown list ID " . $eeListID, 'ERROR', $eeListID);
+			avpvh_flst_debug_log("Upload denied: unknown list ID " . $eeListID, 'ERROR', $eeListID);
 			return 'ERROR 97';
 		}
 
 		// Enforce AllowUploads policy on every request.
 		// SECURITY: is_admin() returns TRUE on admin-ajax.php and cannot guard frontend AJAX uploads.
 		// The list's managers are always permitted; all other callers go through the policy check.
-		if( !avpvh_filelist_user_manages_list($eeListID, get_current_user_id()) ) {
+		if( !avpvh_flst_user_manages_list($eeListID, get_current_user_id()) ) {
 
-			avpvh_filelist_debug_log("Checking upload permissions for non-admin caller...", 'Upload', $eeObject->eeListID);
+			avpvh_flst_debug_log("Checking upload permissions for non-admin caller...", 'Upload', $eeObject->eeListID);
 			// Who should be uploading?
 			switch ($eeObject->eeListSettings['AllowUploads'] ?? 'NO') {
 				case 'YES':
-					avpvh_filelist_debug_log("Upload allowed: YES (all users)", 'Upload', $eeObject->eeListID);
+					avpvh_flst_debug_log("Upload allowed: YES (all users)", 'Upload', $eeObject->eeListID);
 					break;
 				case 'USER':
 					// Allow logged-in users only
 					if( get_current_user_id() ) {
-						avpvh_filelist_debug_log("Upload allowed: USER (logged in user: " . get_current_user_id() . ")", 'Upload', $eeObject->eeListID);
+						avpvh_flst_debug_log("Upload allowed: USER (logged in user: " . get_current_user_id() . ")", 'Upload', $eeObject->eeListID);
 						break;
 					} else {
-						avpvh_filelist_debug_log("Upload denied: USER setting but not logged in", 'ERROR', $eeObject->eeListID);
+						avpvh_flst_debug_log("Upload denied: USER setting but not logged in", 'ERROR', $eeObject->eeListID);
 						return 'ERROR 97';
 					}
 				default: // 'ADMIN', 'NO', or any unrecognised value — deny non-admins
-					avpvh_filelist_debug_log("Upload denied: setting '" . $eeObject->eeListSettings['AllowUploads'] . "' not permitted for this user", 'ERROR', $eeObject->eeListID);
+					avpvh_flst_debug_log("Upload denied: setting '" . $eeObject->eeListSettings['AllowUploads'] . "' not permitted for this user", 'ERROR', $eeObject->eeListID);
 					return 'ERROR 97';
 			}
 		} else {
-			avpvh_filelist_debug_log("Upload allowed: user manages the list", 'Upload', $eeObject->eeListID);
+			avpvh_flst_debug_log("Upload allowed: user manages the list", 'Upload', $eeObject->eeListID);
 		}
 
 		$eeFileUploadDir = $eeObject->eeListSettings['FileListDir'];
@@ -594,8 +594,8 @@ class Avpvh_Filelist_Uploads {
 				// Overwrite only files this user may read: never replace a file restricted to others
 				$eeMayOverwrite = $eeObject->eeListSettings['AllowOverwrite'] == 'YES';
 				if( $eeMayOverwrite ) {
-					$eeExisting = avpvh_filelist_listed_item(get_option('avpvh_filelist_files_' . $eeListID), $eeFileName);
-					if( $eeExisting && !avpvh_filelist_user_can_read_file($eeListID, $eeObject->eeListSettings, $eeExisting, get_current_user_id()) ) {
+					$eeExisting = avpvh_flst_listed_item(get_option('avpvh_flst_files_' . $eeListID), $eeFileName);
+					if( $eeExisting && !avpvh_flst_user_can_read_file($eeListID, $eeObject->eeListSettings, $eeExisting, get_current_user_id()) ) {
 						$eeMayOverwrite = FALSE;
 					}
 				}
@@ -618,7 +618,7 @@ class Avpvh_Filelist_Uploads {
 				// Double-check extension matches WordPress validation
 				if(isset($eeValidatedExt) && $eeValidatedExt !== $eeExtension) {
 					// Use the WordPress validated extension for additional security
-					avpvh_filelist_debug_log("Extension mismatch detected. Original: " . $eeExtension . " | Validated: " . $eeValidatedExt, 'Upload', $eeObject->eeListID);
+					avpvh_flst_debug_log("Extension mismatch detected. Original: " . $eeExtension . " | Validated: " . $eeValidatedExt, 'Upload', $eeObject->eeListID);
 					$eeExtension = $eeValidatedExt;
 				}
 
@@ -633,31 +633,31 @@ class Avpvh_Filelist_Uploads {
 				$eeTargetFile = $eeFileUploadDir . $eeFileName;
 
 				// Check if the name has changed
-				avpvh_filelist_debug_log("Checking filename changes. Original: '" . ($eeRawFileName ?: 'MISSING') . "' | Sanitized: '" . $eeFileName . "'", 'Upload', $eeObject->eeListID);
+				avpvh_flst_debug_log("Checking filename changes. Original: '" . ($eeRawFileName ?: 'MISSING') . "' | Sanitized: '" . $eeFileName . "'", 'Upload', $eeObject->eeListID);
 				if(!empty($eeRawFileName) && $eeRawFileName != $eeFileName) {
 
-					avpvh_filelist_debug_log("Filename was changed, creating transient", 'Upload', $eeObject->eeListID);
+					avpvh_flst_debug_log("Filename was changed, creating transient", 'Upload', $eeObject->eeListID);
 					// Create a consistent hash key for the transient using original sanitized file name and list ID
 					// IMPORTANT: Use the original sanitized filename, NOT the final renamed filename
 					// This ensures the processing phase can find the transient with the same hash key
 
-					$eeHashKey = 'avpvh_filelist_renamed_' . hash('sha256', $eeOriginalSanitizedFileName . $eeListID);
+					$eeHashKey = 'avpvh_flst_renamed_' . hash('sha256', $eeOriginalSanitizedFileName . $eeListID);
 					$eeNewFilePath = str_replace($eeObject->eeListSettings['FileListDir'], '', $eeTargetFile); // Strip the FileListDir
 
-					avpvh_filelist_debug_log("Uploading -> Original: " . $eeRawFileName . " | Sanitized: " . $eeOriginalSanitizedFileName . " | Final: " . $eeFileName . " | Hash: " . $eeHashKey, 'UPLOAD_HASH');
+					avpvh_flst_debug_log("Uploading -> Original: " . $eeRawFileName . " | Sanitized: " . $eeOriginalSanitizedFileName . " | Final: " . $eeFileName . " | Hash: " . $eeHashKey, 'UPLOAD_HASH');
 
 					// Set transient with hashed key
-					avpvh_filelist_debug_log("About to set transient. Key length: " . strlen($eeHashKey) . " | Value length: " . strlen($eeNewFilePath), 'Upload', $eeObject->eeListID);
-					avpvh_filelist_debug_log("Key: " . $eeHashKey, 'Upload', $eeObject->eeListID);
-					avpvh_filelist_debug_log("Value: " . $eeNewFilePath, 'Upload', $eeObject->eeListID);
+					avpvh_flst_debug_log("About to set transient. Key length: " . strlen($eeHashKey) . " | Value length: " . strlen($eeNewFilePath), 'Upload', $eeObject->eeListID);
+					avpvh_flst_debug_log("Key: " . $eeHashKey, 'Upload', $eeObject->eeListID);
+					avpvh_flst_debug_log("Value: " . $eeNewFilePath, 'Upload', $eeObject->eeListID);
 
 					$transient_result = set_transient($eeHashKey, $eeNewFilePath, 900); // Expires in 15 minutes
 
 					// Test if we can immediately retrieve it
 					$test_retrieve = get_transient($eeHashKey);
-					avpvh_filelist_debug_log("Transient set result: " . ($transient_result ? 'SUCCESS' : 'FAILED') . " | Immediate test retrieve: " . ($test_retrieve ? $test_retrieve : 'FAILED'), 'Upload', $eeObject->eeListID);
+					avpvh_flst_debug_log("Transient set result: " . ($transient_result ? 'SUCCESS' : 'FAILED') . " | Immediate test retrieve: " . ($test_retrieve ? $test_retrieve : 'FAILED'), 'Upload', $eeObject->eeListID);
 				} else {
-					avpvh_filelist_debug_log("Filename unchanged, no transient needed", 'Upload', $eeObject->eeListID);
+					avpvh_flst_debug_log("Filename unchanged, no transient needed", 'Upload', $eeObject->eeListID);
 				}
 
 				$eeTarget = $eeSiteRoot . $eeTargetFile;
@@ -665,7 +665,7 @@ class Avpvh_Filelist_Uploads {
 				// return $eeTarget;
 
 				// Save the file
-				$eeFileSystemResult = avpvh_filelist_file_system('copy', array('from' => $eeTempFile, 'to' => $eeTarget, 'overwrite' => true));
+				$eeFileSystemResult = avpvh_flst_file_system('copy', array('from' => $eeTempFile, 'to' => $eeTarget, 'overwrite' => true));
 				if( $eeFileSystemResult['success'] ) {
 
 					if(!is_file($eeTarget)) {
@@ -679,7 +679,7 @@ class Avpvh_Filelist_Uploads {
 
 							if(!strpos($eeString, 'width=') OR !strpos($eeString, 'height=')) { // Make sure it's really an image
 
-								avpvh_filelist_file_system('delete', array('file' => $eeTarget));
+								avpvh_flst_file_system('delete', array('file' => $eeTarget));
 
 								return 'Corrupt Image Not Accepted';
 							}
@@ -689,7 +689,7 @@ class Avpvh_Filelist_Uploads {
 						$eeDate = isset($_POST['eeSFL_FileDate']) ? esc_textarea(sanitize_text_field(wp_unslash($_POST['eeSFL_FileDate']))) : '';
 						$eeDate = strtotime($eeDate);
 						if($eeDate) {
-							avpvh_filelist_file_system('touch', array('file' => $eeTarget, 'time' => $eeDate));  // Do nothing if bad date
+							avpvh_flst_file_system('touch', array('file' => $eeTarget, 'time' => $eeDate));  // Do nothing if bad date
 						}
 
 						// Build Image thumbs right away right away. We'll set other types to use the background job within eeSFL_ProcessUpload()

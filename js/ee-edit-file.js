@@ -258,7 +258,7 @@ function eeSFL_EditFileAction(eeSFL_FileID, eeSFL_FileAction) {
 	if(eeSFL_FileAction == 'Edit') {
 
 		eeFormData = {
-			'action': 'avpvh_filelist_edit_job',
+			'action': 'avpvh_flst_edit_job',
 			'eeSFL_ID': eeSFL_ListID,
 			'eeFileName': eeSFL_FileNameOld,
 			'eeFileNameNew': eeSFL_FileNameNew,
@@ -276,7 +276,7 @@ function eeSFL_EditFileAction(eeSFL_FileID, eeSFL_FileAction) {
 		var eeSFL_FileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text();
 
 		eeFormData = {
-			'action': 'avpvh_filelist_edit_job',
+			'action': 'avpvh_flst_edit_job',
 			'eeSFL_ID': eeSFL_ListID,
 			'eeFileName': eeSFL_FileName,
 			'eeFileAction': 'Delete',

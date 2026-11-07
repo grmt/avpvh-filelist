@@ -24,16 +24,16 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 require_once __DIR__ . '/includes/ee-github-updater.php';
 
 // CONSTANTS
-if(!defined('AVPVH_FILELIST_VERSION')) { define('AVPVH_FILELIST_VERSION', '1.0.0'); }
-define('AVPVH_FILELIST_NAME', 'AV-PvH File List');
-define('AVPVH_FILELIST_SLUG', 'avpvh-filelist');
-define('AVPVH_FILELIST_PRODUCT', 'Free');
-define('AVPVH_FILELIST_MENU_TITLE', 'File List');
+if(!defined('AVPVH_FLST_VERSION')) { define('AVPVH_FLST_VERSION', '1.0.0'); }
+define('AVPVH_FLST_NAME', 'AV-PvH File List');
+define('AVPVH_FLST_SLUG', 'avpvh-filelist');
+define('AVPVH_FLST_PRODUCT', 'Free');
+define('AVPVH_FLST_MENU_TITLE', 'File List');
 
 // Common
-define('AVPVH_FILELIST_PREFIX', 'avpvh_filelist');
-define('AVPVH_FILELIST_DEFAULT_DIR', 'avpvh-filelist/'); // Default Upload Directory
-define('AVPVH_FILELIST_GO', wp_date('Y-m-d h:m:s') ); // Log Entry Key
+define('AVPVH_FLST_PREFIX', 'avpvh_flst');
+define('AVPVH_FLST_DEFAULT_DIR', 'avpvh-filelist/'); // Default Upload Directory
+define('AVPVH_FLST_GO', wp_date('Y-m-d h:m:s') ); // Log Entry Key
 
 
 // GLOBAL VARIABLES
@@ -55,7 +55,7 @@ $eeSFL_Extensions = array();
 // =============================================================================
 // Plugin Setup
 // =============================================================================
-function avpvh_filelist_setup() {
+function avpvh_flst_setup() {
 
 	global $eeSFL, $eeSFL_VarsForJS, $eeSFLE, $eeSFLU;
 
@@ -141,8 +141,8 @@ function avpvh_filelist_setup() {
 	} // end is_admin()
 
 	// Define debug logging stub (no-op on frontend; real implementation provided by Tools plugin above)
-	if(!function_exists('avpvh_filelist_debug_log')) { function avpvh_filelist_debug_log($eeString, $eeCategory = '', $eeListID = 0) { return FALSE; } }
-	avpvh_filelist_debug_log("AV-PvH File List v" . AVPVH_FILELIST_VERSION . " initializing", 'Loading');
+	if(!function_exists('avpvh_flst_debug_log')) { function avpvh_flst_debug_log($eeString, $eeCategory = '', $eeListID = 0) { return FALSE; } }
+	avpvh_flst_debug_log("AV-PvH File List v" . AVPVH_FLST_VERSION . " initializing", 'Loading');
 
 	// Translation strings to pass to javascript as eesfl_vars
 	$eeProtocol = isset( $_SERVER['HTTPS'] ) ? 'https://' : 'http://';
@@ -181,7 +181,7 @@ function avpvh_filelist_setup() {
 		include_once(plugin_dir_path(__FILE__) . 'includes/ee-migrate.php');
 
 		// A site moving over from Simple File List: before anything reads the settings
-		avpvh_filelist_migrate_legacy();
+		avpvh_flst_migrate_legacy();
 		if( is_admin() ) {
 			include_once(plugin_dir_path(__FILE__) . 'includes/ee-access-admin.php');
 		}
@@ -192,11 +192,11 @@ function avpvh_filelist_setup() {
 
 		// Main Class
 		require_once(plugin_dir_path(__FILE__) . 'includes/ee-class.php');
-		$eeSFL = new Avpvh_Filelist_Main();
+		$eeSFL = new Avpvh_Flst_Main();
 
 		// Load Upload Class (needed by GetEnv)
 		require_once(plugin_dir_path(__FILE__) . 'includes/ee-class-uploads.php');
-		$eeSFLU = new Avpvh_Filelist_Uploads();
+		$eeSFLU = new Avpvh_Flst_Uploads();
 
 		// Initialize environment (requires $eeSFLU)
 		$eeSFL->get_env();
@@ -205,7 +205,7 @@ function avpvh_filelist_setup() {
 		$eeResult = $eeSFL->get_root_path();
 		if($eeResult === FALSE) {
 
-			avpvh_filelist_debug_log("CRITICAL: Root path determination failed - hosting incompatibility", 'ERROR');
+			avpvh_flst_debug_log("CRITICAL: Root path determination failed - hosting incompatibility", 'ERROR');
 
 			add_action('admin_notices', function() {
 				echo '<div class="notice notice-error is-dismissible">';
@@ -226,17 +226,17 @@ function avpvh_filelist_setup() {
 		// in the shortcode if AllowFrontSend is enabled.
 		$eeNeedsEmailClass = is_admin()
 			|| isset($_POST['eeSFLE_Send'])
-			|| (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && sanitize_key(wp_unslash($_POST['action'])) === 'avpvh_filelist_sendfile_job');
+			|| (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && sanitize_key(wp_unslash($_POST['action'])) === 'avpvh_flst_sendfile_job');
 		if($eeNeedsEmailClass) {
 			require_once(plugin_dir_path(__FILE__) . 'includes/ee-class-send.php');
-			$eeSFLE = new Avpvh_Filelist_Send();
+			$eeSFLE = new Avpvh_Flst_Send();
 		}
 
 		// Set List ID: the main list, or in wp-admin the list chosen with ?eeListID=
 		$eeSFL->eeListID = 1;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only routing; avpvh_filelist_admin_list_id() checks access
-		if( is_admin() && isset($_GET['page']) && sanitize_key(wp_unslash($_GET['page'])) === AVPVH_FILELIST_SLUG ) {
-			$eeSFL->eeListID = avpvh_filelist_admin_list_id() ?: 1;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only routing; avpvh_flst_admin_list_id() checks access
+		if( is_admin() && isset($_GET['page']) && sanitize_key(wp_unslash($_GET['page'])) === AVPVH_FLST_SLUG ) {
+			$eeSFL->eeListID = avpvh_flst_admin_list_id() ?: 1;
 		}
 
 		// Load Settings
@@ -253,16 +253,16 @@ function avpvh_filelist_setup() {
 
 		// Install or Update if Needed
 		if( is_admin() ) {
-			avpvh_filelist_version_check();
-			avpvh_filelist_debug_log("Version check completed.", 'Loading');
+			avpvh_flst_version_check();
+			avpvh_flst_debug_log("Version check completed.", 'Loading');
 		}
 
-		avpvh_filelist_debug_log('- List ID = ' . $eeSFL->eeListID . ' --> Setup Loaded.', 'General', $eeSFL->eeListID);
-		avpvh_filelist_debug_log("Setup Complete for List ID: " . $eeSFL->eeListID, 'Loading');
-		avpvh_filelist_debug_log("Final memory usage: " . round(memory_get_usage()/1024/1024, 2) . "MB", 'Loading');
+		avpvh_flst_debug_log('- List ID = ' . $eeSFL->eeListID . ' --> Setup Loaded.', 'General', $eeSFL->eeListID);
+		avpvh_flst_debug_log("Setup Complete for List ID: " . $eeSFL->eeListID, 'Loading');
+		avpvh_flst_debug_log("Final memory usage: " . round(memory_get_usage()/1024/1024, 2) . "MB", 'Loading');
 
 	} else {
-		avpvh_filelist_debug_log("eeSFL class already exists, skipping initialization", 'Loading');
+		avpvh_flst_debug_log("eeSFL class already exists, skipping initialization", 'Loading');
 	}
 
 	return TRUE;
@@ -272,57 +272,57 @@ function avpvh_filelist_setup() {
 // =============================================================================
 // WORDPRESS HOOKS REGISTRATION
 // =============================================================================
-// Note: These hooks must be registered after avpvh_filelist_setup() runs and loads all includes
+// Note: These hooks must be registered after avpvh_flst_setup() runs and loads all includes
 
 // Core Initialization
-add_action('init', 'avpvh_filelist_setup'); // Main setup - loads all classes and functions
-add_action('init', function() { // Protected downloads, after avpvh_filelist_setup() has found the site root
-	if( function_exists('avpvh_filelist_handle_file_request') ) { avpvh_filelist_handle_file_request(); }
+add_action('init', 'avpvh_flst_setup'); // Main setup - loads all classes and functions
+add_action('init', function() { // Protected downloads, after avpvh_flst_setup() has found the site root
+	if( function_exists('avpvh_flst_handle_file_request') ) { avpvh_flst_handle_file_request(); }
 }, 20);
-add_action('init', 'avpvh_filelist_textdomain'); // Load textdomain at init to comply with WordPress 6.7+ requirements
+add_action('init', 'avpvh_flst_textdomain'); // Load textdomain at init to comply with WordPress 6.7+ requirements
 
 // Asset Management
-add_action('init', 'avpvh_filelist_register_assets'); // Register scripts and styles
-add_action('wp_enqueue_scripts', 'avpvh_filelist_enqueue'); // Frontend assets
-add_action('admin_enqueue_scripts', 'avpvh_filelist_admin_head'); // Admin assets
+add_action('init', 'avpvh_flst_register_assets'); // Register scripts and styles
+add_action('wp_enqueue_scripts', 'avpvh_flst_enqueue'); // Frontend assets
+add_action('admin_enqueue_scripts', 'avpvh_flst_admin_head'); // Admin assets
 
 // SFL Dashboard detection meta tag
-add_action('wp_head', function() { echo '<meta name="avpvh-filelist" content="' . esc_attr(AVPVH_FILELIST_VERSION) . '">' . "\n"; });
+add_action('wp_head', function() { echo '<meta name="avpvh-filelist" content="' . esc_attr(AVPVH_FLST_VERSION) . '">' . "\n"; });
 
 // Admin Interface
-add_action('admin_menu', 'avpvh_filelist_admin_menu'); // Add admin menu
-add_action('current_screen', 'avpvh_filelist_set_admin_title'); // Set admin page title
-add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'avpvh_filelist_action_plugin_links'); // Plugin page links
+add_action('admin_menu', 'avpvh_flst_admin_menu'); // Add admin menu
+add_action('current_screen', 'avpvh_flst_set_admin_title'); // Set admin page title
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'avpvh_flst_action_plugin_links'); // Plugin page links
 
 // AJAX Handlers
-add_action('wp_ajax_avpvh_filelist_upload_job', 'avpvh_filelist_upload_job');
-add_action('wp_ajax_nopriv_avpvh_filelist_upload_job', 'avpvh_filelist_upload_job');
-add_action('wp_ajax_avpvh_filelist_edit_job', 'avpvh_filelist_edit_job');
-add_action('wp_ajax_nopriv_avpvh_filelist_edit_job', 'avpvh_filelist_edit_job');
-add_action('wp_ajax_avpvh_filelist_sendfile_job', 'avpvh_filelist_sendfile_job');
-add_action('wp_ajax_nopriv_avpvh_filelist_sendfile_job', 'avpvh_filelist_sendfile_job');
-add_action('wp_ajax_avpvh_filelist_confirm', 'avpvh_filelist_confirm');
-add_action('wp_ajax_avpvh_filelist_dismiss', 'avpvh_filelist_dismiss'); // Acknowledge new features
+add_action('wp_ajax_avpvh_flst_upload_job', 'avpvh_flst_upload_job');
+add_action('wp_ajax_nopriv_avpvh_flst_upload_job', 'avpvh_flst_upload_job');
+add_action('wp_ajax_avpvh_flst_edit_job', 'avpvh_flst_edit_job');
+add_action('wp_ajax_nopriv_avpvh_flst_edit_job', 'avpvh_flst_edit_job');
+add_action('wp_ajax_avpvh_flst_sendfile_job', 'avpvh_flst_sendfile_job');
+add_action('wp_ajax_nopriv_avpvh_flst_sendfile_job', 'avpvh_flst_sendfile_job');
+add_action('wp_ajax_avpvh_flst_confirm', 'avpvh_flst_confirm');
+add_action('wp_ajax_avpvh_flst_dismiss', 'avpvh_flst_dismiss'); // Acknowledge new features
 
 // Shortcode: [avpvh_filelist]. [eeSFL] from Simple File List keeps working; the migration
 // rewrites it in post content, but it may also sit in widgets or page builder data.
-add_shortcode('avpvh_filelist', 'avpvh_filelist_front_end');
-add_shortcode('eeSFL', 'avpvh_filelist_front_end');
+add_shortcode('avpvh_filelist', 'avpvh_flst_front_end');
+add_shortcode('eeSFL', 'avpvh_flst_front_end');
 
 // Language Enabler
-function avpvh_filelist_textdomain() {
+function avpvh_flst_textdomain() {
 	// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- Required for private plugins
     load_plugin_textdomain( 'avpvh-filelist', false, basename( dirname( __FILE__ ) ) . '/languages/' );
 }
 
 
 // Plugin Activation
-function avpvh_filelist_activate() {
+function avpvh_flst_activate() {
 
 	include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
 	// Clear cached root path so it is re-verified after activation or update
-	delete_transient('avpvh_filelist_root_path');
+	delete_transient('avpvh_flst_root_path');
 
 	// Deactivate the Pro version if needed
 	$eePlugin = 'ee-simple-file-list-pro/ee-simple-file-list-pro.php';
@@ -332,15 +332,15 @@ function avpvh_filelist_activate() {
 
 	return TRUE;
 }
-register_activation_hook( __FILE__, 'avpvh_filelist_activate' );
+register_activation_hook( __FILE__, 'avpvh_flst_activate' );
 
 
 
 // Upon Deactivation...
-function avpvh_filelist_deactivate() {
+function avpvh_flst_deactivate() {
 	// Nothing needed for Free version
 }
-register_deactivation_hook( __FILE__, 'avpvh_filelist_deactivate' );
+register_deactivation_hook( __FILE__, 'avpvh_flst_deactivate' );
 
 
 ?>

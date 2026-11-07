@@ -12,9 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  * @param array $eeGrant
  * @return string Plain text
  */
-function avpvh_filelist_grant_summary($eeGrant) {
+function avpvh_flst_grant_summary($eeGrant) {
 
-	$eeGrant = avpvh_filelist_normalise_grant($eeGrant);
+	$eeGrant = avpvh_flst_normalise_grant($eeGrant);
 	$eeParts = array();
 
 	if( $eeGrant['users'] ) {
@@ -39,9 +39,9 @@ function avpvh_filelist_grant_summary($eeGrant) {
  * @param array  $eeGrant
  * @return string HTML
  */
-function avpvh_filelist_grant_picker($eePrefix, $eeGrant) {
+function avpvh_flst_grant_picker($eePrefix, $eeGrant) {
 
-	$eeGrant = avpvh_filelist_normalise_grant($eeGrant);
+	$eeGrant = avpvh_flst_normalise_grant($eeGrant);
 
 	// Users, as logins
 	$eeLogins = array();
@@ -69,7 +69,7 @@ function avpvh_filelist_grant_picker($eePrefix, $eeGrant) {
 
 	<p><strong>' . esc_html__('Groups', 'avpvh-filelist') . '</strong></p>';
 
-	$eeAvailable = avpvh_filelist_available_groups();
+	$eeAvailable = avpvh_flst_available_groups();
 	$eeExtra = array_diff($eeGrant['groups'], $eeAvailable); // Granted, but not (or no longer) offered
 
 	if( $eeAvailable ) {
@@ -82,7 +82,7 @@ function avpvh_filelist_grant_picker($eePrefix, $eeGrant) {
 		$eeOutput .= '</p>';
 	} elseif( current_user_can('manage_options') ) {
 		$eeOutput .= '<div class="eeNote">' . esc_html__('No directory groups found.', 'avpvh-filelist')
-			. ' <a href="' . esc_url(admin_url('admin.php?page=' . AVPVH_FILELIST_SLUG . '&tab=groups')) . '">' . esc_html__('Set up LDAP', 'avpvh-filelist') . '</a></div>';
+			. ' <a href="' . esc_url(admin_url('admin.php?page=' . AVPVH_FLST_SLUG . '&tab=groups')) . '">' . esc_html__('Set up LDAP', 'avpvh-filelist') . '</a></div>';
 	}
 
 	$eeOutput .= '
@@ -97,17 +97,17 @@ function avpvh_filelist_grant_picker($eePrefix, $eeGrant) {
 
 
 /**
- * Read a grant posted by avpvh_filelist_grant_picker(). The caller checks the nonce.
+ * Read a grant posted by avpvh_flst_grant_picker(). The caller checks the nonce.
  *
  * @param string $eePrefix
  * @return array{0: array, 1: string[]} The grant, and error messages (unknown users)
  */
-function avpvh_filelist_grant_from_post($eePrefix) {
+function avpvh_flst_grant_from_post($eePrefix) {
 
 	// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- the caller checks the nonce; every field is sanitized below
 	$eePosted = isset($_POST[$eePrefix]) && is_array($_POST[$eePrefix]) ? wp_unslash($_POST[$eePrefix]) : array();
 
-	$eeGrant = avpvh_filelist_empty_grant();
+	$eeGrant = avpvh_flst_empty_grant();
 	$eeErrors = array();
 
 	foreach( preg_split('/[\s,;]+/', sanitize_textarea_field((string) ($eePosted['users'] ?? ''))) as $eeName ) {
@@ -134,7 +134,7 @@ function avpvh_filelist_grant_from_post($eePrefix) {
 		$eeGrant['groups'][] = $eeGroup;
 	}
 
-	return array(avpvh_filelist_normalise_grant($eeGrant), $eeErrors);
+	return array(avpvh_flst_normalise_grant($eeGrant), $eeErrors);
 }
 
 
@@ -146,18 +146,18 @@ function avpvh_filelist_grant_from_post($eePrefix) {
  * @param array  $eeGrant
  * @return bool FALSE when the file is not in the list
  */
-function avpvh_filelist_save_file_grant($eeListID, $eeFilePath, $eeGrant) {
+function avpvh_flst_save_file_grant($eeListID, $eeFilePath, $eeGrant) {
 
-	$eeFiles = get_option('avpvh_filelist_files_' . (int) $eeListID, array());
+	$eeFiles = get_option('avpvh_flst_files_' . (int) $eeListID, array());
 	if( !is_array($eeFiles) ) { return FALSE; }
 
 	foreach( $eeFiles as $eeKey => $eeFileArray ) {
 		if( is_array($eeFileArray) && ($eeFileArray['FilePath'] ?? null) === $eeFilePath ) {
-			$eeFiles[$eeKey]['Access'] = avpvh_filelist_normalise_grant($eeGrant);
+			$eeFiles[$eeKey]['Access'] = avpvh_flst_normalise_grant($eeGrant);
 			// What the old add-on stored is now part of 'Access'
 			$eeFiles[$eeKey]['AccessUsers'] = array();
 			$eeFiles[$eeKey]['AccessRole'] = '';
-			update_option('avpvh_filelist_files_' . (int) $eeListID, $eeFiles);
+			update_option('avpvh_flst_files_' . (int) $eeListID, $eeFiles);
 			return TRUE;
 		}
 	}
@@ -171,15 +171,15 @@ function avpvh_filelist_save_file_grant($eeListID, $eeFilePath, $eeGrant) {
  *
  * @return string HTML
  */
-function avpvh_filelist_file_access_page() {
+function avpvh_flst_file_access_page() {
 
 	global $eeSFL;
 
 	$eeListID = (int) $eeSFL->eeListID;
-	if( !current_user_can(avpvh_filelist_list_admin_capability($eeListID)) ) { return ''; }
+	if( !current_user_can(avpvh_flst_list_admin_capability($eeListID)) ) { return ''; }
 
 	$eeMessages = '';
-	$eeTabURL = admin_url('admin.php?page=' . AVPVH_FILELIST_SLUG . '&tab=access&eeListID=' . $eeListID);
+	$eeTabURL = admin_url('admin.php?page=' . AVPVH_FLST_SLUG . '&tab=access&eeListID=' . $eeListID);
 
 	// Save
 	if( isset($_POST['eeSFL_AccessFile']) && check_admin_referer('eeSFL_FileAccess_' . $eeListID, 'eeSFL_FileAccessNonce') ) {
@@ -187,13 +187,13 @@ function avpvh_filelist_file_access_page() {
 		$eeFilePath = (string) wp_unslash($_POST['eeSFL_AccessFile']); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- compared exactly against the stored file list
 
 		if( isset($_POST['eeSFL_AccessClear']) ) {
-			$eeGrant = avpvh_filelist_empty_grant();
+			$eeGrant = avpvh_flst_empty_grant();
 			$eeErrors = array();
 		} else {
-			list($eeGrant, $eeErrors) = avpvh_filelist_grant_from_post('eeSFL_FileGrant');
+			list($eeGrant, $eeErrors) = avpvh_flst_grant_from_post('eeSFL_FileGrant');
 		}
 
-		if( avpvh_filelist_save_file_grant($eeListID, $eeFilePath, $eeGrant) ) {
+		if( avpvh_flst_save_file_grant($eeListID, $eeFilePath, $eeGrant) ) {
 			$eeMessages .= '<div class="notice notice-success"><p>' . esc_html__('Access saved.', 'avpvh-filelist') . '</p></div>';
 		} else {
 			$eeMessages .= '<div class="notice notice-error"><p>' . esc_html__('This file is not in the list.', 'avpvh-filelist') . '</p></div>';
@@ -204,7 +204,7 @@ function avpvh_filelist_file_access_page() {
 	}
 
 	$eeFiles = array();
-	foreach( (array) get_option('avpvh_filelist_files_' . $eeListID, array()) as $eeFileArray ) {
+	foreach( (array) get_option('avpvh_flst_files_' . $eeListID, array()) as $eeFileArray ) {
 		if( is_array($eeFileArray) && isset($eeFileArray['FilePath']) && ($eeFileArray['FileExt'] ?? '') !== 'folder' ) {
 			$eeFiles[$eeFileArray['FilePath']] = $eeFileArray;
 		}
@@ -213,7 +213,7 @@ function avpvh_filelist_file_access_page() {
 
 	$eeOutput = $eeMessages . '<section class="eeSFL_Settings">';
 
-	if( !avpvh_filelist_list_is_protected($eeSFL->eeListSettings) ) {
+	if( !avpvh_flst_list_is_protected($eeSFL->eeListSettings) ) {
 		$eeOutput .= '<div class="notice notice-warning inline"><p>'
 			. esc_html__('This list does not protect its files: a file with limited access is hidden from the list, but anyone with its direct URL can still open it. Turn on "Protect files" in the list settings.', 'avpvh-filelist')
 			. '</p></div>';
@@ -232,7 +232,7 @@ function avpvh_filelist_file_access_page() {
 			<input type="hidden" name="eeListID" value="' . (int) $eeListID . '" />
 			<input type="hidden" name="eeSFL_AccessFile" value="' . esc_attr($eeEditPath) . '" />
 			<h2>' . esc_html($eeEditPath) . '</h2>
-			' . avpvh_filelist_grant_picker('eeSFL_FileGrant', avpvh_filelist_file_grant($eeFiles[$eeEditPath])) . '
+			' . avpvh_flst_grant_picker('eeSFL_FileGrant', avpvh_flst_file_grant($eeFiles[$eeEditPath])) . '
 			<p>
 				<button type="submit" class="button button-primary">' . esc_html__('Save Access', 'avpvh-filelist') . '</button>
 				<button type="submit" name="eeSFL_AccessClear" value="1" class="button">' . esc_html__('Open to Everyone Who Sees the List', 'avpvh-filelist') . '</button>
@@ -253,11 +253,11 @@ function avpvh_filelist_file_access_page() {
 	}
 
 	foreach( $eeFiles as $eePath => $eeFileArray ) {
-		$eeGrant = avpvh_filelist_file_grant($eeFileArray);
+		$eeGrant = avpvh_flst_file_grant($eeFileArray);
 		$eeOutput .= '
 		<tr>
 			<td>' . esc_html($eePath) . '</td>
-			<td>' . (avpvh_filelist_grant_is_empty($eeGrant) ? '<em>' . esc_html__('Everyone who sees the list', 'avpvh-filelist') . '</em>' : esc_html(avpvh_filelist_grant_summary($eeGrant))) . '</td>
+			<td>' . (avpvh_flst_grant_is_empty($eeGrant) ? '<em>' . esc_html__('Everyone who sees the list', 'avpvh-filelist') . '</em>' : esc_html(avpvh_flst_grant_summary($eeGrant))) . '</td>
 			<td><a class="button button-small" href="' . esc_url($eeTabURL . '&eeFile=' . rawurlencode($eePath)) . '">' . esc_html__('Change', 'avpvh-filelist') . '</a></td>
 		</tr>';
 	}
@@ -275,7 +275,7 @@ function avpvh_filelist_file_access_page() {
  * @param mixed $eeValue
  * @return string
  */
-function avpvh_filelist_clean_setting_text($eeValue) {
+function avpvh_flst_clean_setting_text($eeValue) {
 	return trim(preg_replace('/[\x00-\x1F\x7F]/', '', (string) $eeValue));
 }
 
@@ -285,25 +285,25 @@ function avpvh_filelist_clean_setting_text($eeValue) {
  *
  * @return string HTML
  */
-function avpvh_filelist_groups_page() {
+function avpvh_flst_groups_page() {
 
 	if( !current_user_can('manage_options') ) { return ''; }
 
-	$eeSettings = avpvh_filelist_ldap_settings();
-	$eeAccess = avpvh_filelist_access_settings();
+	$eeSettings = avpvh_flst_ldap_settings();
+	$eeAccess = avpvh_flst_access_settings();
 	$eeMessages = '';
 	$eeTestOutput = '';
 
 	if( (isset($_POST['eeSFL_SaveGroups']) || isset($_POST['eeSFL_TestGroups'])) && check_admin_referer('eeSFL_Groups', 'eeSFL_GroupsNonce') ) {
 
-		// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- avpvh_filelist_clean_setting_text() sanitizes
+		// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- avpvh_flst_clean_setting_text() sanitizes
 		foreach( array('URI', 'BindDN', 'UserBase', 'UserFilter', 'GroupBase', 'GroupFilter', 'GroupListFilter', 'GroupAttribute', 'AllowedGroups') as $eeField ) {
-			$eeSettings[$eeField] = avpvh_filelist_clean_setting_text(wp_unslash($_POST['eeLDAP' . $eeField] ?? ''));
+			$eeSettings[$eeField] = avpvh_flst_clean_setting_text(wp_unslash($_POST['eeLDAP' . $eeField] ?? ''));
 		}
 		$eeSettings['Enabled'] = isset($_POST['eeLDAPEnabled']) ? 'YES' : 'NO';
 		$eeSettings['StartTLS'] = isset($_POST['eeLDAPStartTLS']) ? 'YES' : 'NO';
 
-		if( !avpvh_filelist_ldap_password_in_config() ) {
+		if( !avpvh_flst_ldap_password_in_config() ) {
 			if( isset($_POST['eeLDAPClearPassword']) ) {
 				$eeSettings['BindPassword'] = '';
 			} elseif( isset($_POST['eeLDAPBindPassword']) && $_POST['eeLDAPBindPassword'] !== '' ) {
@@ -311,28 +311,28 @@ function avpvh_filelist_groups_page() {
 			}
 		}
 
-		$eeAccess['AccelPrefix'] = avpvh_filelist_clean_setting_text(wp_unslash($_POST['eeAccelPrefix'] ?? ''));
+		$eeAccess['AccelPrefix'] = avpvh_flst_clean_setting_text(wp_unslash($_POST['eeAccelPrefix'] ?? ''));
 		if( $eeAccess['AccelPrefix'] !== '' && !preg_match('#^/[A-Za-z0-9_\-/]+$#', $eeAccess['AccelPrefix']) ) {
 			$eeAccess['AccelPrefix'] = '';
 			$eeMessages .= '<div class="notice notice-error"><p>' . esc_html__('The internal location must look like /protected-files/. It was cleared.', 'avpvh-filelist') . '</p></div>';
 		}
 		// phpcs:enable
 
-		update_option('avpvh_filelist_ldap', $eeSettings, FALSE);
-		update_option('avpvh_filelist_access_settings', $eeAccess);
+		update_option('avpvh_flst_ldap', $eeSettings, FALSE);
+		update_option('avpvh_flst_access_settings', $eeAccess);
 
 		$eeMessages .= '<div class="notice notice-success"><p>' . esc_html__('Settings saved.', 'avpvh-filelist') . '</p></div>';
 
 		if( isset($_POST['eeSFL_TestGroups']) ) {
 
-			$eeDirectory = new Avpvh_Filelist_Ldap_Directory($eeSettings);
+			$eeDirectory = new Avpvh_Flst_Ldap_Directory($eeSettings);
 			$eeLines = array();
 
 			$eeAll = $eeDirectory->eeAllGroups();
 			if( $eeAll === null ) {
 				$eeLines[] = '✗ ' . $eeDirectory->eeError;
 			} else {
-				$eeOffered = avpvh_filelist_filter_allowed_groups($eeAll, $eeSettings);
+				$eeOffered = avpvh_flst_filter_allowed_groups($eeAll, $eeSettings);
 				/* translators: 1: number of groups found, 2: number of groups offered */
 				$eeLines[] = '✓ ' . sprintf(__('Connected. %1$d groups found, %2$d offered for access:', 'avpvh-filelist'), count($eeAll), count($eeOffered)) . ' ' . implode(', ', $eeOffered);
 
@@ -364,7 +364,7 @@ function avpvh_filelist_groups_page() {
 
 	$eeOutput = $eeMessages . $eeTestOutput . '
 	<section class="eeSFL_Settings">
-	<form method="post" action="' . esc_url(admin_url('admin.php?page=' . AVPVH_FILELIST_SLUG . '&tab=groups')) . '" autocomplete="off">
+	<form method="post" action="' . esc_url(admin_url('admin.php?page=' . AVPVH_FLST_SLUG . '&tab=groups')) . '" autocomplete="off">
 	' . wp_nonce_field('eeSFL_Groups', 'eeSFL_GroupsNonce', true, false) . '
 
 	<h2>' . esc_html__('Groups from an LDAP Directory', 'avpvh-filelist') . '</h2>
@@ -384,17 +384,17 @@ function avpvh_filelist_groups_page() {
 	</fieldset>'
 	. $eeField('BindDN', __('Bind DN', 'avpvh-filelist'), __('A read-only account. Leave empty for an anonymous bind.', 'avpvh-filelist'));
 
-	if( avpvh_filelist_ldap_password_in_config() ) {
+	if( avpvh_flst_ldap_password_in_config() ) {
 		$eeOutput .= '
 		<fieldset><p><strong>' . esc_html__('Bind Password', 'avpvh-filelist') . '</strong></p>
-		<div class="eeNote">' . esc_html__('Set in wp-config.php (AVPVH_FILELIST_LDAP_BIND_PASSWORD).', 'avpvh-filelist') . '</div></fieldset>';
+		<div class="eeNote">' . esc_html__('Set in wp-config.php (AVPVH_FLST_LDAP_BIND_PASSWORD).', 'avpvh-filelist') . '</div></fieldset>';
 	} else {
 		$eeOutput .= '
 		<fieldset>
 		<p><label class="eeBlock" for="eeLDAPBindPassword">' . esc_html__('Bind Password', 'avpvh-filelist') . '</label>
 		<input type="password" class="eeFullWidth" name="eeLDAPBindPassword" id="eeLDAPBindPassword" value="" autocomplete="new-password" placeholder="' . esc_attr($eeSettings['BindPassword'] !== '' ? __('(stored, leave empty to keep)', 'avpvh-filelist') : '') . '" /></p>
 		<p><label><input type="checkbox" name="eeLDAPClearPassword" value="1" /> ' . esc_html__('Remove the stored password', 'avpvh-filelist') . '</label></p>
-		<div class="eeNote">' . esc_html__('Stored in the database. To keep it out of the database, define AVPVH_FILELIST_LDAP_BIND_PASSWORD in wp-config.php instead.', 'avpvh-filelist') . '</div>
+		<div class="eeNote">' . esc_html__('Stored in the database. To keep it out of the database, define AVPVH_FLST_LDAP_BIND_PASSWORD in wp-config.php instead.', 'avpvh-filelist') . '</div>
 		</fieldset>';
 	}
 
@@ -420,7 +420,7 @@ function avpvh_filelist_groups_page() {
 	<p><label class="eeBlock" for="eeAccelPrefix">' . esc_html__('nginx Internal Location (X-Accel-Redirect)', 'avpvh-filelist') . '</label>
 	<input type="text" class="eeFullWidth" name="eeAccelPrefix" id="eeAccelPrefix" value="' . esc_attr($eeAccess['AccelPrefix']) . '" placeholder="/sfl-protected/" /></p>
 	<div class="eeNote">' . esc_html__('Leave empty unless nginx has a matching internal location that points to the WordPress folder, for example:', 'avpvh-filelist') . '<br />
-	<code>location /sfl-protected/ { internal; alias ' . esc_html(rtrim(defined('AVPVH_FILELIST_WP_ROOT') ? AVPVH_FILELIST_WP_ROOT : ABSPATH, '/')) . '/; }</code></div>
+	<code>location /sfl-protected/ { internal; alias ' . esc_html(rtrim(defined('AVPVH_FLST_WP_ROOT') ? AVPVH_FLST_WP_ROOT : ABSPATH, '/')) . '/; }</code></div>
 	</fieldset>
 
 	<p>

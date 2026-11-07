@@ -9,18 +9,18 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // fails, a user is in no groups: group grants then simply don't match (fail closed).
 //
 // Other code may supply or adjust groups through the filters
-//   avpvh_filelist_user_groups      (string[] $groups, int $user_id)
-//   avpvh_filelist_available_groups (string[] $groups)
+//   avpvh_flst_user_groups      (string[] $groups, int $user_id)
+//   avpvh_flst_available_groups (string[] $groups)
 //
 // The bind password can be kept out of the database by defining it in wp-config.php:
-//   define( 'AVPVH_FILELIST_LDAP_BIND_PASSWORD', '...' );   (EESFL_LDAP_BIND_PASSWORD still works)
+//   define( 'AVPVH_FLST_LDAP_BIND_PASSWORD', '...' );   (EESFL_LDAP_BIND_PASSWORD still works)
 
 
 
 /**
  * @return array<string, string>
  */
-function avpvh_filelist_ldap_defaults() {
+function avpvh_flst_ldap_defaults() {
 	return array(
 		'Enabled'         => 'NO',
 		'URI'             => '', // ldap://host:389 or ldaps://host:636
@@ -41,9 +41,9 @@ function avpvh_filelist_ldap_defaults() {
 /**
  * @return array<string, string>
  */
-function avpvh_filelist_ldap_settings() {
-	$eeStored = get_option('avpvh_filelist_ldap', array());
-	return array_merge(avpvh_filelist_ldap_defaults(), is_array($eeStored) ? $eeStored : array());
+function avpvh_flst_ldap_settings() {
+	$eeStored = get_option('avpvh_flst_ldap', array());
+	return array_merge(avpvh_flst_ldap_defaults(), is_array($eeStored) ? $eeStored : array());
 }
 
 
@@ -52,8 +52,8 @@ function avpvh_filelist_ldap_settings() {
  *
  * @return bool
  */
-function avpvh_filelist_ldap_password_in_config() {
-	return defined('AVPVH_FILELIST_LDAP_BIND_PASSWORD') || defined('EESFL_LDAP_BIND_PASSWORD');
+function avpvh_flst_ldap_password_in_config() {
+	return defined('AVPVH_FLST_LDAP_BIND_PASSWORD') || defined('EESFL_LDAP_BIND_PASSWORD');
 }
 
 
@@ -61,8 +61,8 @@ function avpvh_filelist_ldap_password_in_config() {
  * @param array $eeSettings
  * @return string
  */
-function avpvh_filelist_ldap_bind_password($eeSettings) {
-	return avpvh_filelist_ldap_password_in_config() ? (string) constant(defined('AVPVH_FILELIST_LDAP_BIND_PASSWORD') ? 'AVPVH_FILELIST_LDAP_BIND_PASSWORD' : 'EESFL_LDAP_BIND_PASSWORD') : (string) ($eeSettings['BindPassword'] ?? '');
+function avpvh_flst_ldap_bind_password($eeSettings) {
+	return avpvh_flst_ldap_password_in_config() ? (string) constant(defined('AVPVH_FLST_LDAP_BIND_PASSWORD') ? 'AVPVH_FLST_LDAP_BIND_PASSWORD' : 'EESFL_LDAP_BIND_PASSWORD') : (string) ($eeSettings['BindPassword'] ?? '');
 }
 
 
@@ -72,8 +72,8 @@ function avpvh_filelist_ldap_bind_password($eeSettings) {
  * @param array|null $eeSettings
  * @return bool
  */
-function avpvh_filelist_ldap_enabled($eeSettings = null) {
-	$eeSettings = $eeSettings ?? avpvh_filelist_ldap_settings();
+function avpvh_flst_ldap_enabled($eeSettings = null) {
+	$eeSettings = $eeSettings ?? avpvh_flst_ldap_settings();
 	return ($eeSettings['Enabled'] ?? 'NO') === 'YES' && ($eeSettings['URI'] ?? '') !== '' && function_exists('ldap_connect');
 }
 
@@ -84,7 +84,7 @@ function avpvh_filelist_ldap_enabled($eeSettings = null) {
  * @param string $eeValue
  * @return string
  */
-function avpvh_filelist_ldap_escape($eeValue) {
+function avpvh_flst_ldap_escape($eeValue) {
 	return strtr((string) $eeValue, array(
 		'\\' => '\\5c',
 		'*'  => '\\2a',
@@ -102,10 +102,10 @@ function avpvh_filelist_ldap_escape($eeValue) {
  * @param array<string,string> $eeValues   e.g. ['login' => 'jan', 'email' => 'jan@example.org']
  * @return string
  */
-function avpvh_filelist_ldap_filter($eeTemplate, $eeValues) {
+function avpvh_flst_ldap_filter($eeTemplate, $eeValues) {
 	$eeReplace = array();
 	foreach( $eeValues as $eeKey => $eeValue ) {
-		$eeReplace['{' . $eeKey . '}'] = avpvh_filelist_ldap_escape($eeValue);
+		$eeReplace['{' . $eeKey . '}'] = avpvh_flst_ldap_escape($eeValue);
 	}
 	return strtr((string) $eeTemplate, $eeReplace);
 }
@@ -117,7 +117,7 @@ function avpvh_filelist_ldap_filter($eeTemplate, $eeValues) {
  * @param mixed $eeNames
  * @return string[]
  */
-function avpvh_filelist_normalise_group_names($eeNames) {
+function avpvh_flst_normalise_group_names($eeNames) {
 
 	$eeOut = array();
 
@@ -140,8 +140,8 @@ function avpvh_filelist_normalise_group_names($eeNames) {
  * @param array $eeSettings
  * @return string[]
  */
-function avpvh_filelist_ldap_allowed_groups($eeSettings) {
-	return avpvh_filelist_normalise_group_names(preg_split('/[\s,]+/', (string) ($eeSettings['AllowedGroups'] ?? '')));
+function avpvh_flst_ldap_allowed_groups($eeSettings) {
+	return avpvh_flst_normalise_group_names(preg_split('/[\s,]+/', (string) ($eeSettings['AllowedGroups'] ?? '')));
 }
 
 
@@ -152,10 +152,10 @@ function avpvh_filelist_ldap_allowed_groups($eeSettings) {
  * @param array    $eeSettings
  * @return string[]
  */
-function avpvh_filelist_filter_allowed_groups($eeGroups, $eeSettings) {
+function avpvh_flst_filter_allowed_groups($eeGroups, $eeSettings) {
 
-	$eeGroups = avpvh_filelist_normalise_group_names($eeGroups);
-	$eeAllowed = avpvh_filelist_ldap_allowed_groups($eeSettings);
+	$eeGroups = avpvh_flst_normalise_group_names($eeGroups);
+	$eeAllowed = avpvh_flst_ldap_allowed_groups($eeSettings);
 
 	return $eeAllowed ? array_values(array_intersect($eeGroups, $eeAllowed)) : $eeGroups;
 }
@@ -168,7 +168,7 @@ function avpvh_filelist_filter_allowed_groups($eeGroups, $eeSettings) {
  * @param string $eeAttribute
  * @return string[]
  */
-function avpvh_filelist_ldap_entry_values($eeEntries, $eeAttribute) {
+function avpvh_flst_ldap_entry_values($eeEntries, $eeAttribute) {
 
 	$eeAttribute = strtolower($eeAttribute); // ldap_get_entries() lower-cases attribute names
 	$eeValues = array();
@@ -192,7 +192,7 @@ function avpvh_filelist_ldap_entry_values($eeEntries, $eeAttribute) {
  * A connection to the configured directory. Every method fails closed: on any error it returns
  * null (or false) and keeps the reason in $eeError.
  */
-class Avpvh_Filelist_Ldap_Directory {
+class Avpvh_Flst_Ldap_Directory {
 
 	/** @var array */
 	private $eeSettings;
@@ -249,7 +249,7 @@ class Avpvh_Filelist_Ldap_Directory {
 		$eeBindDN = trim((string) $this->eeSettings['BindDN']);
 		$eeBound = $eeBindDN === ''
 			? @ldap_bind($eeLink) // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- the error is reported below
-			: @ldap_bind($eeLink, $eeBindDN, avpvh_filelist_ldap_bind_password($this->eeSettings)); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			: @ldap_bind($eeLink, $eeBindDN, avpvh_flst_ldap_bind_password($this->eeSettings)); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 
 		if( !$eeBound ) {
 			$this->eeError = __('Could not log in to the directory:', 'avpvh-filelist') . ' ' . ldap_error($eeLink);
@@ -289,7 +289,7 @@ class Avpvh_Filelist_Ldap_Directory {
 	 */
 	public function eeUserDN($eeLogin, $eeEmail) {
 
-		$eeFilter = avpvh_filelist_ldap_filter($this->eeSettings['UserFilter'], array('login' => $eeLogin, 'email' => $eeEmail));
+		$eeFilter = avpvh_flst_ldap_filter($this->eeSettings['UserFilter'], array('login' => $eeLogin, 'email' => $eeEmail));
 		$eeEntries = $this->eeSearch($this->eeSettings['UserBase'], $eeFilter, array('dn'));
 		if( $eeEntries === null ) { return null; }
 
@@ -317,12 +317,12 @@ class Avpvh_Filelist_Ldap_Directory {
 		$eeDN = $this->eeUserDN($eeLogin, $eeEmail);
 		if( $eeDN === null ) { return null; }
 
-		$eeFilter = avpvh_filelist_ldap_filter($this->eeSettings['GroupFilter'], array('dn' => $eeDN, 'login' => $eeLogin, 'email' => $eeEmail));
+		$eeFilter = avpvh_flst_ldap_filter($this->eeSettings['GroupFilter'], array('dn' => $eeDN, 'login' => $eeLogin, 'email' => $eeEmail));
 		$eeAttribute = $this->eeSettings['GroupAttribute'] ?: 'cn';
 		$eeEntries = $this->eeSearch($this->eeSettings['GroupBase'], $eeFilter, array($eeAttribute));
 		if( $eeEntries === null ) { return null; }
 
-		return avpvh_filelist_normalise_group_names(avpvh_filelist_ldap_entry_values($eeEntries, $eeAttribute));
+		return avpvh_flst_normalise_group_names(avpvh_flst_ldap_entry_values($eeEntries, $eeAttribute));
 	}
 
 	/**
@@ -336,7 +336,7 @@ class Avpvh_Filelist_Ldap_Directory {
 		$eeEntries = $this->eeSearch($this->eeSettings['GroupBase'], $this->eeSettings['GroupListFilter'], array($eeAttribute));
 		if( $eeEntries === null ) { return null; }
 
-		return avpvh_filelist_normalise_group_names(avpvh_filelist_ldap_entry_values($eeEntries, $eeAttribute));
+		return avpvh_flst_normalise_group_names(avpvh_flst_ldap_entry_values($eeEntries, $eeAttribute));
 	}
 
 	public function __destruct() {
@@ -352,7 +352,7 @@ class Avpvh_Filelist_Ldap_Directory {
  * @param array $eeSettings
  * @return string
  */
-function avpvh_filelist_ldap_cache_version($eeSettings) {
+function avpvh_flst_ldap_cache_version($eeSettings) {
 	unset($eeSettings['BindPassword']);
 	return substr(md5(wp_json_encode($eeSettings)), 0, 10);
 }
@@ -360,12 +360,12 @@ function avpvh_filelist_ldap_cache_version($eeSettings) {
 
 /**
  * The groups a WordPress user is in, from LDAP (cached 15 minutes) and the
- * avpvh_filelist_user_groups filter.
+ * avpvh_flst_user_groups filter.
  *
  * @param int $eeUserID
  * @return string[]
  */
-function avpvh_filelist_user_groups($eeUserID) {
+function avpvh_flst_user_groups($eeUserID) {
 
 	static $eeMemo = array();
 
@@ -374,11 +374,11 @@ function avpvh_filelist_user_groups($eeUserID) {
 	if( isset($eeMemo[$eeUserID]) ) { return $eeMemo[$eeUserID]; }
 
 	$eeGroups = array();
-	$eeSettings = avpvh_filelist_ldap_settings();
+	$eeSettings = avpvh_flst_ldap_settings();
 
-	if( avpvh_filelist_ldap_enabled($eeSettings) ) {
+	if( avpvh_flst_ldap_enabled($eeSettings) ) {
 
-		$eeKey = 'avpvh_filelist_groups_' . avpvh_filelist_ldap_cache_version($eeSettings) . '_' . $eeUserID;
+		$eeKey = 'avpvh_flst_groups_' . avpvh_flst_ldap_cache_version($eeSettings) . '_' . $eeUserID;
 		$eeCached = get_transient($eeKey);
 
 		if( is_array($eeCached) ) {
@@ -387,10 +387,10 @@ function avpvh_filelist_user_groups($eeUserID) {
 			$eeUser = get_userdata($eeUserID);
 			$eeFound = null;
 			if( $eeUser ) {
-				$eeDirectory = new Avpvh_Filelist_Ldap_Directory($eeSettings);
+				$eeDirectory = new Avpvh_Flst_Ldap_Directory($eeSettings);
 				$eeFound = $eeDirectory->eeUserGroups((string) $eeUser->user_login, (string) $eeUser->user_email);
 				if( $eeFound === null ) {
-					avpvh_filelist_debug_log('LDAP groups for user ' . $eeUserID . ' unavailable: ' . $eeDirectory->eeError, 'Access');
+					avpvh_flst_debug_log('LDAP groups for user ' . $eeUserID . ' unavailable: ' . $eeDirectory->eeError, 'Access');
 				}
 			}
 			$eeGroups = $eeFound ?? array();
@@ -399,7 +399,7 @@ function avpvh_filelist_user_groups($eeUserID) {
 		}
 	}
 
-	$eeGroups = avpvh_filelist_normalise_group_names(apply_filters('avpvh_filelist_user_groups', $eeGroups, $eeUserID));
+	$eeGroups = avpvh_flst_normalise_group_names(apply_filters('avpvh_flst_user_groups', $eeGroups, $eeUserID));
 	$eeMemo[$eeUserID] = $eeGroups;
 
 	return $eeGroups;
@@ -408,31 +408,31 @@ function avpvh_filelist_user_groups($eeUserID) {
 
 /**
  * The groups an admin can grant access to: every directory group (cached 15 minutes),
- * limited by AllowedGroups, plus the avpvh_filelist_available_groups filter.
+ * limited by AllowedGroups, plus the avpvh_flst_available_groups filter.
  *
  * @return string[]
  */
-function avpvh_filelist_available_groups() {
+function avpvh_flst_available_groups() {
 
 	$eeGroups = array();
-	$eeSettings = avpvh_filelist_ldap_settings();
+	$eeSettings = avpvh_flst_ldap_settings();
 
-	if( avpvh_filelist_ldap_enabled($eeSettings) ) {
+	if( avpvh_flst_ldap_enabled($eeSettings) ) {
 
-		$eeKey = 'avpvh_filelist_groups_' . avpvh_filelist_ldap_cache_version($eeSettings) . '_all';
+		$eeKey = 'avpvh_flst_groups_' . avpvh_flst_ldap_cache_version($eeSettings) . '_all';
 		$eeCached = get_transient($eeKey);
 
 		if( is_array($eeCached) ) {
 			$eeGroups = $eeCached;
 		} else {
-			$eeDirectory = new Avpvh_Filelist_Ldap_Directory($eeSettings);
+			$eeDirectory = new Avpvh_Flst_Ldap_Directory($eeSettings);
 			$eeFound = $eeDirectory->eeAllGroups();
 			$eeGroups = $eeFound ?? array();
 			set_transient($eeKey, $eeGroups, $eeFound === null ? MINUTE_IN_SECONDS : 15 * MINUTE_IN_SECONDS);
 		}
 
-		$eeGroups = avpvh_filelist_filter_allowed_groups($eeGroups, $eeSettings);
+		$eeGroups = avpvh_flst_filter_allowed_groups($eeGroups, $eeSettings);
 	}
 
-	return avpvh_filelist_normalise_group_names(apply_filters('avpvh_filelist_available_groups', $eeGroups));
+	return avpvh_flst_normalise_group_names(apply_filters('avpvh_flst_available_groups', $eeGroups));
 }

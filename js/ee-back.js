@@ -257,7 +257,7 @@ jQuery(document).ready(function() {
 	   console.log('Confirmed');
 
 	   var eeData = {
-			'action': 'avpvh_filelist_confirm',
+			'action': 'avpvh_flst_confirm',
 			'confirm': 'toggle'
 		};
 

@@ -11,8 +11,8 @@ This file helps AI coding agents and developers understand the structure, conven
 | Plugin slug | `avpvh-filelist` |
 | Text domain | `avpvh-filelist` |
 | Main file | `avpvh-filelist.php` |
-| Version constant | `AVPVH_FILELIST_VERSION` |
-| DB version option | `avpvh_filelist_version` (Simple File List used `eeSFL_Version`; see Migration) |
+| Version constant | `AVPVH_FLST_VERSION` |
+| DB version option | `avpvh_flst_version` (Simple File List used `eeSFL_Version`; see Migration) |
 | Default upload dir | `wp-content/uploads/avpvh-filelist/` |
 | Shortcode | `[avpvh_filelist]` (`[eeSFL]` still works) |
 
@@ -23,7 +23,7 @@ This file helps AI coding agents and developers understand the structure, conven
 There is one version and it is free. No licensing, registration or upsell code belongs here.
 
 Built in (some of it used to be paid add-ons, now rewritten):
-- Several file lists (`ee-lists.php`, `ee-lists-admin.php`); list IDs in `avpvh_filelist_list_ids`
+- Several file lists (`ee-lists.php`, `ee-lists-admin.php`); list IDs in `avpvh_flst_list_ids`
 - Access per list and per file, protected downloads through WordPress (`ee-access.php`, `ee-access-admin.php`)
 - Groups from LDAP (`ee-groups.php`)
 - Search and paging (`ee-search.php`)
@@ -51,13 +51,13 @@ avpvh-filelist.php                Main plugin file — constants, globals, WP ho
 AGENTS.md                         This file
 
 includes/
-  ee-class.php                    Avpvh_Filelist_Main — core methods: GetEnv, GetSettings, UpdateFileListArray,
+  ee-class.php                    Avpvh_Flst_Main — core methods: GetEnv, GetSettings, UpdateFileListArray,
                                   UpdateFileDetail, CheckThumbnail, GetRootPath, GetThisURL, etc.
-  ee-class-uploads.php            Avpvh_Filelist_Uploads — handles file upload processing and validation
-  ee-class-send.php               Avpvh_Filelist_Send — email file sharing
-  ee-functions.php                Standalone functions: avpvh_filelist_file_system wrapper, avpvh_filelist_version_check,
-                                  avpvh_filelist_file_editor, AJAX job functions, asset registration, admin menu
-  ee-front-end.php                avpvh_filelist_front_end() — [avpvh_filelist] shortcode handler, front-end rendering
+  ee-class-uploads.php            Avpvh_Flst_Uploads — handles file upload processing and validation
+  ee-class-send.php               Avpvh_Flst_Send — email file sharing
+  ee-functions.php                Standalone functions: avpvh_flst_file_system wrapper, avpvh_flst_version_check,
+                                  avpvh_flst_file_editor, AJAX job functions, asset registration, admin menu
+  ee-front-end.php                avpvh_flst_front_end() — [avpvh_filelist] shortcode handler, front-end rendering
   ee-admin-page.php               Admin page router — tab/subtab dispatcher
   ee-admin-header.php             Admin page header and tab navigation
   ee-admin-footer.php             Admin page footer
@@ -116,52 +116,53 @@ images/
 
 The plugin uses a **hybrid class + functions** approach:
 
-1. **`avpvh_filelist_setup()`** runs on `init`, loads all includes, instantiates classes, and bootstraps the environment
-2. **`Avpvh_Filelist_Main`** (`ee-class.php`) holds stateful methods and the core file-list logic
+1. **`avpvh_flst_setup()`** runs on `init`, loads all includes, instantiates classes, and bootstraps the environment
+2. **`Avpvh_Flst_Main`** (`ee-class.php`) holds stateful methods and the core file-list logic
 3. **`ee-functions.php`** holds stateless utility functions and all WordPress AJAX handlers
 4. **Admin pages** are tab/subtab routed through `ee-admin-page.php` using `$_GET['tab']` and `$_GET['subtab']`
-5. **Front-end** rendering is triggered by the `[avpvh_filelist]` shortcode via `avpvh_filelist_front_end()`
+5. **Front-end** rendering is triggered by the `[avpvh_filelist]` shortcode via `avpvh_flst_front_end()`
 
 ### Request Flow
 
 ```
 WordPress init
-  └── avpvh_filelist_setup()
+  └── avpvh_flst_setup()
         ├── Load includes (ee-functions.php, ee-class.php, ee-class-uploads.php, ee-class-send.php)
-        ├── $eeSFL = new Avpvh_Filelist_Main()
-        ├── $eeSFLU = new Avpvh_Filelist_Uploads()
-        ├── $eeSFLE = new Avpvh_Filelist_Send()
+        ├── $eeSFL = new Avpvh_Flst_Main()
+        ├── $eeSFLU = new Avpvh_Flst_Uploads()
+        ├── $eeSFLE = new Avpvh_Flst_Send()
         ├── get_env() — detect OS, web server, PHP extensions, paths
         ├── get_root_path() — resolve site root (handles managed host path offsets)
         ├── get_settings(1) — load list settings from DB
-        └── avpvh_filelist_version_check() — install/upgrade routine (admin only)
+        └── avpvh_flst_version_check() — install/upgrade routine (admin only)
 
 Shortcode [avpvh_filelist]
-  └── avpvh_filelist_front_end() in ee-front-end.php
+  └── avpvh_flst_front_end() in ee-front-end.php
         ├── Load file list array from DB
         ├── Apply access/display rules
         ├── ee-list-display.php → table/flex/tiles renderer
         └── upload_form() — if uploads enabled
 
-AJAX: avpvh_filelist_edit_job
-  └── avpvh_filelist_file_editor() in ee-functions.php
+AJAX: avpvh_flst_edit_job
+  └── avpvh_flst_file_editor() in ee-functions.php
         ├── Verify nonce (eeSFL_ActionNonce)
-        ├── Dispatch to avpvh_filelist_delete_file() / avpvh_filelist_rename_file() / avpvh_filelist_update_file_*()
+        ├── Dispatch to avpvh_flst_delete_file() / avpvh_flst_rename_file() / avpvh_flst_update_file_*()
         └── Update DB file array
 
-AJAX: avpvh_filelist_upload_job
-  └── avpvh_filelist_upload_job() → $eeSFLU->file_uploader()
+AJAX: avpvh_flst_upload_job
+  └── avpvh_flst_upload_job() → $eeSFLU->file_uploader()
 ```
 
 ---
 
 ## Naming Conventions
 
-- **Functions**: `avpvh_filelist_snake_case()`; methods `snake_case()`; classes `Avpvh_Filelist_*`. The naming check of grmt/wp-plugin-ci (WordPress or PSR style, never mixed in one name) applies.
+- **Prefix**: `avpvh_flst_` / `Avpvh_Flst_` / `AVPVH_FLST_` for every global name (functions, classes, constants, options, transients, hooks, AJAX actions). `flst` follows the rule for the own plugins: the first four consonants of the plugin name, skipping a consonant already used (see `/mnt/c/03-src/wordpress/CLAUDE.md`). The shortcode, the plugin folder, the text domain and script handles use the full name (`avpvh_filelist`, `avpvh-filelist`).
+- **Functions**: `avpvh_flst_snake_case()`; methods `snake_case()`; classes `Avpvh_Flst_*`. The naming check of grmt/wp-plugin-ci (WordPress or PSR style, never mixed in one name) applies.
 - **Globals**: `$eeSFL`, `$eeSFLU`, `$eeSFLE`
-- **DB options**: `avpvh_filelist_list_ids`, `avpvh_filelist_settings_{ID}`, `avpvh_filelist_files_{ID}`, `avpvh_filelist_ldap`, `avpvh_filelist_access_settings`, `AVPVH_FILELIST_VERSION`
-- **AJAX actions**: `avpvh_filelist_upload_job`, `avpvh_filelist_edit_job`, `avpvh_filelist_sendfile_job`
-- **WP action hooks**: `avpvh_filelist_uploaded`, `avpvh_filelist_deleted`, `avpvh_filelist_edited`, `avpvh_filelist_listed`
+- **DB options**: `avpvh_flst_list_ids`, `avpvh_flst_settings_{ID}`, `avpvh_flst_files_{ID}`, `avpvh_flst_ldap`, `avpvh_flst_access_settings`, `AVPVH_FLST_VERSION`
+- **AJAX actions**: `avpvh_flst_upload_job`, `avpvh_flst_edit_job`, `avpvh_flst_sendfile_job`
+- **WP action hooks**: `avpvh_flst_uploaded`, `avpvh_flst_deleted`, `avpvh_flst_edited`, `avpvh_flst_listed`
 - **CSS IDs** (kept from Simple File List, so sites' own CSS keeps working; JS function names and HTML ids/classes keep the `eeSFL` names too): `#eeSFL` (wrapper), `#eeSFL_AdminMain`, `#eeSFL_ListOpsBarGo`, `#upload_form`
 
 ---
@@ -169,38 +170,38 @@ AJAX: avpvh_filelist_upload_job
 ## Key Patterns
 
 ### Filesystem Operations
-All file I/O goes through `avpvh_filelist_file_system($mode, $params)` in `ee-functions.php`. This wraps `WP_Filesystem` with a native PHP fallback for managed hosts (Pressable, Kinsta, WP Engine) where FTP credentials are unavailable at runtime. Never bypass with raw `file_get_contents()`, `rename()`, `unlink()`, etc.
+All file I/O goes through `avpvh_flst_file_system($mode, $params)` in `ee-functions.php`. This wraps `WP_Filesystem` with a native PHP fallback for managed hosts (Pressable, Kinsta, WP Engine) where FTP credentials are unavailable at runtime. Never bypass with raw `file_get_contents()`, `rename()`, `unlink()`, etc.
 
 ```php
-avpvh_filelist_file_system('get_contents', array('file' => '/path/to/file'));
-avpvh_filelist_file_system('put_contents', array('file' => '/path', 'data' => $content));
-avpvh_filelist_file_system('move', array('from' => $old, 'to' => $new));
-avpvh_filelist_file_system('delete', array('file' => $path));
-avpvh_filelist_file_system('is_dir', array('path' => $dir));
-avpvh_filelist_file_system('mkdir', array('path' => $dir));
-avpvh_filelist_file_system('filemtime', array('file' => $path));
-avpvh_filelist_file_system('filesize', array('file' => $path));
-avpvh_filelist_file_system('dirlist', array('path' => $dir, 'include_hidden' => false, 'recursive' => false));
+avpvh_flst_file_system('get_contents', array('file' => '/path/to/file'));
+avpvh_flst_file_system('put_contents', array('file' => '/path', 'data' => $content));
+avpvh_flst_file_system('move', array('from' => $old, 'to' => $new));
+avpvh_flst_file_system('delete', array('file' => $path));
+avpvh_flst_file_system('is_dir', array('path' => $dir));
+avpvh_flst_file_system('mkdir', array('path' => $dir));
+avpvh_flst_file_system('filemtime', array('file' => $path));
+avpvh_flst_file_system('filesize', array('file' => $path));
+avpvh_flst_file_system('dirlist', array('path' => $dir, 'include_hidden' => false, 'recursive' => false));
 ```
 
 All return `array('success' => bool, 'data' => mixed)`.
 
 ### Settings
-Stored per list in `get_option('avpvh_filelist_settings_{ID}')`. Access via `$eeSFL->eeListSettings['Key']`. Defaults are defined in `$eeSFL->eeDefaultListSettings` inside `ee-class.php`. Always merge new defaults over existing settings on upgrade — never overwrite blindly.
+Stored per list in `get_option('avpvh_flst_settings_{ID}')`. Access via `$eeSFL->eeListSettings['Key']`. Defaults are defined in `$eeSFL->eeDefaultListSettings` inside `ee-class.php`. Always merge new defaults over existing settings on upgrade — never overwrite blindly.
 
 ### File List Array
-Stored per list in `get_option('avpvh_filelist_files_{ID}')`. Each entry is an array with: `FilePath`, `FileExt`, `FileSize`, `FileDateAdded`, `FileDateChanged`, `FileNiceName`, `FileDescription`, and optionally `Access` (a per-file grant of users, roles and groups).
+Stored per list in `get_option('avpvh_flst_files_{ID}')`. Each entry is an array with: `FilePath`, `FileExt`, `FileSize`, `FileDateAdded`, `FileDateChanged`, `FileNiceName`, `FileDescription`, and optionally `Access` (a per-file grant of users, roles and groups).
 
 ### Version / Update Routine
-`avpvh_filelist_version_check()` in `ee-functions.php` (wp-admin only):
-1. Reads the `avpvh_filelist_version` option
+`avpvh_flst_version_check()` in `ee-functions.php` (wp-admin only):
+1. Reads the `avpvh_flst_version` option
 2. Not found → New Install path (writes default settings for list 1)
 3. Found but different → Update path (merge settings, clean up old options)
 
 ### Migration from Simple File List
-`avpvh_filelist_migrate_legacy()` in `ee-migrate.php` runs once, early in `avpvh_filelist_setup()` before anything reads settings, and records itself in `avpvh_filelist_migrated`:
-1. Copies `eeSFL_*` options to their new names (`avpvh_filelist_new_option_name()`); logs, versions and task flags are not carried over. The old options stay, for a rollback.
-2. Sets `avpvh_filelist_version`, so the New Install path doesn't reset list 1.
+`avpvh_flst_migrate_legacy()` in `ee-migrate.php` runs once, early in `avpvh_flst_setup()` before anything reads settings, and records itself in `avpvh_flst_migrated`:
+1. Copies `eeSFL_*` options to their new names (`avpvh_flst_new_option_name()`); logs, versions and task flags are not carried over. The old options stay, for a rollback.
+2. Sets `avpvh_flst_version`, so the New Install path doesn't reset list 1.
 3. Rewrites `[eeSFL]` to `[avpvh_filelist]` in post content (not revisions) and the text, block and custom HTML widgets. `[eeSFL]` stays registered for page builder data and other places it doesn't reach.
 4. Deactivates `simple-file-list/simple-file-list.php`.
 5. Shows an administrator one notice with what it did.

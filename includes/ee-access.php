@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 /**
  * @return array{users: int[], roles: string[], groups: string[]}
  */
-function avpvh_filelist_empty_grant() {
+function avpvh_flst_empty_grant() {
 	return array('users' => array(), 'roles' => array(), 'groups' => array());
 }
 
@@ -33,7 +33,7 @@ function avpvh_filelist_empty_grant() {
  * @param mixed $eeGrant
  * @return array{users: int[], roles: string[], groups: string[]}
  */
-function avpvh_filelist_normalise_grant($eeGrant) {
+function avpvh_flst_normalise_grant($eeGrant) {
 
 	$eeGrant = is_array($eeGrant) ? $eeGrant : array();
 
@@ -51,7 +51,7 @@ function avpvh_filelist_normalise_grant($eeGrant) {
 	return array(
 		'users'  => $eeUsers,
 		'roles'  => $eeRoles,
-		'groups' => avpvh_filelist_normalise_group_names($eeGrant['groups'] ?? array()),
+		'groups' => avpvh_flst_normalise_group_names($eeGrant['groups'] ?? array()),
 	);
 }
 
@@ -60,8 +60,8 @@ function avpvh_filelist_normalise_grant($eeGrant) {
  * @param array $eeGrant
  * @return bool
  */
-function avpvh_filelist_grant_is_empty($eeGrant) {
-	$eeGrant = avpvh_filelist_normalise_grant($eeGrant);
+function avpvh_flst_grant_is_empty($eeGrant) {
+	$eeGrant = avpvh_flst_normalise_grant($eeGrant);
 	return !$eeGrant['users'] && !$eeGrant['roles'] && !$eeGrant['groups'];
 }
 
@@ -73,9 +73,9 @@ function avpvh_filelist_grant_is_empty($eeGrant) {
  * @param array $eeFileArray
  * @return array{users: int[], roles: string[], groups: string[]}
  */
-function avpvh_filelist_file_grant($eeFileArray) {
+function avpvh_flst_file_grant($eeFileArray) {
 
-	$eeGrant = avpvh_filelist_normalise_grant($eeFileArray['Access'] ?? array());
+	$eeGrant = avpvh_flst_normalise_grant($eeFileArray['Access'] ?? array());
 
 	if( !empty($eeFileArray['AccessUsers']) && is_array($eeFileArray['AccessUsers']) ) {
 		$eeGrant['users'] = array_merge($eeGrant['users'], $eeFileArray['AccessUsers']);
@@ -90,7 +90,7 @@ function avpvh_filelist_file_grant($eeFileArray) {
 		$eeGrant['roles'][] = $eeLegacyRole;
 	}
 
-	return avpvh_filelist_normalise_grant($eeGrant);
+	return avpvh_flst_normalise_grant($eeGrant);
 }
 
 
@@ -101,12 +101,12 @@ function avpvh_filelist_file_grant($eeFileArray) {
  * @param int   $eeUserID
  * @return bool
  */
-function avpvh_filelist_user_matches_grant($eeGrant, $eeUserID) {
+function avpvh_flst_user_matches_grant($eeGrant, $eeUserID) {
 
 	$eeUserID = (int) $eeUserID;
 	if( $eeUserID <= 0 ) { return FALSE; }
 
-	$eeGrant = avpvh_filelist_normalise_grant($eeGrant);
+	$eeGrant = avpvh_flst_normalise_grant($eeGrant);
 
 	if( in_array($eeUserID, $eeGrant['users'], true) ) { return TRUE; }
 
@@ -116,7 +116,7 @@ function avpvh_filelist_user_matches_grant($eeGrant, $eeUserID) {
 	}
 
 	// Last: this may ask the directory
-	if( $eeGrant['groups'] && array_intersect($eeGrant['groups'], avpvh_filelist_user_groups($eeUserID)) ) { return TRUE; }
+	if( $eeGrant['groups'] && array_intersect($eeGrant['groups'], avpvh_flst_user_groups($eeUserID)) ) { return TRUE; }
 
 	return FALSE;
 }
@@ -129,8 +129,8 @@ function avpvh_filelist_user_matches_grant($eeGrant, $eeUserID) {
  * @param int $eeUserID
  * @return bool
  */
-function avpvh_filelist_user_manages_list($eeListID, $eeUserID) {
-	return (int) $eeUserID > 0 && user_can((int) $eeUserID, avpvh_filelist_list_admin_capability($eeListID));
+function avpvh_flst_user_manages_list($eeListID, $eeUserID) {
+	return (int) $eeUserID > 0 && user_can((int) $eeUserID, avpvh_flst_list_admin_capability($eeListID));
 }
 
 
@@ -138,7 +138,7 @@ function avpvh_filelist_user_manages_list($eeListID, $eeUserID) {
  * @param array $eeSettings
  * @return bool
  */
-function avpvh_filelist_list_is_protected($eeSettings) {
+function avpvh_flst_list_is_protected($eeSettings) {
 	return ($eeSettings['ProtectFiles'] ?? 'NO') === 'YES';
 }
 
@@ -151,17 +151,17 @@ function avpvh_filelist_list_is_protected($eeSettings) {
  * @param int   $eeUserID
  * @return bool
  */
-function avpvh_filelist_user_can_see_list($eeListID, $eeSettings, $eeUserID) {
+function avpvh_flst_user_can_see_list($eeListID, $eeSettings, $eeUserID) {
 
 	$eeUserID = (int) $eeUserID;
 
-	if( avpvh_filelist_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
+	if( avpvh_flst_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
 
 	switch ( $eeSettings['ShowList'] ?? 'YES' ) {
 		case 'YES':     return TRUE;
 		case 'USER':    return $eeUserID > 0;
 		case 'ADMIN':   return $eeUserID > 0 && user_can($eeUserID, 'manage_options');
-		case 'GRANTED': return avpvh_filelist_user_matches_grant($eeSettings['ListAccess'] ?? array(), $eeUserID);
+		case 'GRANTED': return avpvh_flst_user_matches_grant($eeSettings['ListAccess'] ?? array(), $eeUserID);
 		default:        return FALSE;
 	}
 }
@@ -176,14 +176,14 @@ function avpvh_filelist_user_can_see_list($eeListID, $eeSettings, $eeUserID) {
  * @param int   $eeUserID
  * @return bool
  */
-function avpvh_filelist_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
+function avpvh_flst_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
 
-	if( avpvh_filelist_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
-	if( !avpvh_filelist_user_can_see_list($eeListID, $eeSettings, $eeUserID) ) { return FALSE; }
+	if( avpvh_flst_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
+	if( !avpvh_flst_user_can_see_list($eeListID, $eeSettings, $eeUserID) ) { return FALSE; }
 
-	$eeGrant = avpvh_filelist_file_grant($eeFileArray);
+	$eeGrant = avpvh_flst_file_grant($eeFileArray);
 
-	return avpvh_filelist_grant_is_empty($eeGrant) || avpvh_filelist_user_matches_grant($eeGrant, $eeUserID);
+	return avpvh_flst_grant_is_empty($eeGrant) || avpvh_flst_user_matches_grant($eeGrant, $eeUserID);
 }
 
 
@@ -197,12 +197,12 @@ function avpvh_filelist_user_can_read_file($eeListID, $eeSettings, $eeFileArray,
  * @param int   $eeUserID
  * @return bool
  */
-function avpvh_filelist_user_can_change_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
+function avpvh_flst_user_can_change_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) {
 
-	if( avpvh_filelist_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
+	if( avpvh_flst_user_manages_list($eeListID, $eeUserID) ) { return TRUE; }
 	if( ($eeSettings['AllowFrontManage'] ?? 'NO') !== 'YES' ) { return FALSE; }
 
-	return avpvh_filelist_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID);
+	return avpvh_flst_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID);
 }
 
 
@@ -214,7 +214,7 @@ function avpvh_filelist_user_can_change_file($eeListID, $eeSettings, $eeFileArra
  * @param array  $eeOptions  'download' => bool (save instead of open), 'thumb' => bool
  * @return string
  */
-function avpvh_filelist_protected_file_url($eeListID, $eeFilePath, $eeOptions = array()) {
+function avpvh_flst_protected_file_url($eeListID, $eeFilePath, $eeOptions = array()) {
 
 	$eeURL = home_url('/') . '?sfl-list=' . (int) $eeListID;
 
@@ -232,15 +232,15 @@ function avpvh_filelist_protected_file_url($eeListID, $eeFilePath, $eeOptions = 
  * @param int    $eeListID
  * @param array  $eeSettings
  * @param string $eeFilePath
- * @param array  $eeOptions See avpvh_filelist_protected_file_url()
+ * @param array  $eeOptions See avpvh_flst_protected_file_url()
  * @return string
  */
-function avpvh_filelist_file_url($eeListID, $eeSettings, $eeFilePath, $eeOptions = array()) {
+function avpvh_flst_file_url($eeListID, $eeSettings, $eeFilePath, $eeOptions = array()) {
 
 	global $eeSFL;
 
-	if( avpvh_filelist_list_is_protected($eeSettings) ) {
-		return avpvh_filelist_protected_file_url($eeListID, $eeFilePath, $eeOptions);
+	if( avpvh_flst_list_is_protected($eeSettings) ) {
+		return avpvh_flst_protected_file_url($eeListID, $eeFilePath, $eeOptions);
 	}
 
 	return $eeSFL->eeEnvironment['wpSiteURL'] . $eeSettings['FileListDir'] . $eeFilePath;
@@ -253,8 +253,8 @@ function avpvh_filelist_file_url($eeListID, $eeSettings, $eeFilePath, $eeOptions
  *
  * @return array{AccelPrefix: string}
  */
-function avpvh_filelist_access_settings() {
-	$eeStored = get_option('avpvh_filelist_access_settings', array());
+function avpvh_flst_access_settings() {
+	$eeStored = get_option('avpvh_flst_access_settings', array());
 	return array_merge(array('AccelPrefix' => ''), is_array($eeStored) ? $eeStored : array());
 }
 
@@ -272,22 +272,22 @@ function avpvh_filelist_access_settings() {
  * @param string $eeRoot     Site root path, with trailing slash
  * @return array{status: int, file?: string, name?: string}
  */
-function avpvh_filelist_resolve_file_request($eeListID, $eeFilePath, $eeThumb, $eeUserID, $eeRoot) {
+function avpvh_flst_resolve_file_request($eeListID, $eeFilePath, $eeThumb, $eeUserID, $eeRoot) {
 
 	$eeDenied = array('status' => (int) $eeUserID > 0 ? 404 : 401);
 
 	$eeListID = (int) $eeListID;
 	$eeFilePath = ltrim(str_replace('\\', '/', (string) $eeFilePath), '/');
 
-	if( $eeFilePath === '' || strpos($eeFilePath, "\0") !== FALSE || !avpvh_filelist_list_exists($eeListID) ) { return $eeDenied; }
+	if( $eeFilePath === '' || strpos($eeFilePath, "\0") !== FALSE || !avpvh_flst_list_exists($eeListID) ) { return $eeDenied; }
 	if( in_array('..', explode('/', $eeFilePath), true) ) { return $eeDenied; }
 
-	$eeSettings = get_option('avpvh_filelist_settings_' . $eeListID);
+	$eeSettings = get_option('avpvh_flst_settings_' . $eeListID);
 	if( !is_array($eeSettings) || empty($eeSettings['FileListDir']) ) { return $eeDenied; }
 
 	// Only files the list knows about
 	$eeFileArray = null;
-	foreach( (array) get_option('avpvh_filelist_files_' . $eeListID, array()) as $eeItem ) {
+	foreach( (array) get_option('avpvh_flst_files_' . $eeListID, array()) as $eeItem ) {
 		if( is_array($eeItem) && ($eeItem['FilePath'] ?? null) === $eeFilePath && ($eeItem['FileExt'] ?? '') !== 'folder' ) {
 			$eeFileArray = $eeItem;
 			break;
@@ -295,7 +295,7 @@ function avpvh_filelist_resolve_file_request($eeListID, $eeFilePath, $eeThumb, $
 	}
 	if( $eeFileArray === null ) { return $eeDenied; }
 
-	if( !avpvh_filelist_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) ) { return $eeDenied; }
+	if( !avpvh_flst_user_can_read_file($eeListID, $eeSettings, $eeFileArray, $eeUserID) ) { return $eeDenied; }
 
 	$eeListDir = $eeRoot . trim($eeSettings['FileListDir'], '/') . '/';
 
@@ -330,7 +330,7 @@ function avpvh_filelist_resolve_file_request($eeListID, $eeFilePath, $eeThumb, $
  * @param int    $eeSize
  * @return array{0: int, 1: int}|null|false [start, end] inclusive; null: whole file; false: not satisfiable
  */
-function avpvh_filelist_parse_range($eeHeader, $eeSize) {
+function avpvh_flst_parse_range($eeHeader, $eeSize) {
 
 	if( !preg_match('/^bytes=(\d*)-(\d*)$/', trim((string) $eeHeader), $eeMatch) ) { return null; } // Ignore what we don't support
 	if( $eeMatch[1] === '' && $eeMatch[2] === '' ) { return null; }
@@ -357,7 +357,7 @@ function avpvh_filelist_parse_range($eeHeader, $eeSize) {
  *
  * @return string[]
  */
-function avpvh_filelist_inline_extensions() {
+function avpvh_flst_inline_extensions() {
 	return array('pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'mp3', 'm4a', 'ogg', 'oga', 'wav', 'flac', 'mp4', 'm4v', 'webm', 'ogv', 'mov', 'txt');
 }
 
@@ -369,7 +369,7 @@ function avpvh_filelist_inline_extensions() {
  * @param bool   $eeInline
  * @return string
  */
-function avpvh_filelist_content_disposition($eeName, $eeInline) {
+function avpvh_flst_content_disposition($eeName, $eeInline) {
 	// One _ per character; per byte when the name is not valid UTF-8
 	$eeAscii = preg_replace('/[^\x20-\x7E]|["\\\\]/u', '_', $eeName) ?? preg_replace('/[^\x20-\x7E]|["\\\\]/', '_', $eeName);
 	return ($eeInline ? 'inline' : 'attachment') . '; filename="' . $eeAscii . '"; filename*=UTF-8\'\'' . rawurlencode($eeName);
@@ -379,35 +379,35 @@ function avpvh_filelist_content_disposition($eeName, $eeInline) {
 /**
  * Send a resolved file and stop.
  *
- * @param array $eeResolved From avpvh_filelist_resolve_file_request()
+ * @param array $eeResolved From avpvh_flst_resolve_file_request()
  * @param bool  $eeDownload Save instead of open
  */
-function avpvh_filelist_send_file($eeResolved, $eeDownload) {
+function avpvh_flst_send_file($eeResolved, $eeDownload) {
 
 	$eeFile = $eeResolved['file'];
 	$eeName = $eeResolved['name'];
 	$eeSize = (int) filesize($eeFile);
 	$eeExt = strtolower(pathinfo($eeName, PATHINFO_EXTENSION));
 	$eeType = wp_check_filetype($eeName);
-	$eeInline = !$eeDownload && in_array($eeExt, avpvh_filelist_inline_extensions(), true);
+	$eeInline = !$eeDownload && in_array($eeExt, avpvh_flst_inline_extensions(), true);
 
 	while( ob_get_level() ) { ob_end_clean(); }
 
 	header('Content-Type: ' . ($eeInline && $eeType['type'] ? $eeType['type'] : 'application/octet-stream'));
-	header('Content-Disposition: ' . avpvh_filelist_content_disposition($eeName, $eeInline));
+	header('Content-Disposition: ' . avpvh_flst_content_disposition($eeName, $eeInline));
 	header('X-Content-Type-Options: nosniff');
 	header('Cache-Control: private, no-store');
 	header('Accept-Ranges: bytes');
 
 	// Let nginx send the file from an internal location
-	$eeAccel = trim(avpvh_filelist_access_settings()['AccelPrefix']);
+	$eeAccel = trim(avpvh_flst_access_settings()['AccelPrefix']);
 	if( $eeAccel !== '' ) {
 		$eeEncoded = implode('/', array_map('rawurlencode', explode('/', $eeResolved['path'])));
 		header('X-Accel-Redirect: ' . rtrim($eeAccel, '/') . '/' . $eeEncoded);
 		exit;
 	}
 
-	$eeRange = isset($_SERVER['HTTP_RANGE']) ? avpvh_filelist_parse_range(sanitize_text_field(wp_unslash($_SERVER['HTTP_RANGE'])), $eeSize) : null;
+	$eeRange = isset($_SERVER['HTTP_RANGE']) ? avpvh_flst_parse_range(sanitize_text_field(wp_unslash($_SERVER['HTTP_RANGE'])), $eeSize) : null;
 
 	if( $eeRange === FALSE ) {
 		status_header(416);
@@ -452,7 +452,7 @@ function avpvh_filelist_send_file($eeResolved, $eeDownload) {
 /**
  * The download handler: ?sfl-list=N&sfl-file=path[&sfl-dl=1][&sfl-thumb=1]
  */
-function avpvh_filelist_handle_file_request() {
+function avpvh_flst_handle_file_request() {
 
 	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- links are shareable; access is checked per user
 	if( !isset($_GET['sfl-list'], $_GET['sfl-file']) ) { return; }
@@ -465,11 +465,11 @@ function avpvh_filelist_handle_file_request() {
 
 	nocache_headers();
 
-	$eeRoot = defined('AVPVH_FILELIST_WP_ROOT') ? AVPVH_FILELIST_WP_ROOT : ABSPATH;
-	$eeResolved = avpvh_filelist_resolve_file_request($eeListID, $eeFilePath, $eeThumb, get_current_user_id(), $eeRoot);
+	$eeRoot = defined('AVPVH_FLST_WP_ROOT') ? AVPVH_FLST_WP_ROOT : ABSPATH;
+	$eeResolved = avpvh_flst_resolve_file_request($eeListID, $eeFilePath, $eeThumb, get_current_user_id(), $eeRoot);
 
 	if( $eeResolved['status'] === 401 ) {
-		$eeHere = avpvh_filelist_protected_file_url($eeListID, $eeFilePath, array('download' => $eeDownload, 'thumb' => $eeThumb));
+		$eeHere = avpvh_flst_protected_file_url($eeListID, $eeFilePath, array('download' => $eeDownload, 'thumb' => $eeThumb));
 		wp_safe_redirect(wp_login_url($eeHere));
 		exit;
 	}
@@ -481,9 +481,9 @@ function avpvh_filelist_handle_file_request() {
 		exit;
 	}
 
-	avpvh_filelist_debug_log('Serving ' . $eeResolved['path'] . ' to user ' . get_current_user_id(), 'Access', $eeListID);
+	avpvh_flst_debug_log('Serving ' . $eeResolved['path'] . ' to user ' . get_current_user_id(), 'Access', $eeListID);
 
-	avpvh_filelist_send_file($eeResolved, $eeDownload);
+	avpvh_flst_send_file($eeResolved, $eeDownload);
 }
 
 
@@ -494,7 +494,7 @@ function avpvh_filelist_handle_file_request() {
  *
  * @return bool
  */
-function avpvh_filelist_protect_list_dir() {
+function avpvh_flst_protect_list_dir() {
 
 	global $eeSFL;
 
@@ -507,7 +507,7 @@ function avpvh_filelist_protect_list_dir() {
 			. "<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n"
 			. "<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n";
 
-		$eeWrite = avpvh_filelist_file_system('put_contents', array('file' => $eeDir . '.htaccess', 'data' => $eeRules));
+		$eeWrite = avpvh_flst_file_system('put_contents', array('file' => $eeDir . '.htaccess', 'data' => $eeRules));
 
 		if( !$eeWrite['success'] ) {
 			$eeSFL->eeUserMessages['errors'][] = __('WARNING: Could not write', 'avpvh-filelist') . ' .htaccess';

@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
-avpvh_filelist_debug_log("Loaded: Upload Settings", 'General');
+avpvh_flst_debug_log("Loaded: Upload Settings", 'General');
 
 // Check for POST, Capability and Nonce
 if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanitize_text_field(wp_unslash($_POST['eePost']))) AND check_admin_referer( 'avpvh-filelist-upload-settings', 'avpvh-filelist-upload-settings-nonce')) {
@@ -75,7 +75,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 		,'UploadConfirm'
 	);
 	foreach( $eeCheckboxes as $eeTerm ) {
-		$eeSFL->eeListSettings[$eeTerm] = avpvh_filelist_process_checkbox_input($eeTerm);
+		$eeSFL->eeListSettings[$eeTerm] = avpvh_flst_process_checkbox_input($eeTerm);
 	}
 
 	// Show Above or Below List
@@ -84,7 +84,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 
 
 	// Update DB
-	update_option('avpvh_filelist_settings_' . $eeSFL->eeListID, $eeSFL->eeListSettings );
+	update_option('avpvh_flst_settings_' . $eeSFL->eeListID, $eeSFL->eeListSettings );
 
 	$eeSFL->eeUserMessages['messages'][] = __('Upload Settings Saved', 'avpvh-filelist');
 }

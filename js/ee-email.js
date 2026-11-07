@@ -109,7 +109,7 @@ function eeSFLE_DoFileSend() {
 		'message': eeMessage,
 		'files': eeFileList,
 		'eeSecurity': eeSFL_SendNonce,
-		'action': 'avpvh_filelist_sendfile_job'
+		'action': 'avpvh_flst_sendfile_job'
 	};
 
 	var eeSaved = jQuery('#SendFilesButton').html(); // Save the button

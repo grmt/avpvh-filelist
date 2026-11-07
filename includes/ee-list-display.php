@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // The Main File List Display Page Used Both Front and Back
 
 
-avpvh_filelist_debug_log("Loading File List Display ...", 'List');
+avpvh_flst_debug_log("Loading File List Display ...", 'List');
 
 // Initialization is such a sensation
 $eeReScan = FALSE;
@@ -31,7 +31,7 @@ if(!isset($eeSFL_HideType)) { $eeSFL_HideType = FALSE; }
 
 // Who is accessing this list?
 $eeThisUser = get_current_user_id();
-avpvh_filelist_debug_log('- USER ID: ' . $eeThisUser , 'List', $eeSFL->eeListID);
+avpvh_flst_debug_log('- USER ID: ' . $eeThisUser , 'List', $eeSFL->eeListID);
 
 // Load the file list
 if( empty($eeSFL->eeAllFiles) OR $eeForceSort) { $eeSFL->get_file_list($eeForceSort); }
@@ -39,7 +39,7 @@ if( empty($eeSFL->eeAllFiles) OR $eeForceSort) { $eeSFL->get_file_list($eeForceS
 // echo '<pre>(' . $eeSFL->eeListID . ') '; print_r($eeSFL->eeListSettings); echo '</pre>'; // exit;
 // echo '<pre>'; print_r($eeSFL->eeAllFiles); echo '</pre>'; exit;
 
-avpvh_filelist_debug_log('- LIST RUN #' . $eeSFL->eeListRun, 'List', $eeSFL->eeListID);
+avpvh_flst_debug_log('- LIST RUN #' . $eeSFL->eeListRun, 'List', $eeSFL->eeListID);
 
 // Process Bulk Ops
 include($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-list-ops-bar-process.php');
@@ -63,7 +63,7 @@ if( $eeSFL_Uploaded ) { // Reduce down to upload Results
 
 } else { // Reduce full list down to just the items for display <<<---------------------------
 
-	avpvh_filelist_debug_log('Scanning File Array...', 'List', $eeSFL->eeListID);
+	avpvh_flst_debug_log('Scanning File Array...', 'List', $eeSFL->eeListID);
 
 	// Only files directly in the list folder (folders and their files from the old Pro version are skipped)
 	foreach( $eeSFL->eeAllFiles as $eeKey => $eeFileArray ) {
@@ -78,7 +78,7 @@ if( $eeSFL_Uploaded ) { // Reduce down to upload Results
 	// Only what this visitor will see, so the counts and pages are right
 	foreach( $eeSFL->eeDisplayFiles as $eeKey => $eeFileArray ) {
 		if( !strpos($eeFileArray['FilePath'], '.')
-			|| !avpvh_filelist_user_can_read_file($eeSFL->eeListID, $eeSFL->eeListSettings, $eeFileArray, get_current_user_id())
+			|| !avpvh_flst_user_can_read_file($eeSFL->eeListID, $eeSFL->eeListSettings, $eeFileArray, get_current_user_id())
 			|| ( $eeSFL_HideName && in_array($eeFileArray['FilePath'], array_map('trim', explode(',', $eeSFL_HideName)), TRUE) )
 			|| ( $eeSFL_HideType && in_array($eeFileArray['FileExt'], array_map('trim', explode(',', strtolower($eeSFL_HideType))), TRUE) ) ) {
 			unset($eeSFL->eeDisplayFiles[$eeKey]);
@@ -88,18 +88,18 @@ if( $eeSFL_Uploaded ) { // Reduce down to upload Results
 
 	// Search: always in wp-admin, on the front end when the list or shortcode turns it on
 	$eeShowSearch = $eeAdmin || ($eeSFL->eeListSettings['ShowSearch'] ?? 'NO') == 'YES';
-	$eeSearchQuery = $eeShowSearch ? avpvh_filelist_search_query($eeSFL->eeListID) : '';
+	$eeSearchQuery = $eeShowSearch ? avpvh_flst_search_query($eeSFL->eeListID) : '';
 	$eeListTotal = count($eeSFL->eeDisplayFiles);
 
 	if( $eeSearchQuery !== '' ) {
-		$eeSFL->eeDisplayFiles = avpvh_filelist_filter_files($eeSFL->eeDisplayFiles, $eeSearchQuery);
-		avpvh_filelist_debug_log('- Search "' . $eeSearchQuery . '": ' . count($eeSFL->eeDisplayFiles) . ' of ' . $eeListTotal, 'List', $eeSFL->eeListID);
+		$eeSFL->eeDisplayFiles = avpvh_flst_filter_files($eeSFL->eeDisplayFiles, $eeSearchQuery);
+		avpvh_flst_debug_log('- Search "' . $eeSearchQuery . '": ' . count($eeSFL->eeDisplayFiles) . ' of ' . $eeListTotal, 'List', $eeSFL->eeListID);
 	}
 
 	$eeMatchCount = count($eeSFL->eeDisplayFiles);
 
 	// Paging
-	$eePaging = avpvh_filelist_paginate($eeMatchCount, (int) ($eeSFL->eeListSettings['FilesPerPage'] ?? 0), avpvh_filelist_page_query($eeSFL->eeListID));
+	$eePaging = avpvh_flst_paginate($eeMatchCount, (int) ($eeSFL->eeListSettings['FilesPerPage'] ?? 0), avpvh_flst_page_query($eeSFL->eeListID));
 	if( $eePaging['length'] ) {
 		$eeSFL->eeDisplayFiles = array_slice($eeSFL->eeDisplayFiles, $eePaging['offset'], $eePaging['length'], TRUE); // Keep the keys
 	}
@@ -158,7 +158,7 @@ if(!is_admin() AND $eeSFL_Uploaded) {
 // Search form, with the result count while searching
 if( !empty($eeShowSearch) && ($eeListTotal > 0 || $eeSearchQuery !== '') ) {
 
-	$eeOutput .= avpvh_filelist_search_form_html($eeSFL->eeListID, $eeSearchQuery, $eeURL);
+	$eeOutput .= avpvh_flst_search_form_html($eeSFL->eeListID, $eeSearchQuery, $eeURL);
 
 	if( $eeSearchQuery !== '' ) {
 		$eeOutput .= '<p class="eeSFL_SearchResults">' . ( $eeMatchCount
@@ -202,7 +202,7 @@ if( ($eeShowOps OR $eeSFL->eeListSettings['AllowBulkFileDownload'] == 'YES') AND
 
 
 $eeSFL->eeItemCount = count($eeSFL->eeDisplayFiles);
-avpvh_filelist_debug_log('- Listing ' . $eeSFL->eeItemCount . ' Items ...', 'List', $eeSFL->eeListID);
+avpvh_flst_debug_log('- Listing ' . $eeSFL->eeItemCount . ' Items ...', 'List', $eeSFL->eeListID);
 
 if( $eeSFL->eeItemCount ) {
 
@@ -222,14 +222,14 @@ if( $eeSFL->eeItemCount ) {
 
 	// Page links
 	if( !empty($eePaging) ) {
-		$eeOutput .= avpvh_filelist_pagination_html($eeSFL->eeListID, $eePaging, $eeURL);
+		$eeOutput .= avpvh_flst_pagination_html($eeSFL->eeListID, $eePaging, $eeURL);
 	}
 
 
 // No Files Found and Not Empty Search
 } elseif( $eeSFL->eeFileCount === 0 AND $eeSearchQuery === '' ) {
 
-	avpvh_filelist_debug_log("There are no files here :-(", 'List');
+	avpvh_flst_debug_log("There are no files here :-(", 'List');
 
 	if($eeAdmin) {
 		 $eeOutput .= '<div><p>&#8593; ' . __('Upload some files and they will appear here.', 'avpvh-filelist') . '</p></div>';
@@ -319,10 +319,10 @@ if(is_object($eeSFLE) && method_exists($eeSFLE, 'email_send_form')) {
 
 
 
-avpvh_filelist_debug_log("File Listing Completed.", 'List');
+avpvh_flst_debug_log("File Listing Completed.", 'List');
 
 $eeMessages[] = $eeURL;
 $eeMessages[] = 'Listing ' . $eeSFL->eeFileCount . ' Items';
-do_action('avpvh_filelist_loaded', $eeMessages);
+do_action('avpvh_flst_loaded', $eeMessages);
 
 ?>

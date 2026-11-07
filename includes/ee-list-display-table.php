@@ -69,7 +69,7 @@ if($eeSFL->eeListSettings['ShowHeader'] == 'YES' OR $eeAdmin) {  $eeOutput .= '<
 <tbody>';
 
 
-avpvh_filelist_debug_log("Listing Files in Table View...", 'General');
+avpvh_flst_debug_log("Listing Files in Table View...", 'General');
 
 // echo '<pre>'; print_r($eeSFL->eeAllFiles); echo '</pre>'; exit;
 

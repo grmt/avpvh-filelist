@@ -261,7 +261,7 @@ def step_ldap_down(admin):
 
 
 def edit_job(browser, nonce, action, name, **extra):
-    fields = {'action': 'avpvh_filelist_edit_job', 'eeSFL_ID': '1', 'eeFileName': name, 'eeFileAction': action, 'eeSecurity': nonce}
+    fields = {'action': 'avpvh_flst_edit_job', 'eeSFL_ID': '1', 'eeFileName': name, 'eeFileAction': action, 'eeSecurity': nonce}
     fields.update(extra)
     return browser.post('/wp-admin/admin-ajax.php', fields)[2].decode('utf-8', 'replace').strip()
 
@@ -317,7 +317,7 @@ def step_front_manage(admin):
     # Uploads with overwrite on: only files the uploader may read are replaced
     upload_nonce = page_value(page, r'var eeSFL_Nonce = "([^"]+)"')
     check('upload: jan gets the upload nonce', bool(upload_nonce))
-    fields = {'action': 'avpvh_filelist_upload_job', 'eeSFL_ID': '1', 'eeSFL_FileUploadDir': '', 'avpvh-filelist-upload': upload_nonce}
+    fields = {'action': 'avpvh_flst_upload_job', 'eeSFL_ID': '1', 'eeSFL_FileUploadDir': '', 'avpvh-filelist-upload': upload_nonce}
     answer = jan.upload('/wp-admin/admin-ajax.php', fields, 'notulen-bestuur.pdf', b'%PDF-1.4 overwritten\n')[2].decode().strip()
     check('upload: a restricted file is not overwritten', content('piet', 'notulen-bestuur.pdf') == original, (answer, content('piet', 'notulen-bestuur.pdf')))
     answer = jan.upload('/wp-admin/admin-ajax.php', fields, 'ledenbrief.txt', b'nieuwe brief\n')[2].decode().strip()

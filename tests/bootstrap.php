@@ -14,7 +14,7 @@ if ( ! is_dir(WP_PLUGIN_DIR) ) {
 }
 
 function get_transient($eeKey) { return false; }
-function avpvh_filelist_debug_log($eeString, $eeCategory = '', $eeListID = 0) { return false; }
+function avpvh_flst_debug_log($eeString, $eeCategory = '', $eeListID = 0) { return false; }
 
 // Options live in $GLOBALS['eeTestOptions']; tests reset it in setUp().
 $GLOBALS['eeTestOptions'] = array();

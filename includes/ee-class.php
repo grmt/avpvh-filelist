@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
-class Avpvh_Filelist_Main {
+class Avpvh_Flst_Main {
 
 	// public $eeCustomThumbsPath = '';
 
@@ -44,19 +44,19 @@ class Avpvh_Filelist_Main {
 	// Get the WordPress Root Directory for File Operations
 	public function get_root_path() {
 
-		if(!defined('AVPVH_FILELIST_WP_ROOT')) {
+		if(!defined('AVPVH_FLST_WP_ROOT')) {
 
 			// Check transient cache — avoids a filesystem write test on every page load.
-			// Cleared on plugin activation (avpvh_filelist_activate); expires after 24 hours.
-			$eeRootPath = get_transient('avpvh_filelist_root_path');
+			// Cleared on plugin activation (avpvh_flst_activate); expires after 24 hours.
+			$eeRootPath = get_transient('avpvh_flst_root_path');
 			if($eeRootPath !== false) {
-				define('AVPVH_FILELIST_WP_ROOT', $eeRootPath);
-				avpvh_filelist_debug_log("eeSFL_WP_ROOT (cached) = " . $eeRootPath, 'Environment');
+				define('AVPVH_FLST_WP_ROOT', $eeRootPath);
+				avpvh_flst_debug_log("eeSFL_WP_ROOT (cached) = " . $eeRootPath, 'Environment');
 				return $eeRootPath;
 			}
 
-			avpvh_filelist_debug_log("Checking file operations compatibility...", 'Environment');
-			avpvh_filelist_debug_log("ABSPATH = " . ABSPATH, 'Environment');
+			avpvh_flst_debug_log("Checking file operations compatibility...", 'Environment');
+			avpvh_flst_debug_log("ABSPATH = " . ABSPATH, 'Environment');
 
 			// Get WordPress uploads directory
 			$eeUploadDir = wp_upload_dir();
@@ -66,52 +66,52 @@ class Avpvh_Filelist_Main {
 			}
 
 			$eeUploadPath = str_replace('\\', '/', $eeUploadDir['basedir']); // Normalize Windows backslashes before regex
-			avpvh_filelist_debug_log("WordPress uploads directory: " . $eeUploadPath, 'Environment');
+			avpvh_flst_debug_log("WordPress uploads directory: " . $eeUploadPath, 'Environment');
 
 			// Test if we can write to the uploads directory
 			$testFile = $eeUploadPath . '/sfl-write-test-' . time() . '.tmp';
-			avpvh_filelist_debug_log("Testing write permissions: " . $testFile, 'FileSystem');
+			avpvh_flst_debug_log("Testing write permissions: " . $testFile, 'FileSystem');
 
-			$write_test = avpvh_filelist_file_system('put_contents', array(
+			$write_test = avpvh_flst_file_system('put_contents', array(
 				'file' => $testFile,
 				'data' => 'SFL compatibility test'
 			));
 
 			if (!$write_test['success']) {
 				$this->eeUserMessages['error'][] = '- Cannot write to uploads directory - hosting incompatible';
-				avpvh_filelist_debug_log("FILESYSTEM ERROR: Cannot write to uploads directory - " . ($write_test['error'] ?? 'Unknown error'), 'ERROR');
+				avpvh_flst_debug_log("FILESYSTEM ERROR: Cannot write to uploads directory - " . ($write_test['error'] ?? 'Unknown error'), 'ERROR');
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Diagnostic log only, WP_Filesystem not initialized in error-check context
-				avpvh_filelist_debug_log("Directory permissions: readable=" . (is_readable($eeUploadPath) ? 'YES' : 'NO') . ", writable=" . (is_writable($eeUploadPath) ? 'YES' : 'NO'), 'FileSystem');
+				avpvh_flst_debug_log("Directory permissions: readable=" . (is_readable($eeUploadPath) ? 'YES' : 'NO') . ", writable=" . (is_writable($eeUploadPath) ? 'YES' : 'NO'), 'FileSystem');
 				return false;
 			}
 
 			// Clean up test file
-			$cleanup_result = avpvh_filelist_file_system('delete', array('file' => $testFile));
+			$cleanup_result = avpvh_flst_file_system('delete', array('file' => $testFile));
 			if (!$cleanup_result['success']) {
-				avpvh_filelist_debug_log("Warning: Could not clean up test file " . $testFile, 'FileSystem');
+				avpvh_flst_debug_log("Warning: Could not clean up test file " . $testFile, 'FileSystem');
 			}
 
-			avpvh_filelist_debug_log("Uploads directory is writable ✓", 'Environment');
-			avpvh_filelist_debug_log("File system permissions verified successfully", 'FileSystem');
+			avpvh_flst_debug_log("Uploads directory is writable ✓", 'Environment');
+			avpvh_flst_debug_log("File system permissions verified successfully", 'FileSystem');
 
 			// Simple approach: if uploads contains wp-content/uploads, extract the root
 			if (preg_match('#(.+)/wp-content/uploads#', $eeUploadPath, $matches)) {
 				$eeRootPath = $matches[1] . '/';
-				avpvh_filelist_debug_log("Extracted root from uploads path: " . $eeRootPath, 'Environment');
+				avpvh_flst_debug_log("Extracted root from uploads path: " . $eeRootPath, 'Environment');
 			} else {
 				// Fallback: use ABSPATH (works for most standard installations)
 				$eeRootPath = ABSPATH;
-				avpvh_filelist_debug_log("Using standard ABSPATH: " . $eeRootPath, 'Environment');
+				avpvh_flst_debug_log("Using standard ABSPATH: " . $eeRootPath, 'Environment');
 			}
 
-			set_transient('avpvh_filelist_root_path', $eeRootPath, DAY_IN_SECONDS);
-			define('AVPVH_FILELIST_WP_ROOT', $eeRootPath);
-			avpvh_filelist_debug_log("eeSFL_WP_ROOT = " . $eeRootPath, 'Environment');
+			set_transient('avpvh_flst_root_path', $eeRootPath, DAY_IN_SECONDS);
+			define('AVPVH_FLST_WP_ROOT', $eeRootPath);
+			avpvh_flst_debug_log("eeSFL_WP_ROOT = " . $eeRootPath, 'Environment');
 
 			return $eeRootPath;
 
 		} else {
-			return AVPVH_FILELIST_WP_ROOT;
+			return AVPVH_FLST_WP_ROOT;
 		}
 	}
 
@@ -214,17 +214,17 @@ class Avpvh_Filelist_Main {
     public function get_settings($eeListID) {
 
 		$eeListID = is_numeric($eeListID) ? (int) $eeListID : 0;
-		$eeStored = $eeListID >= 1 ? get_option('avpvh_filelist_settings_' . $eeListID) : FALSE;
+		$eeStored = $eeListID >= 1 ? get_option('avpvh_flst_settings_' . $eeListID) : FALSE;
 
 		if(is_array($eeStored)) {
 			// Merge with defaults to ensure all keys exist
 			$this->eeListSettings = array_merge($this->eeDefaultListSettings, $eeStored);
 		} elseif($eeListID === 1) {
 			$this->eeUserMessages['warnings'][] = 'No Settings Found. Restoring the defaults ...';
-			update_option('avpvh_filelist_settings_1', $this->eeDefaultListSettings); // The settings are gone, so reset to defaults.
+			update_option('avpvh_flst_settings_1', $this->eeDefaultListSettings); // The settings are gone, so reset to defaults.
 			$this->eeListSettings = $this->eeDefaultListSettings;
 		} else {
-			avpvh_filelist_debug_log("Unknown list ID: " . $eeListID, 'Settings');
+			avpvh_flst_debug_log("Unknown list ID: " . $eeListID, 'Settings');
 			$this->eeListSettings = array();
 			return $this->eeListSettings;
 		}
@@ -280,15 +280,15 @@ class Avpvh_Filelist_Main {
 		$eeEnv['wpSiteURL'] = get_option('siteurl') . '/'; // This Wordpress Website
 		$eeEnv['wpPluginsURL'] = plugins_url() . '/'; // The Wordpress Plugins Location
 
-		$eeEnv['pluginURL'] = plugins_url() . '/' . AVPVH_FILELIST_SLUG . '/';
-		$eeEnv['pluginDir'] = WP_PLUGIN_DIR . '/' . AVPVH_FILELIST_SLUG . '/';
+		$eeEnv['pluginURL'] = plugins_url() . '/' . AVPVH_FLST_SLUG . '/';
+		$eeEnv['pluginDir'] = WP_PLUGIN_DIR . '/' . AVPVH_FLST_SLUG . '/';
 
 		$wpUploadArray = wp_upload_dir();
 		$wpUploadDir = $wpUploadArray['basedir'];
 		$eeEnv['wpUploadDir'] = $wpUploadDir . '/'; // The Wordpress Uploads Location
 		$eeEnv['wpUploadURL'] = $wpUploadArray['baseurl'] . '/';
 
-		$eeEnv['FileListDefaultDir'] = str_replace($this->get_root_path(), '', $eeEnv['wpUploadDir'] . AVPVH_FILELIST_DEFAULT_DIR); // The default file list location
+		$eeEnv['FileListDefaultDir'] = str_replace($this->get_root_path(), '', $eeEnv['wpUploadDir'] . AVPVH_FLST_DEFAULT_DIR); // The default file list location
 
 		$eeEnv['php_version'] = phpversion(); // PHP Version
 
@@ -298,12 +298,12 @@ class Avpvh_Filelist_Main {
 
 		$eeEnv['the_max_upload_size'] = $eeSFLU->actual_upload_max();
 
-		$eeEnv['supported'] = get_option('avpvh_filelist_supported'); // Server technologies available (i.e. FFMPEG)
+		$eeEnv['supported'] = get_option('avpvh_flst_supported'); // Server technologies available (i.e. FFMPEG)
 
 		$eeEnv['wpUserID'] = get_current_user_id();
 
 		// Check Server technologies available (i.e. ffMpeg)
-		$eeSupported = get_option('avpvh_filelist_supported');
+		$eeSupported = get_option('avpvh_flst_supported');
 
 		if(is_array($eeSupported)) {
 
@@ -326,7 +326,7 @@ class Avpvh_Filelist_Main {
 
 	/**
 	 * Set up the temporary directory for ZIP downloads and debug logs.
-	 * Defines AVPVH_FILELIST_TEMP_DIR and AVPVH_FILELIST_TEMP_URL constants and sets eeTempDirectory.
+	 * Defines AVPVH_FLST_TEMP_DIR and AVPVH_FLST_TEMP_URL constants and sets eeTempDirectory.
 	 * Migrates any existing files from the old wp-content location if present.
 	 * Does NOT create the directory — call ensure_temp_directory() at point of use.
 	 */
@@ -335,10 +335,10 @@ class Avpvh_Filelist_Main {
 		$new_dir = wp_upload_dir()['basedir'] . '/avpvh-filelist-temp-files';
 		$new_url = wp_upload_dir()['baseurl']  . '/avpvh-filelist-temp-files';
 
-		if(!defined('AVPVH_FILELIST_TEMP_DIR')) { define('AVPVH_FILELIST_TEMP_DIR', $new_dir); }
-		if(!defined('AVPVH_FILELIST_TEMP_URL')) { define('AVPVH_FILELIST_TEMP_URL', $new_url); }
+		if(!defined('AVPVH_FLST_TEMP_DIR')) { define('AVPVH_FLST_TEMP_DIR', $new_dir); }
+		if(!defined('AVPVH_FLST_TEMP_URL')) { define('AVPVH_FLST_TEMP_URL', $new_url); }
 
-		$this->eeTempDirectory = AVPVH_FILELIST_TEMP_DIR;
+		$this->eeTempDirectory = AVPVH_FLST_TEMP_DIR;
 
 		// Migrate files from old wp-content location if it still exists
 		// We can remove this in 6.2.3
@@ -363,9 +363,9 @@ class Avpvh_Filelist_Main {
 			if($all_moved && count(glob($old_dir . '/*') ?: array()) === 0) {
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Migration block (removed in 6.2.3), WP_Filesystem not initialized here
 				@rmdir($old_dir);
-				avpvh_filelist_debug_log('Temp directory migrated from wp-content to uploads.', 'General');
+				avpvh_flst_debug_log('Temp directory migrated from wp-content to uploads.', 'General');
 			} else {
-				avpvh_filelist_debug_log('Temp directory migration incomplete — old directory kept.', 'General');
+				avpvh_flst_debug_log('Temp directory migration incomplete — old directory kept.', 'General');
 			}
 		}
 
@@ -393,25 +393,25 @@ class Avpvh_Filelist_Main {
 		if(is_dir($this->eeTempDirectory)) {
 			$index_file = trailingslashit($this->eeTempDirectory) . 'index.html';
 			if(!file_exists($index_file)) {
-				avpvh_filelist_file_system('put_contents', array('file' => $index_file, 'data' => '<!-- Simple File List -->'));
+				avpvh_flst_file_system('put_contents', array('file' => $index_file, 'data' => '<!-- Simple File List -->'));
 			}
 			return TRUE;
 		} // Already exists, nothing to do
 
 		// The temp dir always lives inside wp-content/uploads which is natively writable.
-		// Use wp_mkdir_p() directly rather than avpvh_filelist_file_list_dir_check(), which expects a
-		// path relative to AVPVH_FILELIST_WP_ROOT — a conversion that breaks on managed hosts like
+		// Use wp_mkdir_p() directly rather than avpvh_flst_file_list_dir_check(), which expects a
+		// path relative to AVPVH_FLST_WP_ROOT — a conversion that breaks on managed hosts like
 		// Pressable where ABSPATH (/wordpress/core/x.x.x/) differs from the uploads root.
 		if(wp_mkdir_p($this->eeTempDirectory)) {
 			$index_file = trailingslashit($this->eeTempDirectory) . 'index.html';
 			if(!file_exists($index_file)) {
-				avpvh_filelist_file_system('put_contents', array('file' => $index_file, 'data' => '<!-- Simple File List -->'));
+				avpvh_flst_file_system('put_contents', array('file' => $index_file, 'data' => '<!-- Simple File List -->'));
 			}
-			avpvh_filelist_debug_log('Temp directory created: ' . $this->eeTempDirectory, 'General');
+			avpvh_flst_debug_log('Temp directory created: ' . $this->eeTempDirectory, 'General');
 			return TRUE;
 		}
 
-		avpvh_filelist_debug_log('CRITICAL: Cannot create temp directory: ' . $this->eeTempDirectory, 'ERROR');
+		avpvh_flst_debug_log('CRITICAL: Cannot create temp directory: ' . $this->eeTempDirectory, 'ERROR');
 		$upload_base = wp_upload_dir()['basedir'];
 		add_action('admin_notices', function() use ($upload_base) {
 			echo '<div class="notice notice-error is-dismissible">';
@@ -506,17 +506,17 @@ class Avpvh_Filelist_Main {
 
 		} else {
 
-			avpvh_filelist_debug_log("Getting File List Array from the Database ...", 'List', $this->eeListID);
+			avpvh_flst_debug_log("Getting File List Array from the Database ...", 'List', $this->eeListID);
 			$db_start_time = microtime(true);
-			$this->eeAllFiles = get_option('avpvh_filelist_files_' . $this->eeListID); // Get from the database
+			$this->eeAllFiles = get_option('avpvh_flst_files_' . $this->eeListID); // Get from the database
 			$db_execution_time = round((microtime(true) - $db_start_time) * 1000, 2);
 
 			if(empty($this->eeAllFiles)) {
-				avpvh_filelist_debug_log("Database returned empty result for List ID " . $this->eeListID . " (query: {$db_execution_time}ms) - scanning disk", 'DATABASE', $this->eeListID);
+				avpvh_flst_debug_log("Database returned empty result for List ID " . $this->eeListID . " (query: {$db_execution_time}ms) - scanning disk", 'DATABASE', $this->eeListID);
 				$this->update_file_list_array($this->eeListID); // Scan the Disk
 			} else {
 				$file_count = is_array($this->eeAllFiles) ? count($this->eeAllFiles) : 0;
-				avpvh_filelist_debug_log("Database query completed: {$file_count} files retrieved in {$db_execution_time}ms", 'DATABASE', $this->eeListID);
+				avpvh_flst_debug_log("Database query completed: {$file_count} files retrieved in {$db_execution_time}ms", 'DATABASE', $this->eeListID);
 			}
 		}
 
@@ -559,7 +559,7 @@ class Avpvh_Filelist_Main {
 		if($eeAdmin OR $this->eeListSettings['ShowFileDownload'] == 'YES') {
 
 			// A protected list's handler sends the file as a download itself
-			$eeDownloadURL = avpvh_filelist_file_url($this->eeListID, $this->eeListSettings, $this->eeFilePath, array('download' => TRUE));
+			$eeDownloadURL = avpvh_flst_file_url($this->eeListID, $this->eeListSettings, $this->eeFilePath, array('download' => TRUE));
 
 			 $eeOutput .= '
 			<a class="eeSFL_FileDownload" href="' . esc_url($eeDownloadURL) . '" download="' . esc_attr($this->eeRealFileName) . '">' . __('Download', 'avpvh-filelist') . '</a>';
@@ -599,8 +599,8 @@ class Avpvh_Filelist_Main {
 		// Who may open this file (wp-admin)
 		if($eeAdmin AND $this->eeIsFile) {
 
-			$eeAccessURL = admin_url('admin.php?page=' . AVPVH_FILELIST_SLUG . '&tab=access&eeListID=' . $this->eeListID . '&eeFile=' . rawurlencode($this->eeFilePath));
-			$eeHasGrant = !avpvh_filelist_grant_is_empty(avpvh_filelist_file_grant($eeFileArray));
+			$eeAccessURL = admin_url('admin.php?page=' . AVPVH_FLST_SLUG . '&tab=access&eeListID=' . $this->eeListID . '&eeFile=' . rawurlencode($this->eeFilePath));
+			$eeHasGrant = !avpvh_flst_grant_is_empty(avpvh_flst_file_grant($eeFileArray));
 
 			 $eeOutput .= '
 			<a href="' . esc_url($eeAccessURL) . '">' . ($eeHasGrant ? esc_html__('Access (limited)', 'avpvh-filelist') : esc_html__('Access', 'avpvh-filelist')) . '</a>';
@@ -662,7 +662,7 @@ class Avpvh_Filelist_Main {
 	    if( is_array($eeFileArray) ) {
 
 			// Files with their own access grant are only listed for the people in it
-			if( !avpvh_filelist_user_can_read_file($this->eeListID, $this->eeListSettings, $eeFileArray, get_current_user_id()) ) { return FALSE; }
+			if( !avpvh_flst_user_can_read_file($this->eeListID, $this->eeListSettings, $eeFileArray, get_current_user_id()) ) { return FALSE; }
 
 			// Internal file tracking removed - was debug only
 
@@ -673,7 +673,7 @@ class Avpvh_Filelist_Main {
 			$this->eeFileName = basename($eeFileArray['FilePath']); // This name might change
 			$this->eeRealFileName = $this->eeFileName; // Never changed
 			$this->eeFileExt = $eeFileArray['FileExt']; // Just the name
-			$this->eeFileURL = avpvh_filelist_file_url($this->eeListID, $this->eeListSettings, $this->eeFilePath); // Clickable URL (the download handler for a protected list)
+			$this->eeFileURL = avpvh_flst_file_url($this->eeListID, $this->eeListSettings, $this->eeFilePath); // Clickable URL (the download handler for a protected list)
 			$this->eeFileSize = $this->format_file_size($eeFileArray['FileSize']); // Formatted Size
 			$this->eeFileDateAdded = $eeFileArray['FileDateAdded'];
 			$this->eeFileDateChanged = $eeFileArray['FileDateChanged'];
@@ -735,9 +735,9 @@ class Avpvh_Filelist_Main {
 
 					$eeFileThumbPath = $this->get_root_path() . $this->eeListSettings['FileListDir'] . $eeFolder . '_eeSFL_Thumbnails/thumb_' . $eePathParts['filename'] . '.jpg';
 
-					$thumb_check = avpvh_filelist_file_system('exists', array('file' => $eeFileThumbPath));
-					if( $thumb_check['data'] && avpvh_filelist_list_is_protected($this->eeListSettings) ) {
-						$this->eeFileThumbURL = avpvh_filelist_protected_file_url($this->eeListID, $this->eeFilePath, array('thumb' => TRUE));
+					$thumb_check = avpvh_flst_file_system('exists', array('file' => $eeFileThumbPath));
+					if( $thumb_check['data'] && avpvh_flst_list_is_protected($this->eeListSettings) ) {
+						$this->eeFileThumbURL = avpvh_flst_protected_file_url($this->eeListID, $this->eeFilePath, array('thumb' => TRUE));
 						$eeThumbSet = TRUE;
 					} elseif( $thumb_check['data'] ) {
 						$eeFileThumbURL = $this->eeListSettings['FileListURL'];
@@ -784,7 +784,7 @@ class Avpvh_Filelist_Main {
 				// LEGACY - Replace hyphens with spaces?
 				if(isset($this->eeListSettings['PreserveSpaces'])) {
 					if(!$eeAdmin AND $this->eeListSettings['PreserveSpaces'] == 'YES') {
-						$this->eeFileName = avpvh_filelist_preserve_spaces($this->eeRealFileName);
+						$this->eeFileName = avpvh_flst_preserve_spaces($this->eeRealFileName);
 					}
 				}
 			}
@@ -830,7 +830,7 @@ class Avpvh_Filelist_Main {
 		}
 
 		$eeMessages = array($eeFileArray);
-		do_action('avpvh_filelist_listed', $eeMessages);
+		do_action('avpvh_flst_listed', $eeMessages);
 
 	    return TRUE; // Properties have been updated
 	}
@@ -847,7 +847,7 @@ class Avpvh_Filelist_Main {
 		$eePathParts = pathinfo($eeFilePath);
 		$eeSiteRoot = $this->get_root_path();
 
-		$file_check = avpvh_filelist_file_system('exists', array('file' => $eeSiteRoot . $this->eeListSettings['FileListDir'] . $eeFilePath));
+		$file_check = avpvh_flst_file_system('exists', array('file' => $eeSiteRoot . $this->eeListSettings['FileListDir'] . $eeFilePath));
 		if( $file_check['data'] ) {
 
 			if( !is_array($eeFileArray) ) {
@@ -869,14 +869,14 @@ class Avpvh_Filelist_Main {
 				$eeFileArray['FileMIME'] = 'no/mime';
 			}
 
-			$file_size_result = avpvh_filelist_file_system('filesize', array('file' => $eeSiteRoot . $this->eeListSettings['FileListDir'] . $eeFilePath));
+			$file_size_result = avpvh_flst_file_system('filesize', array('file' => $eeSiteRoot . $this->eeListSettings['FileListDir'] . $eeFilePath));
 			$eeFileArray['FileSize'] = $file_size_result['success'] ? $file_size_result['data'] : 0;
 
 			if(empty($eeFileArray['FileDateAdded'])) {
 				$eeFileArray['FileDateAdded'] = wp_date("Y-m-d H:i:s");
 			}
 
-			$file_time_result = avpvh_filelist_file_system('filemtime', array('file' => $eeSiteRoot . $this->eeListSettings['FileListDir'] . $eeFilePath));
+			$file_time_result = avpvh_flst_file_system('filemtime', array('file' => $eeSiteRoot . $this->eeListSettings['FileListDir'] . $eeFilePath));
 			$eeFileArray['FileDateChanged'] = wp_date("Y-m-d H:i:s", $file_time_result['success'] ? $file_time_result['data'] : time());
 
 			if( strlen($eeFileArray['FilePath']) ) { // 02/21 - If FilePath is empty, sort doesn't work? But why would that be empty.
@@ -906,17 +906,17 @@ class Avpvh_Filelist_Main {
 
 	// Initialize file array if needed (only if not set, not if empty)
 	if (!isset($this->eeAllFiles)) {
-		$this->eeAllFiles = get_option('avpvh_filelist_files_' . $this->eeListID, array());
+		$this->eeAllFiles = get_option('avpvh_flst_files_' . $this->eeListID, array());
 	}	// If $eeNewFileArray is FALSE, just save the existing array and return
 	if ($eeNewFileArray === false) {
-		update_option('avpvh_filelist_files_' . $this->eeListID, $this->eeAllFiles);
+		update_option('avpvh_flst_files_' . $this->eeListID, $this->eeAllFiles);
 		return true;
 	}
 
 	// Handle empty arrays (valid for bulk delete operations that clear all files)
 	if (is_array($eeNewFileArray) && empty($eeNewFileArray)) {
 		$this->eeAllFiles = array(); // Set to empty array
-		update_option('avpvh_filelist_files_' . $this->eeListID, $this->eeAllFiles);
+		update_option('avpvh_flst_files_' . $this->eeListID, $this->eeAllFiles);
 		return true;
 	}
 
@@ -945,7 +945,7 @@ class Avpvh_Filelist_Main {
 		}
 
 		// Save the updated array to database
-		update_option('avpvh_filelist_files_' . $this->eeListID, $this->eeAllFiles);
+		update_option('avpvh_flst_files_' . $this->eeListID, $this->eeAllFiles);
 
 		return $eeReturnKey;
 	}
@@ -959,14 +959,14 @@ class Avpvh_Filelist_Main {
 
 		$start_memory = memory_get_usage();
 		$peak_memory = memory_get_peak_usage();
-		avpvh_filelist_debug_log("Re-Indexing the File List - Memory: " . round($start_memory/1024/1024, 2) . "MB (peak: " . round($peak_memory/1024/1024, 2) . "MB)", 'ReIndexing');
+		avpvh_flst_debug_log("Re-Indexing the File List - Memory: " . round($start_memory/1024/1024, 2) . "MB (peak: " . round($peak_memory/1024/1024, 2) . "MB)", 'ReIndexing');
 
 	    if(empty($this->eeListSettings)) {
-		    $this->eeListSettings = get_option('avpvh_filelist_settings_' . $this->eeListID);
+		    $this->eeListSettings = get_option('avpvh_flst_settings_' . $this->eeListID);
 	    }
 
 	    // Double-check the Disk Directory
-	    if( !avpvh_filelist_file_list_dir_check($this->eeListSettings['FileListDir']) ) { return FALSE; }
+	    if( !avpvh_flst_file_list_dir_check($this->eeListSettings['FileListDir']) ) { return FALSE; }
 
 		// Check where ZIPs to be downloaded are kept temporarily (only if temp dir is in use)
 		if(!empty($this->eeTempDirectory) && !is_dir($this->eeTempDirectory)) {
@@ -974,17 +974,17 @@ class Avpvh_Filelist_Main {
 		}
 
 	    // Look for files in this directory and delete the ones older than 1 hour
-	    $dir_list_result = !empty($this->eeTempDirectory) ? avpvh_filelist_file_system('dirlist', array('path' => $this->eeTempDirectory)) : array('success' => false, 'data' => array());
+	    $dir_list_result = !empty($this->eeTempDirectory) ? avpvh_flst_file_system('dirlist', array('path' => $this->eeTempDirectory)) : array('success' => false, 'data' => array());
 	    $eeTempFiles = $dir_list_result['success'] && is_array($dir_list_result['data']) ? array_keys($dir_list_result['data']) : array();
 	    if(count($eeTempFiles)) {
 		    foreach( $eeTempFiles as $eeKey => $eeTempFile){
 			    if(strpos($eeTempFile, '.') !== 0) { // Nothing up or hidden
 				    if($eeTempFile != 'index.html') { // Don't delete this
 					    $eeTempFile = $this->eeTempDirectory . '/' . $eeTempFile; // Make full path
-					    $file_time_result = avpvh_filelist_file_system('filemtime', array('file' => $eeTempFile));
+					    $file_time_result = avpvh_flst_file_system('filemtime', array('file' => $eeTempFile));
 					    if( $file_time_result['success'] && time() - $file_time_result['data'] > 3600 ) { // file older than 1 hour
-							if( !avpvh_filelist_file_system('is_dir', array('path' => $eeTempFile))['data'] ) {
-								avpvh_filelist_file_system('delete', array('file' => $eeTempFile));
+							if( !avpvh_flst_file_system('is_dir', array('path' => $eeTempFile))['data'] ) {
+								avpvh_flst_file_system('delete', array('file' => $eeTempFile));
 							}
 					    }
 				    }
@@ -993,13 +993,13 @@ class Avpvh_Filelist_Main {
 		}
 
 	    // Get the File List Array
-	    $this->eeAllFiles = get_option('avpvh_filelist_files_' . $this->eeListID);
+	    $this->eeAllFiles = get_option('avpvh_flst_files_' . $this->eeListID);
 	    if(!is_array($this->eeAllFiles)) { $this->eeAllFiles = array(); }
 
 		// The files in the list folder (no subfolders)
 		$eeSFL_FileScanArray = array();
 		$eeSiteRoot = $this->get_root_path();
-		$dir_result = avpvh_filelist_file_system('dirlist', array('path' => $eeSiteRoot . $this->eeListSettings['FileListDir'], 'include_hidden' => false, 'recursive' => false));
+		$dir_result = avpvh_flst_file_system('dirlist', array('path' => $eeSiteRoot . $this->eeListSettings['FileListDir'], 'include_hidden' => false, 'recursive' => false));
 		if($dir_result['success'] && is_array($dir_result['data'])) {
 			foreach($dir_result['data'] as $eeEntryName => $eeEntryInfo) {
 				if(isset($eeEntryInfo['type']) && $eeEntryInfo['type'] === 'f' && $eeEntryName !== 'index.html') {
@@ -1007,12 +1007,12 @@ class Avpvh_Filelist_Main {
 				}
 			}
 		}
-		avpvh_filelist_debug_log("Directory scan found " . count($eeSFL_FileScanArray) . " file(s)", 'ReIndexing');
+		avpvh_flst_debug_log("Directory scan found " . count($eeSFL_FileScanArray) . " file(s)", 'ReIndexing');
 
 		// No List in the DB, Creating New...
 	    if( !count($this->eeAllFiles) ) {
 
-			avpvh_filelist_debug_log("No List Found! Creating from scratch...", 'General');
+			avpvh_flst_debug_log("No List Found! Creating from scratch...", 'General');
 
 			if(count($eeSFL_FileScanArray)) {
 
@@ -1043,10 +1043,10 @@ class Avpvh_Filelist_Main {
 					$eeSiteRoot = $this->get_root_path();
 					$eeFile = $eeSiteRoot . $this->eeListSettings['FileListDir'] . $eeFileSet['FilePath'];
 
-					if( avpvh_filelist_file_system('is_file', array('file' => $eeFile))['data'] ) { // Update file size
+					if( avpvh_flst_file_system('is_file', array('file' => $eeFile))['data'] ) { // Update file size
 
 						// Update file size
-						$file_size_result = avpvh_filelist_file_system('filesize', array('file' => $eeFile));
+						$file_size_result = avpvh_flst_file_system('filesize', array('file' => $eeFile));
 						$this->eeAllFiles[$eeKey]['FileSize'] = $file_size_result['success'] ? $file_size_result['data'] : 0;
 
 						// LEGACY as of 6.0 - Remove this down the road
@@ -1054,13 +1054,13 @@ class Avpvh_Filelist_Main {
 
 					} else { // Get rid of it (also folders left by the old Pro version)
 
-						avpvh_filelist_debug_log("Removing: " . $eeFile, 'General');
+						avpvh_flst_debug_log("Removing: " . $eeFile, 'General');
 
 						unset($this->eeAllFiles[$eeKey]);
 
 						// Custom Hook
 						array_unshift($eeFileSet, 'File Not Found');
-						do_action('avpvh_filelist_removed', $eeFileSet);
+						do_action('avpvh_flst_removed', $eeFileSet);
 
 						continue;
 					}
@@ -1075,7 +1075,7 @@ class Avpvh_Filelist_Main {
 					}
 
 					// Update modification date
-					$file_time_result = avpvh_filelist_file_system('filemtime', array('file' => $eeFile));
+					$file_time_result = avpvh_flst_file_system('filemtime', array('file' => $eeFile));
 					$this->eeAllFiles[$eeKey]['FileDateChanged'] = wp_date("Y-m-d H:i:s", $file_time_result['success'] ? $file_time_result['data'] : time());
 
 					// Merge-in Default File Attributes
@@ -1101,7 +1101,7 @@ class Avpvh_Filelist_Main {
 
 					if($eeFound === FALSE) { // New Item Found
 
-						avpvh_filelist_debug_log("New Item Found: " . $eeFile, 'General');
+						avpvh_flst_debug_log("New Item Found: " . $eeFile, 'General');
 
 						// Build a new file array
 						$eeNewArray = $this->build_file_array($eeFile); // Path relative to FileListDir
@@ -1116,7 +1116,7 @@ class Avpvh_Filelist_Main {
 
 							// Custom Hook
 							array_unshift($eeNewArray, 'New File Found');
-							do_action('avpvh_filelist_added', $eeNewArray);
+							do_action('avpvh_flst_added', $eeNewArray);
 						}
 
 					}
@@ -1128,7 +1128,7 @@ class Avpvh_Filelist_Main {
 		// Finish Up
 		if(count($this->eeAllFiles)) {
 
-			avpvh_filelist_debug_log("Finishing Up ...", 'General');
+			avpvh_flst_debug_log("Finishing Up ...", 'General');
 
 			// Sort - Passing a reference to the file array
 		    $this->sort_files($this->eeListSettings['SortBy'], $this->eeListSettings['SortOrder']);
@@ -1148,7 +1148,7 @@ class Avpvh_Filelist_Main {
 		    }
 
 		    // Check Thumbnails...
-		    $eeTasks = get_option('avpvh_filelist_tasks') ?: array();
+		    $eeTasks = get_option('avpvh_flst_tasks') ?: array();
 
 		    // Ensure the task array exists for this list ID
 		    if (!isset($eeTasks[$this->eeListID])) {
@@ -1160,9 +1160,9 @@ class Avpvh_Filelist_Main {
 
 		    if( $generateThumbs != 'YES' AND $this->eeListSettings['ShowFileThumb'] == 'YES' ) { // Don't do thumbnails if that Cron is running
 
-			    avpvh_filelist_debug_log("Checking Thumbnails ...", 'General');
+			    avpvh_flst_debug_log("Checking Thumbnails ...", 'General');
 
-			    avpvh_filelist_check_supported();
+			    avpvh_flst_check_supported();
 
 				// Check for and create thumbnail if needed...
 				if( $this->eeListSettings['GeneratePDFThumbs'] == 'YES' OR $this->eeListSettings['GenerateImgThumbs'] == 'YES' OR $this->eeListSettings['GenerateVideoThumbs'] == 'YES' ) {
@@ -1172,7 +1172,7 @@ class Avpvh_Filelist_Main {
 
 					if($backgroundMode == 'YES') {
 
-						avpvh_filelist_debug_log("Setting Thumbnail Check Cron Job ...", 'General');
+						avpvh_flst_debug_log("Setting Thumbnail Check Cron Job ...", 'General');
 
 						$eeSFL_Tasks[$this->eeListID]['GenerateThumbs'] = 'YES';
 
@@ -1189,21 +1189,21 @@ class Avpvh_Filelist_Main {
 						$eeSFL_Tasks[$this->eeListID]['GenerateThumbs'] = 'NO';
 					}
 
-					update_option('avpvh_filelist_tasks', $eeSFL_Tasks);
+					update_option('avpvh_flst_tasks', $eeSFL_Tasks);
 
 				} else {
-			    	avpvh_filelist_debug_log("Skipped Thumbnail Checks", 'General');
+			    	avpvh_flst_debug_log("Skipped Thumbnail Checks", 'General');
 		    	}
 
 		    } else {
-			    avpvh_filelist_debug_log("Skipped Thumbnail Checks", 'General');
+			    avpvh_flst_debug_log("Skipped Thumbnail Checks", 'General');
 		    }
 
 		    // Check for Environment Changes
 		    $eeActual = $eeSFLU->actual_upload_max();
 			if( $this->eeListSettings['UploadMaxFileSize'] > $eeActual ) {
 				$this->eeListSettings['UploadMaxFileSize'] = $eeActual;
-				update_option('avpvh_filelist_settings_' . $this->eeListID, $this->eeListSettings); // Set to Actual Max
+				update_option('avpvh_flst_settings_' . $this->eeListID, $this->eeListSettings); // Set to Actual Max
 			}
 
 			$end_memory = memory_get_usage();
@@ -1211,10 +1211,10 @@ class Avpvh_Filelist_Main {
 			$peak_memory_final = memory_get_peak_usage();
 
 			if($memory_used > 5242880) { // Log if re-indexing uses more than 5MB
-				avpvh_filelist_debug_log("Memory spike detected: Re-indexing used " . round($memory_used/1024/1024, 2) . "MB additional memory", 'Performance', $this->eeListID);
+				avpvh_flst_debug_log("Memory spike detected: Re-indexing used " . round($memory_used/1024/1024, 2) . "MB additional memory", 'Performance', $this->eeListID);
 			}
 
-			avpvh_filelist_debug_log("Re-Index Completed - Final memory: " . round($end_memory/1024/1024, 2) . "MB (peak: " . round($peak_memory_final/1024/1024, 2) . "MB)", 'ReIndexing');
+			avpvh_flst_debug_log("Re-Index Completed - Final memory: " . round($end_memory/1024/1024, 2) . "MB (peak: " . round($peak_memory_final/1024/1024, 2) . "MB)", 'ReIndexing');
 
 		    if($this->eeListSettings['UseCacheCron'] == 'NO') {
 
@@ -1226,7 +1226,7 @@ class Avpvh_Filelist_Main {
 				}
 
 				if($eeExpire) {
-					set_transient('avpvh_filelist_scan_' . $this->eeListID, 'Good', $eeExpire);
+					set_transient('avpvh_flst_scan_' . $this->eeListID, 'Good', $eeExpire);
 				}
 		    }
 
@@ -1236,7 +1236,7 @@ class Avpvh_Filelist_Main {
 			// Add Custom Hook
 			$eeMessages[] = 'Disk Scan Completed';
 			$eeMessages[] = $this->eeAllFiles;
-			do_action('avpvh_filelist_scanned', $eeMessages);
+			do_action('avpvh_flst_scanned', $eeMessages);
 
 		    return TRUE;
 
@@ -1274,14 +1274,14 @@ class Avpvh_Filelist_Main {
 
 				$eeThumbFrom .= '/_eeSFL_Thumbnails/thumb_' . basename($eeFileFrom);
 
-				if( avpvh_filelist_file_system('is_file', array('file' => $eeThumbFrom))['data'] ) {
+				if( avpvh_flst_file_system('is_file', array('file' => $eeThumbFrom))['data'] ) {
 
 					if(!$eeFileTo) { // Delete the thumb
 
-						$eeDeleteResult = avpvh_filelist_file_system('delete', array('file' => $eeThumbFrom));
+						$eeDeleteResult = avpvh_flst_file_system('delete', array('file' => $eeThumbFrom));
 						if($eeDeleteResult['success']) {
 
-							avpvh_filelist_debug_log("Deleted Thumbnail For: " . basename($eeFileFrom), 'General');
+							avpvh_flst_debug_log("Deleted Thumbnail For: " . basename($eeFileFrom), 'General');
 
 							return;
 						}
@@ -1292,13 +1292,13 @@ class Avpvh_Filelist_Main {
 
 						$eeThumbTo = $this->get_root_path() . $this->eeListSettings['FileListDir'] . $eePathPartsTo['dirname'] . '/_eeSFL_Thumbnails';
 
-						if(!avpvh_filelist_file_system('is_dir', array('path' => $eeThumbTo))['data']) { avpvh_filelist_file_system('mkdir', array('path' => $eeThumbTo)); }
+						if(!avpvh_flst_file_system('is_dir', array('path' => $eeThumbTo))['data']) { avpvh_flst_file_system('mkdir', array('path' => $eeThumbTo)); }
 
 						$eeThumbTo .= '/thumb_' . basename($eeFileTo);
 
-						if(avpvh_filelist_file_system('move', array('from' => $eeThumbFrom, 'to' => $eeThumbTo))['success']) { // Do nothing on failure
+						if(avpvh_flst_file_system('move', array('from' => $eeThumbFrom, 'to' => $eeThumbTo))['success']) { // Do nothing on failure
 
-							avpvh_filelist_debug_log("Thumbnail Updated For: " . basename($eeFileFrom), 'General');
+							avpvh_flst_debug_log("Thumbnail Updated For: " . basename($eeFileFrom), 'General');
 
 							return;
 						}
@@ -1330,16 +1330,16 @@ class Avpvh_Filelist_Main {
 		$eeThumbFileToCheck = 'thumb_' . $eeFileNameOnly . '.jpg';
 
 		// Check for the _eeSFL_Thumbnails directory
-		if( !avpvh_filelist_file_system('is_dir', array('path' => $eeThumbsPath))['data'] ) {
-			if( !avpvh_filelist_file_system('mkdir', array('path' => $eeThumbsPath))['success'] ) {
-				avpvh_filelist_debug_log('!!!! Cannot create the _eeSFL_Thumbnails directory: ' . $eeThumbsPath, 'General', $this->eeListID);
+		if( !avpvh_flst_file_system('is_dir', array('path' => $eeThumbsPath))['data'] ) {
+			if( !avpvh_flst_file_system('mkdir', array('path' => $eeThumbsPath))['success'] ) {
+				avpvh_flst_debug_log('!!!! Cannot create the _eeSFL_Thumbnails directory: ' . $eeThumbsPath, 'General', $this->eeListID);
 				return FALSE;
 			}
 		}
 
 		// Is there already a thumb?
-		if(avpvh_filelist_file_system('is_file', array('file' => $eeThumbsPath . $eeThumbFileToCheck))['data']) {
-			// avpvh_filelist_debug_log("Found: thumb_" . $eeFileNameOnly . '.jpg', 'General');
+		if(avpvh_flst_file_system('is_file', array('file' => $eeThumbsPath . $eeThumbFileToCheck))['data']) {
+			// avpvh_flst_debug_log("Found: thumb_" . $eeFileNameOnly . '.jpg', 'General');
 			return TRUE; // Checked Okay
 		}
 
@@ -1352,7 +1352,7 @@ class Avpvh_Filelist_Main {
 				if(strpos($eeFileFullPath, '.')) {
 
 					// Else We Generate ...
-					avpvh_filelist_debug_log("Missing: thumb_" . $eeFileNameOnly . '.jpg', 'General');
+					avpvh_flst_debug_log("Missing: thumb_" . $eeFileNameOnly . '.jpg', 'General');
 
 					if( $this->create_thumbnail_image($eeFileFullPath) ) {
 						return TRUE;
@@ -1361,7 +1361,7 @@ class Avpvh_Filelist_Main {
 
 			} else { // Not an image, be gone with you!
 
-				avpvh_filelist_file_system('delete', array('file' => $eeFileFullPath));
+				avpvh_flst_file_system('delete', array('file' => $eeFileFullPath));
 				$this->eeUserMessages['errors'][] = '!!!! ' . __('Corrupt Image File Deleted', 'avpvh-filelist') . ': ' . basename($eeFileFullPath);
 				return TRUE;
 			}
@@ -1392,12 +1392,12 @@ class Avpvh_Filelist_Main {
 	// Create Image Thumbnail
 	private function create_thumbnail_image($eeInputFileCompletePath) { // Expects Full Path
 
-		if( !avpvh_filelist_file_system('is_file', array('file' => $eeInputFileCompletePath))['data'] ) {
-			avpvh_filelist_debug_log(" !!!! Source File Not Found", 'General');
+		if( !avpvh_flst_file_system('is_file', array('file' => $eeInputFileCompletePath))['data'] ) {
+			avpvh_flst_debug_log(" !!!! Source File Not Found", 'General');
 			return FALSE;
 		}
 
-		avpvh_filelist_debug_log("Creating Thumbnail Image for " . basename($eeInputFileCompletePath), 'Thumbnails');
+		avpvh_flst_debug_log("Creating Thumbnail Image for " . basename($eeInputFileCompletePath), 'Thumbnails');
 
 		// All The Path Parts
 		$eePathParts = pathinfo($eeInputFileCompletePath);
@@ -1420,7 +1420,7 @@ class Avpvh_Filelist_Main {
 		// The Source
 		$eeImageMemoryNeeded = 0;
 		$eeImageSizeLimit = 0;
-		$file_size_result = avpvh_filelist_file_system('filesize', array('file' => $eeInputFileCompletePath));
+		$file_size_result = avpvh_flst_file_system('filesize', array('file' => $eeInputFileCompletePath));
 		$eeFileSize = $file_size_result['success'] ? $file_size_result['data'] : 0;
 		$eeSizeCheck = getimagesize($eeInputFileCompletePath);
         $eeSizeCheck['memory-limit'] = preg_replace("/[^0-9]/", "", ini_get('memory_limit') ) * 1048576;
@@ -1445,9 +1445,9 @@ class Avpvh_Filelist_Main {
 			}
 			$eeNewThumb = $eeThumbsPath . 'thumb_' . $eeFileNameOnly . '.jpg';
 
-			avpvh_filelist_file_system('copy', array('from' => $eeDefaultThumbIcon, 'to' => $eeNewThumb)); // Use our default image file icon
+			avpvh_flst_file_system('copy', array('from' => $eeDefaultThumbIcon, 'to' => $eeNewThumb)); // Use our default image file icon
 
-			avpvh_filelist_debug_log("Image was too large. Default thumbnail will be used for: " . basename($eeInputFileCompletePath), 'General');
+			avpvh_flst_debug_log("Image was too large. Default thumbnail will be used for: " . basename($eeInputFileCompletePath), 'General');
 
 			return TRUE;
 
@@ -1470,13 +1470,13 @@ class Avpvh_Filelist_Main {
 
 	            $eeFileImage->save($eeThumbsPath . 'thumb_' . $eeFileNameOnly . '.jpg'); // Save the file
 
-			avpvh_filelist_debug_log("Thumbnail Created.", 'Thumbnails');
+			avpvh_flst_debug_log("Thumbnail Created.", 'Thumbnails');
 
 	            return TRUE;
 
 	        } else { // Cannot open
 
-		        avpvh_filelist_debug_log("Bad Image File Deleted: " . basename($eeInputFileCompletePath), 'General');
+		        avpvh_flst_debug_log("Bad Image File Deleted: " . basename($eeInputFileCompletePath), 'General');
 
 		        return FALSE;
 	        }
@@ -1498,7 +1498,7 @@ class Avpvh_Filelist_Main {
 		$eeCompleteDir = $eePathParts['dirname'] . '/';
 		$eeThumbsPath = $eeCompleteDir . '_eeSFL_Thumbnails/';
 
-		if(avpvh_filelist_file_system('is_dir', array('path' => $eeThumbsPath))['data']) {
+		if(avpvh_flst_file_system('is_dir', array('path' => $eeThumbsPath))['data']) {
 
 			// Create a temporary file
 			$eeScreenshot = $eeThumbsPath . 'temp_' . $eeFileNameOnly . '.png';
@@ -1509,25 +1509,25 @@ class Avpvh_Filelist_Main {
 
 			shell_exec($eeCommand);
 
-			if(avpvh_filelist_file_system('is_file', array('file' => $eeScreenshot))['data']) { // Resize down to $this->eeFileThumbSize
+			if(avpvh_flst_file_system('is_file', array('file' => $eeScreenshot))['data']) { // Resize down to $this->eeFileThumbSize
 
 				if( $this->create_thumbnail_image($eeScreenshot) ) {
-					avpvh_filelist_file_system('delete', array('file' => $eeScreenshot)); // Delete the screeshot file
+					avpvh_flst_file_system('delete', array('file' => $eeScreenshot)); // Delete the screeshot file
 					return TRUE;
 				} else {
-					avpvh_filelist_file_system('delete', array('file' => $eeScreenshot)); // Delete the screeshot file anyway
+					avpvh_flst_file_system('delete', array('file' => $eeScreenshot)); // Delete the screeshot file anyway
 					return FALSE;
 				}
 
 			} else {
 
 				// FFmpeg FAILED !!!
-				avpvh_filelist_debug_log("FFmpeg could not create a screenshot for " . basename($eeScreenshot), 'General');
+				avpvh_flst_debug_log("FFmpeg could not create a screenshot for " . basename($eeScreenshot), 'General');
 				return FALSE;
 			}
 		}
 
-		avpvh_filelist_debug_log('!!!! There is no _eeSFL_Thumbnails directory: ' . $eeThumbsPath, 'General', $this->eeListID);
+		avpvh_flst_debug_log('!!!! There is no _eeSFL_Thumbnails directory: ' . $eeThumbsPath, 'General', $this->eeListID);
 
 		return FALSE;
 	}
@@ -1541,7 +1541,7 @@ class Avpvh_Filelist_Main {
 		// SECURITY: only absolute paths reach the shell, so a name can never be read as a command-line option
 		if( !path_is_absolute($eeFileFullPath) ) { return FALSE; }
 
-		avpvh_filelist_debug_log("Generating PDF Thumbnail...", 'General');
+		avpvh_flst_debug_log("Generating PDF Thumbnail...", 'General');
 
 		$eePathParts = pathinfo($eeFileFullPath);
 		$eeFileNameOnly = $eePathParts['filename'];
@@ -1555,10 +1555,10 @@ class Avpvh_Filelist_Main {
 
 		if( isset($this->eeEnvironment['GhostScript']) ) {
 
-			// avpvh_filelist_debug_log("GhostScript is Installed", 'General');
+			// avpvh_flst_debug_log("GhostScript is Installed", 'General');
 
 			// Check Size and set image resolution higher for smaller sizes.
-			$file_size_result = avpvh_filelist_file_system('filesize', array('file' => $eeFileFullPath));
+			$file_size_result = avpvh_flst_file_system('filesize', array('file' => $eeFileFullPath));
 			$eeFileSize = $file_size_result['success'] ? $file_size_result['data'] : 0;
 			if($eeFileSize >= 8388608) { // Greater than 8 MB
 				$eeResolution = '72';
@@ -1578,7 +1578,7 @@ class Avpvh_Filelist_Main {
 			}
 
 			// GhostScript Operations
-			$temp_file_check = avpvh_filelist_file_system('exists', array('file' => $eeTempFileFullPath));
+			$temp_file_check = avpvh_flst_file_system('exists', array('file' => $eeTempFileFullPath));
 			if( !$temp_file_check['data'] ) { // Might be there already.
 
 				// Check PDF Validity
@@ -1601,42 +1601,42 @@ class Avpvh_Filelist_Main {
 
 					// GhostScript logging removed - was debug only
 
-					avpvh_filelist_debug_log('FILE NOT READABLE: ' . basename($eeFileFullPath), 'ERROR', $this->eeListID);
-					avpvh_filelist_debug_log("!!!! PDF NOT READABLE: " . basename($eeFileFullPath), 'ERROR', $this->eeListID);
+					avpvh_flst_debug_log('FILE NOT READABLE: ' . basename($eeFileFullPath), 'ERROR', $this->eeListID);
+					avpvh_flst_debug_log("!!!! PDF NOT READABLE: " . basename($eeFileFullPath), 'ERROR', $this->eeListID);
 					return FALSE;
 				}
 			}
 
 			// Confirm the file is there
-			$temp_file_check = avpvh_filelist_file_system('exists', array('file' => $eeTempFileFullPath));
+			$temp_file_check = avpvh_flst_file_system('exists', array('file' => $eeTempFileFullPath));
 			if($temp_file_check['data']) {
 
 				if($this->create_thumbnail_image($eeTempFileFullPath)) {
 
-					avpvh_filelist_debug_log("Created the PDF Thumbnail for " . basename($eeFileFullPath), 'General');
+					avpvh_flst_debug_log("Created the PDF Thumbnail for " . basename($eeFileFullPath), 'General');
 
-					avpvh_filelist_file_system('delete', array('file' => $eeTempFileFullPath)); // Delete the temp PNG file
+					avpvh_flst_file_system('delete', array('file' => $eeTempFileFullPath)); // Delete the temp PNG file
 
 					return TRUE;
 
 				} else {
 
-					avpvh_filelist_debug_log("!!!! FAILED to Create the PDF Thumbnail for " . basename($eeFileFullPath), 'ERROR');
+					avpvh_flst_debug_log("!!!! FAILED to Create the PDF Thumbnail for " . basename($eeFileFullPath), 'ERROR');
 
-					avpvh_filelist_file_system('delete', array('file' => $eeTempFileFullPath));
+					avpvh_flst_file_system('delete', array('file' => $eeTempFileFullPath));
 
 					return FALSE;
 				}
 
-			} elseif(avpvh_filelist_file_system('is_file', array('file' => $eeTempFileFullPath))['data']) {
+			} elseif(avpvh_flst_file_system('is_file', array('file' => $eeTempFileFullPath))['data']) {
 
-				avpvh_filelist_file_system('delete', array('file' => $eeTempFileFullPath)); // Delete the corrupt temp file;
+				avpvh_flst_file_system('delete', array('file' => $eeTempFileFullPath)); // Delete the corrupt temp file;
 
 				return FALSE;
 
 			} else {
 
-				avpvh_filelist_debug_log("!!!! PDF to PNG FAILED for " . basename($eeFileFullPath), 'General');
+				avpvh_flst_debug_log("!!!! PDF to PNG FAILED for " . basename($eeFileFullPath), 'General');
 
 				return FALSE;
 			}
@@ -1655,7 +1655,7 @@ class Avpvh_Filelist_Main {
 
 		$file_count = count($this->eeAllFiles);
 		$sort_start_time = microtime(true);
-		avpvh_filelist_debug_log("Sorting the File Array - {$file_count} files by {$eeSortBy} ({$eeSortOrder})", 'General');
+		avpvh_flst_debug_log("Sorting the File Array - {$file_count} files by {$eeSortBy} ({$eeSortOrder})", 'General');
 
 		// Legacy check
 		if( !array_key_exists(1, $this->eeAllFiles) ) {
@@ -1696,10 +1696,10 @@ class Avpvh_Filelist_Main {
 		$sort_execution_time = round((microtime(true) - $sort_start_time) * 1000, 2);
 
 		if($sort_execution_time > 500) { // Log if sorting takes more than 500ms
-			avpvh_filelist_debug_log("SLOW OPERATION: File sorting took {$sort_execution_time}ms for {$file_count} files", 'PERFORMANCE', $this->eeListID);
+			avpvh_flst_debug_log("SLOW OPERATION: File sorting took {$sort_execution_time}ms for {$file_count} files", 'PERFORMANCE', $this->eeListID);
 		}
 
-		avpvh_filelist_debug_log("Files Sorted: " . $eeSortBy . ' (' . $eeSortOrder . ') in ' . $sort_execution_time . 'ms', 'General');
+		avpvh_flst_debug_log("Files Sorted: " . $eeSortBy . ' (' . $eeSortOrder . ') in ' . $sort_execution_time . 'ms', 'General');
 	}
 
 
@@ -1724,7 +1724,7 @@ class Avpvh_Filelist_Main {
 	// Send the notification email
 	public function notification_email($eeSFL_UploadJob) {
 
-		avpvh_filelist_debug_log("Class Method Called: eeSFL_NotificationEmail()", 'General');
+		avpvh_flst_debug_log("Class Method Called: eeSFL_NotificationEmail()", 'General');
 
 		$eeAdminEmail = $this->eeListSettings['NotifyTo'];
 
@@ -1743,7 +1743,7 @@ class Avpvh_Filelist_Main {
 				// Verify nonce for upload form submission (Missing nonce security)
 				if (!wp_verify_nonce(isset($_POST['avpvh-filelist-upload-form-nonce']) ? sanitize_text_field(wp_unslash($_POST['avpvh-filelist-upload-form-nonce'])) : '', 'avpvh-filelist-upload-form') && !is_admin()) {
 					// Skip form input processing if nonce verification fails
-					avpvh_filelist_debug_log("Email form input skipped: Invalid nonce", 'General');
+					avpvh_flst_debug_log("Email form input skipped: Invalid nonce", 'General');
 				} else {
 
 					$eeSFL_Body .= PHP_EOL . PHP_EOL . __('Uploader Information', 'avpvh-filelist') . PHP_EOL;
@@ -1815,7 +1815,7 @@ class Avpvh_Filelist_Main {
 						$eeSFL_HeadersCC = '';
 						$eeSent = TRUE;
 
-						avpvh_filelist_debug_log("Notification Email SENT", 'General');
+						avpvh_flst_debug_log("Notification Email SENT", 'General');
 
 					} else {
 
@@ -2018,22 +2018,22 @@ class Avpvh_Filelist_Main {
 		$eeCopyLimit = 1000; // File copies limit
 
 		if(empty($this->eeAllFiles)) {
-			$this->eeAllFiles = get_option('avpvh_filelist_files_' . $this->eeListID) ?: array();
+			$this->eeAllFiles = get_option('avpvh_flst_files_' . $this->eeListID) ?: array();
 		}
 
 		foreach($this->eeAllFiles as $eeFileArray) { // Loop through file array and look for a match.
 
 			if( $eeFolderPath . $eeFileName == $eeFileArray['FilePath'] ) { // Duplicate found
 
-				avpvh_filelist_debug_log("Duplicate Item Found: " . $eeFolderPath . $eeFileName, 'General');
+				avpvh_flst_debug_log("Duplicate Item Found: " . $eeFolderPath . $eeFileName, 'General');
 
-				if( avpvh_filelist_file_system('is_file', array('file' => $eeSiteRoot . $eeSFL_FilePathAdded))['data'] ) { // Confirm the file is really there
+				if( avpvh_flst_file_system('is_file', array('file' => $eeSiteRoot . $eeSFL_FilePathAdded))['data'] ) { // Confirm the file is really there
 
 					for ($i = 1; $i <= $eeCopyLimit; $i++) { // Look for existing copies
 
 						$eeFileName = $eeNameOnly . '_' . $i . '.' . $eeExtension; // Indicate the copy number
 
-						if(!avpvh_filelist_file_system('is_file', array('file' => $eeSiteRoot . $eeDir . $eeFileName))['data']) { break; } // We're done.
+						if(!avpvh_flst_file_system('is_file', array('file' => $eeSiteRoot . $eeDir . $eeFileName))['data']) { break; } // We're done.
 					}
 				}
 			}
@@ -2047,37 +2047,37 @@ class Avpvh_Filelist_Main {
 	// Detect upward path traversal
 	public function detect_upward_traversal($eeFilePath) { // Relative to site root
 
-		avpvh_filelist_debug_log("Traversal check started for: " . $eeFilePath, 'Security', $this->eeListID);
+		avpvh_flst_debug_log("Traversal check started for: " . $eeFilePath, 'Security', $this->eeListID);
 
 		// Decode URL-encoded characters
 		$eeFilePath = urldecode($eeFilePath);
-		avpvh_filelist_debug_log("After urldecode: " . $eeFilePath, 'Security', $this->eeListID);
+		avpvh_flst_debug_log("After urldecode: " . $eeFilePath, 'Security', $this->eeListID);
 
 		// Convert all directory separators to '/'
 		$eeFilePath = str_replace('\\', '/', $eeFilePath);
 
 		// Normalize the path: replace double or multiple slashes with a single slash
 		$eeFilePath = preg_replace('~/+~', '/', $eeFilePath);
-		avpvh_filelist_debug_log("After normalization: " . $eeFilePath, 'Security', $this->eeListID);
+		avpvh_flst_debug_log("After normalization: " . $eeFilePath, 'Security', $this->eeListID);
 
 		// Check for '..' after decoding and normalization
 		if (strpos($eeFilePath, '..') !== FALSE) {
 			$this->eeUserMessages['errors'][] = 'Potential directory traversal detected.';
-			avpvh_filelist_debug_log("FAILED: Contains '..'", 'Security', $this->eeListID);
+			avpvh_flst_debug_log("FAILED: Contains '..'", 'Security', $this->eeListID);
 		}
 
 		// Construct the full path and resolve to a real path
 		$eeSiteRoot = $this->get_root_path(); // Use verified site root — ABSPATH differs from site root on managed hosts (e.g. Pressable)
 		$eeUserPath = str_replace('\\', '/', $eeSiteRoot . dirname($eeFilePath));
-		avpvh_filelist_debug_log("User path (dirname): " . $eeUserPath, 'Security', $this->eeListID);
+		avpvh_flst_debug_log("User path (dirname): " . $eeUserPath, 'Security', $this->eeListID);
 
 		$eeRealPath = realpath($eeUserPath);
-		avpvh_filelist_debug_log("Real path: " . ($eeRealPath ? $eeRealPath : 'FALSE'), 'Security', $this->eeListID);
+		avpvh_flst_debug_log("Real path: " . ($eeRealPath ? $eeRealPath : 'FALSE'), 'Security', $this->eeListID);
 
 		// Ensure paths are valid
 		if ($eeRealPath === FALSE || $eeUserPath === FALSE) {
 			$this->eeUserMessages['errors'][] = 'Invalid path detected.';
-			avpvh_filelist_debug_log("FAILED: Invalid path (realpath returned FALSE)", 'Security', $this->eeListID);
+			avpvh_flst_debug_log("FAILED: Invalid path (realpath returned FALSE)", 'Security', $this->eeListID);
 		}
 
 		// Convert real path directory separator for consistency
@@ -2085,11 +2085,11 @@ class Avpvh_Filelist_Main {
 
 		// Check if the real path starts with the intended base directory
 		$eeSiteRootNorm = str_replace('\\', '/', $eeSiteRoot);
-		avpvh_filelist_debug_log("Site root: " . $eeSiteRootNorm, 'Security', $this->eeListID);
+		avpvh_flst_debug_log("Site root: " . $eeSiteRootNorm, 'Security', $this->eeListID);
 
 		if (strpos($eeRealPath, $eeSiteRootNorm) !== 0) {
 			$this->eeUserMessages['errors'][] = 'Potential directory traversal detected.';
-			avpvh_filelist_debug_log("FAILED: Real path doesn't start with site root", 'Security', $this->eeListID);
+			avpvh_flst_debug_log("FAILED: Real path doesn't start with site root", 'Security', $this->eeListID);
 		}
 
 		// SECURITY: Also verify the resolved path is within the configured FileListDir,
@@ -2102,7 +2102,7 @@ class Avpvh_Filelist_Main {
 				// Compare with a trailing slash so a sibling such as "simple-file-list-old/" doesn't pass as inside.
 				if (strpos(rtrim($eeRealPath, '/') . '/', rtrim($eeFileListDirReal, '/') . '/') !== 0) {
 					$this->eeUserMessages['errors'][] = 'Path is outside the configured file list directory.';
-					avpvh_filelist_debug_log("FAILED: Real path is outside FileListDir", 'Security', $this->eeListID);
+					avpvh_flst_debug_log("FAILED: Real path is outside FileListDir", 'Security', $this->eeListID);
 				}
 			}
 		}
@@ -2112,7 +2112,7 @@ class Avpvh_Filelist_Main {
 		}
 
 		// If all checks passed, no traversal detected
-		avpvh_filelist_debug_log("Traversal check passed.", 'General');
+		avpvh_flst_debug_log("Traversal check passed.", 'General');
 
 		return TRUE;
 	}
@@ -2146,7 +2146,7 @@ class Avpvh_Filelist_Main {
 			$eeURL = strtok($eeURL, '?');
 		}
 
-		avpvh_filelist_debug_log("eeSFL_GetThisURL() returning: " . $eeURL, 'URL', $this->eeListID);
+		avpvh_flst_debug_log("eeSFL_GetThisURL() returning: " . $eeURL, 'URL', $this->eeListID);
 
 		return $eeURL;
 	}
@@ -2158,7 +2158,7 @@ class Avpvh_Filelist_Main {
 	// This method should return the results of an operation; success, warning or failure.
 	public function results_notification() {
 
-		$eeGo = AVPVH_FILELIST_GO;
+		$eeGo = AVPVH_FLST_GO;
 
 		 $eeOutput = '';
 

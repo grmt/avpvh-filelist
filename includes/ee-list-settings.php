@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // Check for POST, Capability and Nonce
 if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_text_field(wp_unslash($_POST['eePost'])) && check_admin_referer( 'avpvh-filelist-settings', 'avpvh-filelist-settings-nonce')) {
 
-	avpvh_filelist_debug_log("Updating the List Settings", 'General');
+	avpvh_flst_debug_log("Updating the List Settings", 'General');
 
 	// List Title
 	if(isset($_POST['eeListTitle'])) {
@@ -25,11 +25,11 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 			$new_directory = sanitize_text_field(wp_unslash($_POST['eeFileListDir']));
 			$user_id = get_current_user_id();
 
-			avpvh_filelist_debug_log("SETTINGS CHANGE: FileListDir changed from '$old_directory' to '$new_directory' by user $user_id", 'Settings', $eeSFL->eeListID);
+			avpvh_flst_debug_log("SETTINGS CHANGE: FileListDir changed from '$old_directory' to '$new_directory' by user $user_id", 'Settings', $eeSFL->eeListID);
 
-			$eeFileListDir = avpvh_filelist_validate_file_list_dir($new_directory); // Sanitize and Validate the Path
+			$eeFileListDir = avpvh_flst_validate_file_list_dir($new_directory); // Sanitize and Validate the Path
 
-			$eeOverlap = $eeFileListDir ? avpvh_filelist_find_overlapping_list($eeFileListDir, $eeSFL->eeListID) : 0;
+			$eeOverlap = $eeFileListDir ? avpvh_flst_find_overlapping_list($eeFileListDir, $eeSFL->eeListID) : 0;
 
 			if($eeOverlap) {
 
@@ -38,10 +38,10 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 
 			} elseif($eeFileListDir) {
 
-				if( avpvh_filelist_file_list_dir_check($eeFileListDir) ) { // Check / Create the Dir
+				if( avpvh_flst_file_list_dir_check($eeFileListDir) ) { // Check / Create the Dir
 
 					$eeSFL->eeListSettings['FileListDir'] = $eeFileListDir;
-					avpvh_filelist_debug_log("Directory change successful: new path validated and created", 'Settings', $eeSFL->eeListID);
+					avpvh_flst_debug_log("Directory change successful: new path validated and created", 'Settings', $eeSFL->eeListID);
 
 				} else {
 
@@ -57,12 +57,12 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 
 
 		// Who may see the list when "Show To" is "Specific users, roles or groups"
-		list($eeListGrant, $eeGrantErrors) = avpvh_filelist_grant_from_post('eeListAccess');
+		list($eeListGrant, $eeGrantErrors) = avpvh_flst_grant_from_post('eeListAccess');
 		$eeSFL->eeListSettings['ListAccess'] = $eeListGrant;
 		foreach( $eeGrantErrors as $eeError ) { $eeSFL->eeUserMessages['warnings'][] = $eeError; }
 
-		// Serve files through the download handler (set before avpvh_filelist_limit_dir_access() below)
-		$eeSFL->eeListSettings['ProtectFiles'] = avpvh_filelist_process_checkbox_input('ProtectFiles');
+		// Serve files through the download handler (set before avpvh_flst_limit_dir_access() below)
+		$eeSFL->eeListSettings['ProtectFiles'] = avpvh_flst_process_checkbox_input('ProtectFiles');
 
 		if(isset($_POST['eeShowList'])) {
 
@@ -74,11 +74,11 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 				  elseif($eeShowList == 'ADMIN') { $eeSFL->eeListSettings['ShowList'] = 'ADMIN'; } // Show only to logged in Admins
 					else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
 
-			if( $eeSFL->eeListSettings['ShowList'] == 'GRANTED' && avpvh_filelist_grant_is_empty($eeListGrant) ) {
+			if( $eeSFL->eeListSettings['ShowList'] == 'GRANTED' && avpvh_flst_grant_is_empty($eeListGrant) ) {
 				$eeSFL->eeUserMessages['warnings'][] = __('No users, roles or groups are chosen, so only the people who manage this list can see it.', 'avpvh-filelist');
 			}
 
-			avpvh_filelist_limit_dir_access($eeSFL->eeListSettings['ShowList']);
+			avpvh_flst_limit_dir_access($eeSFL->eeListSettings['ShowList']);
 		}
 
 		if(isset($_POST['eeAdminRole'])) {
@@ -119,7 +119,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 	$eeCheckboxes[] = 'AllowFrontManage';
 
 	foreach( $eeCheckboxes as $eeTerm ) { // "ee" is added in the function
-		$eeSFL->eeListSettings[$eeTerm] = avpvh_filelist_process_checkbox_input($eeTerm);
+		$eeSFL->eeListSettings[$eeTerm] = avpvh_flst_process_checkbox_input($eeTerm);
 	}
 
 	$eeTextInputs = array(
@@ -137,11 +137,11 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 	);
 
 	foreach( $eeTextInputs as $eeTerm ) {
-		$eeSFL->eeListSettings[$eeTerm] = avpvh_filelist_process_text_input($eeTerm);
+		$eeSFL->eeListSettings[$eeTerm] = avpvh_flst_process_text_input($eeTerm);
 	}
 
 	// Files per page: 0 shows everything on one page
-	$eeSFL->eeListSettings['FilesPerPage'] = min(500, absint(avpvh_filelist_process_text_input('FilesPerPage')));
+	$eeSFL->eeListSettings['FilesPerPage'] = min(500, absint(avpvh_flst_process_text_input('FilesPerPage')));
 
 
 	if(!empty($_POST['eeSortOrder'])) {
@@ -160,7 +160,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 		// Sort for Sanity
 		ksort($eeSFL->eeListSettings);
 
-		update_option('avpvh_filelist_settings_' . $eeSFL->eeListID, $eeSFL->eeListSettings);
+		update_option('avpvh_flst_settings_' . $eeSFL->eeListID, $eeSFL->eeListSettings);
 
 		$eeSFL->update_file_list_array(); // Re-Populate $eeSFL->eeAllFiles
 
@@ -171,7 +171,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 
 // Settings Display =========================================
 
-avpvh_filelist_debug_log("Loading: List Settings", 'General');
+avpvh_flst_debug_log("Loading: List Settings", 'General');
 
 // User Messaging
  $eeOutput .= $eeSFL->results_notification();
@@ -286,7 +286,7 @@ avpvh_filelist_debug_log("Loading: List Settings", 'General');
 		<div class="eeNote">' . __('Determine who you will show the front-side list to.', 'avpvh-filelist') . '</div>
 
 		<div id="eeSFL_ListAccessPicker"' . ($eeSFL->eeListSettings['ShowList'] == 'GRANTED' ? '' : ' style="display:none"') . '>'
-			. avpvh_filelist_grant_picker('eeListAccess', $eeSFL->eeListSettings['ListAccess'] ?? array()) . '
+			. avpvh_flst_grant_picker('eeListAccess', $eeSFL->eeListSettings['ListAccess'] ?? array()) . '
 		</div>
 		<script>
 		document.getElementById("eeShowList").addEventListener("change", function() {
@@ -300,7 +300,7 @@ avpvh_filelist_debug_log("Loading: List Settings", 'General');
 		<legend>' . __('Protect Files', 'avpvh-filelist') . '</legend>
 
 		<div><label for="eeProtectFiles">' . __('Protect', 'avpvh-filelist') . '</label>
-		<input type="checkbox" name="eeProtectFiles" value="YES" id="eeProtectFiles"' . (avpvh_filelist_list_is_protected($eeSFL->eeListSettings) ? ' checked="checked"' : '') . ' /></div>
+		<input type="checkbox" name="eeProtectFiles" value="YES" id="eeProtectFiles"' . (avpvh_flst_list_is_protected($eeSFL->eeListSettings) ? ' checked="checked"' : '') . ' /></div>
 
 		<div class="eeNote">' . __('Serve files through WordPress, which checks on every download who may open the file. Needed for "Show To" and per-file access to protect the files themselves, not just the list. The folder must then be blocked for direct access: done automatically on Apache, the settings page shows what to add for nginx.', 'avpvh-filelist') . '</div>
 
@@ -539,7 +539,7 @@ avpvh_filelist_debug_log("Loading: List Settings", 'General');
 
 		<input id="eeGenerateImgThumbs" type="checkbox" name="eeGenerateImgThumbs" value="YES"';
 
-		$eeSupported = get_option('avpvh_filelist_supported');
+		$eeSupported = get_option('avpvh_flst_supported');
 		if( !is_array($eeSupported) ) { $eeSupported = array(); }
 		$eeMissing = array();
 

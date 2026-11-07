@@ -102,7 +102,7 @@ In the [issues on GitHub](https://github.com/grmt/avpvh-filelist/issues). Please
 == Changelog ==
 
 = 1.0.0 =
-* Change: Simple File List (grmt) is now **AV-PvH File List**: plugin folder `avpvh-filelist`, shortcode `[avpvh_filelist]`, text domain `avpvh-filelist`, repository grmt/avpvh-filelist. All code follows WordPress naming (`avpvh_filelist_*` functions, `Avpvh_Filelist_*` classes); options, hooks, AJAX actions and filters moved to `avpvh_filelist_*` names. The wp-config constant is now `AVPVH_FILELIST_LDAP_BIND_PASSWORD` (`EESFL_LDAP_BIND_PASSWORD` still works).
+* Change: Simple File List (grmt) is now **AV-PvH File List**: plugin folder `avpvh-filelist`, shortcode `[avpvh_filelist]`, text domain `avpvh-filelist`, repository grmt/avpvh-filelist. All code follows WordPress naming (`avpvh_flst_*` functions, `Avpvh_Flst_*` classes); options, hooks, AJAX actions and filters moved to `avpvh_flst_*` names. The wp-config constant is now `AVPVH_FLST_LDAP_BIND_PASSWORD` (`EESFL_LDAP_BIND_PASSWORD` still works).
 * New: A site moves over from Simple File List on the first request: lists and settings are copied, `[eeSFL]` becomes `[avpvh_filelist]` in posts, pages and text and block widgets, and Simple File List is deactivated. Its options stay for a rollback; `[eeSFL]` stays registered for places the migration doesn't reach.
 * Change: Requires PHP 8.4 and WordPress 7.1, the versions it is tested on. Both are now also in the plugin header, so WordPress won't activate it on older versions.
 * New: Multiple file lists. Create, rename and remove lists under "All File Lists" and "Create List"; each list has its own folder, settings and `[eeSFL list="N"]` shortcode. Lists left by the old File Access Manager add-on are picked up automatically.

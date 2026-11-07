@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 			<a href="https://github.com/grmt/avpvh-filelist" target="_blank" rel="noopener">
 				<img src="' . $eeSFL->eeEnvironment['pluginURL'] . '/images/icon-128x128.png" alt="AV-PvH File List ' . __('Logo', 'avpvh-filelist') . '" title="AV-PvH File List" /></a>
 			<div>
-				<p class="heading">' . AVPVH_FILELIST_NAME . '</p>
+				<p class="heading">' . AVPVH_FLST_NAME . '</p>
 				<p class="eeTagLine">' . __('Easy File Sharing for WordPress', 'avpvh-filelist') . '</p>
 				<p class="eeHeaderLinks">
 					<a href="https://github.com/grmt/avpvh-filelist#readme" target="_blank" rel="noopener">' . __('Documentation', 'avpvh-filelist') . '</a><a href="https://github.com/grmt/avpvh-filelist/issues" target="_blank" rel="noopener">' . __('Get Support', 'avpvh-filelist') . '</a>';
@@ -34,15 +34,15 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 		<div id="eeSFL_HeaderTools">';
 
 		// List switcher, when this user manages more than one list
-		$eeManageable = avpvh_filelist_manageable_list_ids();
+		$eeManageable = avpvh_flst_manageable_list_ids();
 		if(count($eeManageable) > 1) {
 			$eeOutput .= '
 			<form method="get" class="eeSFL_ListNavigation">
-				<input type="hidden" name="page" value="' . esc_attr(AVPVH_FILELIST_SLUG) . '" />
+				<input type="hidden" name="page" value="' . esc_attr(AVPVH_FLST_SLUG) . '" />
 				<input type="hidden" name="tab" value="list" />
 				<select name="eeListID" onchange="this.form.submit()" aria-label="' . esc_attr__('Choose List', 'avpvh-filelist') . '">';
 			foreach($eeManageable as $eeNavID) {
-				$eeNavSettings = get_option('avpvh_filelist_settings_' . $eeNavID, array());
+				$eeNavSettings = get_option('avpvh_flst_settings_' . $eeNavID, array());
 				$eeOutput .= '
 					<option value="' . (int) $eeNavID . '"' . selected($eeNavID, (int) $eeSFL->eeListID, false) . '>' . esc_html(stripslashes($eeNavSettings['ListTitle'] ?? '')) . '</option>';
 			}
@@ -55,7 +55,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 		// Verify nonce for admin tab navigation (Recommended security practice)
 		$eeTabNonceValid = isset($_GET['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'ee-admin-navigation');
 		if (isset($_GET['tab']) && !$eeTabNonceValid) {
-			avpvh_filelist_debug_log("Admin tab navigation nonce verification failed for security logging", 'Admin');
+			avpvh_flst_debug_log("Admin tab navigation nonce verification failed for security logging", 'Admin');
 		}
 
 		if(!isset($_GET['tab'])) { $eeShowShortcodeBlock = TRUE; } else { $eeShowShortcodeBlock = FALSE; }

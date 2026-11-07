@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  *
  * @return string HTML
  */
-function avpvh_filelist_all_lists_page() {
+function avpvh_flst_all_lists_page() {
 
 	if( !current_user_can('manage_options') ) { return ''; }
 
@@ -19,7 +19,7 @@ function avpvh_filelist_all_lists_page() {
 
 	if( isset($_POST['eeSFL_DeleteList']) && check_admin_referer('eeSFL_DeleteList', 'eeSFL_DeleteListNonce') ) {
 		$eeDeleteID = absint(wp_unslash($_POST['eeSFL_DeleteList']));
-		if( avpvh_filelist_delete_list($eeDeleteID) ) {
+		if( avpvh_flst_delete_list($eeDeleteID) ) {
 			/* translators: %d: list ID */
 			$eeMessages .= '<div class="notice notice-success"><p>' . esc_html(sprintf(__('List %d was removed. Its files are still on the server.', 'avpvh-filelist'), $eeDeleteID)) . '</p></div>';
 		} else {
@@ -40,13 +40,13 @@ function avpvh_filelist_all_lists_page() {
 	</tr></thead>
 	<tbody>';
 
-	foreach( avpvh_filelist_get_list_ids() as $eeID ) {
+	foreach( avpvh_flst_get_list_ids() as $eeID ) {
 
-		$eeSettings = get_option('avpvh_filelist_settings_' . $eeID, array());
-		$eeFiles = get_option('avpvh_filelist_files_' . $eeID, array());
+		$eeSettings = get_option('avpvh_flst_settings_' . $eeID, array());
+		$eeFiles = get_option('avpvh_flst_files_' . $eeID, array());
 		$eeShortcode = $eeID === 1 ? '[eeSFL]' : '[eeSFL list="' . $eeID . '"]';
-		$eeListURL = admin_url('admin.php?page=' . AVPVH_FILELIST_SLUG . '&tab=list&eeListID=' . $eeID);
-		$eeSettingsURL = admin_url('admin.php?page=' . AVPVH_FILELIST_SLUG . '&tab=settings&eeListID=' . $eeID);
+		$eeListURL = admin_url('admin.php?page=' . AVPVH_FLST_SLUG . '&tab=list&eeListID=' . $eeID);
+		$eeSettingsURL = admin_url('admin.php?page=' . AVPVH_FLST_SLUG . '&tab=settings&eeListID=' . $eeID);
 
 		$eeOutput .= '
 		<tr>
@@ -87,7 +87,7 @@ function avpvh_filelist_all_lists_page() {
  *
  * @return string HTML
  */
-function avpvh_filelist_create_list_page() {
+function avpvh_flst_create_list_page() {
 
 	global $eeSFL;
 
@@ -102,10 +102,10 @@ function avpvh_filelist_create_list_page() {
 		$eeTitle = isset($_POST['eeSFL_ListTitle']) ? sanitize_text_field(wp_unslash($_POST['eeSFL_ListTitle'])) : '';
 		$eeDir = isset($_POST['eeSFL_ListDir']) ? sanitize_text_field(wp_unslash($_POST['eeSFL_ListDir'])) : '';
 
-		$eeResult = avpvh_filelist_create_list($eeTitle, $eeDir);
+		$eeResult = avpvh_flst_create_list($eeTitle, $eeDir);
 
 		if( is_int($eeResult) ) {
-			$eeSettingsURL = admin_url('admin.php?page=' . AVPVH_FILELIST_SLUG . '&tab=settings&eeListID=' . $eeResult);
+			$eeSettingsURL = admin_url('admin.php?page=' . AVPVH_FLST_SLUG . '&tab=settings&eeListID=' . $eeResult);
 			$eeMessages .= '<div class="notice notice-success"><p>'
 				/* translators: %d: list ID */
 				. esc_html(sprintf(__('List %d was created. It is visible to admins only and does not accept uploads until you change its settings.', 'avpvh-filelist'), $eeResult))
@@ -122,12 +122,12 @@ function avpvh_filelist_create_list_page() {
 		}
 	}
 
-	$eeNextID = max((int) get_option('avpvh_filelist_next_list_id', 0), max(avpvh_filelist_get_list_ids()) + 1);
+	$eeNextID = max((int) get_option('avpvh_flst_next_list_id', 0), max(avpvh_flst_get_list_ids()) + 1);
 	$eeSuggestedDir = 'wp-content/uploads/avpvh-filelist-' . $eeNextID . '/';
 
 	return $eeMessages . '
 	<section class="eeSFL_Settings">
-	<form method="post" action="' . esc_url(admin_url('admin.php?page=' . AVPVH_FILELIST_SLUG . '&tab=create')) . '">
+	<form method="post" action="' . esc_url(admin_url('admin.php?page=' . AVPVH_FLST_SLUG . '&tab=create')) . '">
 		' . wp_nonce_field('eeSFL_CreateList', 'eeSFL_CreateListNonce', true, false) . '
 
 		<fieldset>

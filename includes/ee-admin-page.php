@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 
 // Admin-Side Display
-function avpvh_filelist_back_end() {
+function avpvh_flst_back_end() {
 
 	$eeAdmin = is_admin(); // Should be TRUE here
 	if(!$eeAdmin) { return FALSE; }
@@ -14,13 +14,13 @@ function avpvh_filelist_back_end() {
 	global $eeSFL, $eeSFL_Tasks;
 	global $eeSFLU, $eeSFLE, $eeSFLM; // Extensions
 
-	avpvh_filelist_debug_log("Loading Back-End Display ...", 'Admin');
+	avpvh_flst_debug_log("Loading Back-End Display ...", 'Admin');
 
 	// Load the settings - SFLA will auto-initialize if needed during ee-ini.php
 	$eeSFL->eeListSettings = $eeSFL->get_settings($eeSFL->eeListID); // Get the Settings
 
 	$eeURL = $eeSFL->get_this_url();
-	avpvh_filelist_debug_log("Current URL: " . $eeURL, 'Admin', $eeSFL->eeListID);
+	avpvh_flst_debug_log("Current URL: " . $eeURL, 'Admin', $eeSFL->eeListID);
 
 	$eeForceSort = FALSE; // Only used in shortcode
 	$eeConfirm = FALSE;
@@ -29,8 +29,8 @@ function avpvh_filelist_back_end() {
 	if($eeSFLE) {
 		if( !isset($eeSFL->eeListSettings['AllowFrontSend']) ) {
 			$eeArray = array_merge( $eeSFL->eeListSettings, $eeSFLE->eeSettingsDefault );
-			avpvh_filelist_debug_log('- File Sending Settings Not Found for List ID ' . $eeSFL->eeListID . '. Applying Defaults...', 'Admin', $eeSFL->eeListID);
-			update_option('avpvh_filelist_settings_' . $eeSFL->eeListID , $eeArray);
+			avpvh_flst_debug_log('- File Sending Settings Not Found for List ID ' . $eeSFL->eeListID . '. Applying Defaults...', 'Admin', $eeSFL->eeListID);
+			update_option('avpvh_flst_settings_' . $eeSFL->eeListID , $eeArray);
 			$eeSFL->eeListSettings = $eeArray;
 			unset($eeArray);
 		}
@@ -57,32 +57,32 @@ function avpvh_filelist_back_end() {
 
 	<span class="nav-tab-wrapper-left">';
 
-	$eeMultipleLists = count(avpvh_filelist_manageable_list_ids()) > 1;
+	$eeMultipleLists = count(avpvh_flst_manageable_list_ids()) > 1;
 	$eeListName = $eeMultipleLists ? esc_html(stripslashes($eeSFL->eeListSettings['ListTitle'] ?? '')) : __('File List', 'avpvh-filelist');
 
 	// All File Lists
 	if(current_user_can('manage_options')) {
-		$eeOutput .= '<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=lists" id="eeSFL_TabAllFileLists" class="nav-tab' . ($active_tab == 'lists' ? ' eeActiveTab' : '') . '">' . __('All File Lists', 'avpvh-filelist') . '</a>';
+		$eeOutput .= '<a href="?page=' . AVPVH_FLST_SLUG . '&tab=lists" id="eeSFL_TabAllFileLists" class="nav-tab' . ($active_tab == 'lists' ? ' eeActiveTab' : '') . '">' . __('All File Lists', 'avpvh-filelist') . '</a>';
 	}
 
 	// This List
 	$eeOutput .= '
-	<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=list&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileList" class="nav-tab' . ($active_tab == 'list' ? ' eeActiveTab' : '') . '">' . $eeListName . '</a>';
+	<a href="?page=' . AVPVH_FLST_SLUG . '&tab=list&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileList" class="nav-tab' . ($active_tab == 'list' ? ' eeActiveTab' : '') . '">' . $eeListName . '</a>';
 
 	// Who may open which file of this list
 	$eeOutput .= '
-	<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=access&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileAccess" class="nav-tab' . ($active_tab == 'access' ? ' eeActiveTab' : '') . '">' . __('File Access', 'avpvh-filelist') . '</a>';
+	<a href="?page=' . AVPVH_FLST_SLUG . '&tab=access&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileAccess" class="nav-tab' . ($active_tab == 'access' ? ' eeActiveTab' : '') . '">' . __('File Access', 'avpvh-filelist') . '</a>';
 
 	// Settings
 	if(current_user_can('manage_options')) {
 		$eeOutput .= '
-		<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabSettings" class="nav-tab' . ($active_tab == 'settings' ? ' eeActiveTab' : '') . '">' . __('List Settings', 'avpvh-filelist') . '</a>';
+		<a href="?page=' . AVPVH_FLST_SLUG . '&tab=settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabSettings" class="nav-tab' . ($active_tab == 'settings' ? ' eeActiveTab' : '') . '">' . __('List Settings', 'avpvh-filelist') . '</a>';
 
 		$eeOutput .= '
-		<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=create" id="eeSFL_TabCreate" class="nav-tab' . ($active_tab == 'create' ? ' eeActiveTab' : '') . '">' . __('Create List', 'avpvh-filelist') . '</a>';
+		<a href="?page=' . AVPVH_FLST_SLUG . '&tab=create" id="eeSFL_TabCreate" class="nav-tab' . ($active_tab == 'create' ? ' eeActiveTab' : '') . '">' . __('Create List', 'avpvh-filelist') . '</a>';
 
 		$eeOutput .= '
-		<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=groups" id="eeSFL_TabGroups" class="nav-tab' . ($active_tab == 'groups' ? ' eeActiveTab' : '') . '">' . __('Groups', 'avpvh-filelist') . '</a>';
+		<a href="?page=' . AVPVH_FLST_SLUG . '&tab=groups" id="eeSFL_TabGroups" class="nav-tab' . ($active_tab == 'groups' ? ' eeActiveTab' : '') . '">' . __('Groups', 'avpvh-filelist') . '</a>';
 	}
 
 
@@ -109,20 +109,20 @@ function avpvh_filelist_back_end() {
 	if($active_tab == 'lists' && current_user_can('manage_options')) {
 
 		include_once($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-lists-admin.php');
-		$eeOutput .= avpvh_filelist_all_lists_page();
+		$eeOutput .= avpvh_flst_all_lists_page();
 
 	} elseif($active_tab == 'create' && current_user_can('manage_options')) {
 
 		include_once($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-lists-admin.php');
-		$eeOutput .= avpvh_filelist_create_list_page();
+		$eeOutput .= avpvh_flst_create_list_page();
 
 	} elseif($active_tab == 'access') {
 
-		$eeOutput .= avpvh_filelist_file_access_page(); // Checks the list's admin capability itself
+		$eeOutput .= avpvh_flst_file_access_page(); // Checks the list's admin capability itself
 
 	} elseif($active_tab == 'groups' && current_user_can('manage_options')) {
 
-		$eeOutput .= avpvh_filelist_groups_page();
+		$eeOutput .= avpvh_flst_groups_page();
 
 	} elseif($active_tab == 'list') {
 
@@ -150,7 +150,7 @@ function avpvh_filelist_back_end() {
 
 				 $eeOutput .= '
 
-				<a href="' . admin_url() . '?page=' . AVPVH_FILELIST_SLUG . '&eeListID=' . $eeSFL->eeListID . '" class="button eeButton" id="eeSFL_BacktoFilesButton">&larr; ' . __('Back to the Files', 'avpvh-filelist') . '</a>';
+				<a href="' . admin_url() . '?page=' . AVPVH_FLST_SLUG . '&eeListID=' . $eeSFL->eeListID . '" class="button eeButton" id="eeSFL_BacktoFilesButton">&larr; ' . __('Back to the Files', 'avpvh-filelist') . '</a>';
 
 			} else {
 
@@ -221,9 +221,9 @@ function avpvh_filelist_back_end() {
 
 		// Capture dev output BEFORE clearing arrays (using hook for Tools plugin)
 		ob_start();
-		do_action('avpvh_filelist_debug_output');
+		do_action('avpvh_flst_debug_output');
 		$eeDevOutputFileList = ob_get_clean();
-		avpvh_filelist_debug_log("Captured dev output for file list tab [length:" . strlen($eeDevOutputFileList) . "]", 'Admin', $eeSFL->eeListID);
+		avpvh_flst_debug_log("Captured dev output for file list tab [length:" . strlen($eeDevOutputFileList) . "]", 'Admin', $eeSFL->eeListID);
 
 		$eeSFL->eeAllFiles = array();
 		$eeSFL->eeDisplayFiles = array();
@@ -241,19 +241,19 @@ function avpvh_filelist_back_end() {
 
 
 		// List Settings
-		 $eeOutput .= '<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=settings&subtab=list_settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabListSettings" class="nav-tab ';
+		 $eeOutput .= '<a href="?page=' . AVPVH_FLST_SLUG . '&tab=settings&subtab=list_settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabListSettings" class="nav-tab ';
 		if($active_subtab == 'list_settings') { $eeOutput .= '  eeActiveTab ';}
 	    $active_subtab == 'list_settings' ? 'nav-tab-active' : '';
 	     $eeOutput .= $active_subtab . '">' . __('File List Settings', 'avpvh-filelist') . '</a>';
 
 	    // Upload Settings
-		 $eeOutput .= '<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=settings&subtab=uploader_settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabUploads" class="nav-tab ';
+		 $eeOutput .= '<a href="?page=' . AVPVH_FLST_SLUG . '&tab=settings&subtab=uploader_settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabUploads" class="nav-tab ';
 		if($active_subtab == 'uploader_settings') { $eeOutput .= '  eeActiveTab ';}
 	    $active_subtab == 'uploader_settings' ? 'nav-tab-active' : '';
 	     $eeOutput .= $active_subtab . '">' . __('File Upload Settings', 'avpvh-filelist') . '</a>';
 
 	    // Notification Settings
-		 $eeOutput .= '<a href="?page=' . AVPVH_FILELIST_SLUG . '&tab=settings&subtab=email_settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabNotice" class="nav-tab ';
+		 $eeOutput .= '<a href="?page=' . AVPVH_FLST_SLUG . '&tab=settings&subtab=email_settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabNotice" class="nav-tab ';
 		if($active_subtab == 'email_settings') { $eeOutput .= '  eeActiveTab ';}
 	    $active_subtab == 'email_settings' ? 'nav-tab-active' : '';
 	     $eeOutput .= $active_subtab . '">' . __('Notification Settings', 'avpvh-filelist') . '</a>';
@@ -287,18 +287,18 @@ function avpvh_filelist_back_end() {
 
 	include($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-admin-footer.php');
 
-	avpvh_filelist_debug_log("Admin SFL Display Completed", 'Admin');
+	avpvh_flst_debug_log("Admin SFL Display Completed", 'Admin');
 
 	// Add development output for testing and debugging
 	// First add the file list dev output (if we're on file list tab)
 	if (isset($eeDevOutputFileList)) {
-		avpvh_filelist_debug_log("Adding file list dev output to page", 'Admin', $eeSFL->eeListID);
+		avpvh_flst_debug_log("Adding file list dev output to page", 'Admin', $eeSFL->eeListID);
 		 $eeOutput .= $eeDevOutputFileList;
 	} else {
 		// Otherwise add current dev output (settings tab, etc.) using hook for Tools plugin
-		avpvh_filelist_debug_log("Adding current dev output to page (no file list)", 'Admin', $eeSFL->eeListID);
+		avpvh_flst_debug_log("Adding current dev output to page (no file list)", 'Admin', $eeSFL->eeListID);
 		ob_start();
-		do_action('avpvh_filelist_debug_output');
+		do_action('avpvh_flst_debug_output');
 		 $eeOutput .= ob_get_clean();
 	}
 

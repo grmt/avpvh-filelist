@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
-avpvh_filelist_debug_log("Loaded: Email Settings", 'General');
+avpvh_flst_debug_log("Loaded: Email Settings", 'General');
 
 // echo '<pre>'; print_r($_POST); echo '</pre>'; exit;
 
@@ -19,7 +19,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 		'BccFileSender'
 	);
 	foreach( $eeCheckboxes as $eeTerm){
-		$eeSFL->eeListSettings[$eeTerm] = avpvh_filelist_process_checkbox_input($eeTerm);
+		$eeSFL->eeListSettings[$eeTerm] = avpvh_flst_process_checkbox_input($eeTerm);
 	}
 
 
@@ -46,17 +46,17 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 		,'NotifySubject'
 	);
 	foreach( $eeTextInputs as $eeTerm ) {
-		$eeSFL->eeListSettings[$eeTerm] = avpvh_filelist_process_text_input($eeTerm);
+		$eeSFL->eeListSettings[$eeTerm] = avpvh_flst_process_text_input($eeTerm);
 	}
 
-	$eeSFL->eeListSettings['NotifyMessage'] = avpvh_filelist_process_text_input('NotifyMessage', 'textarea');
+	$eeSFL->eeListSettings['NotifyMessage'] = avpvh_flst_process_text_input('NotifyMessage', 'textarea');
 
 	if(!$eeSFL->eeListSettings['NotifyMessage']) {
 		$eeSFL->eeListSettings['NotifyMessage'] = $eeSFL->eeNotifyMessageDefault;
 	}
 
 	// Update DB
-	update_option('avpvh_filelist_settings_' . $eeSFL->eeListID, $eeSFL->eeListSettings );
+	update_option('avpvh_flst_settings_' . $eeSFL->eeListID, $eeSFL->eeListSettings );
 
 	$eeSFL->eeUserMessages['messages'][] = __('Notification Settings Saved', 'avpvh-filelist');
 }

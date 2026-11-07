@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
-avpvh_filelist_debug_log("Listing Files in Tile View...", 'General');
+avpvh_flst_debug_log("Listing Files in Tile View...", 'General');
 
 // Bulk Editing
 if( ($eeShowOps OR $eeSFL->eeListSettings['AllowBulkFileDownload'] == 'YES') AND !$eeShowingResults) {

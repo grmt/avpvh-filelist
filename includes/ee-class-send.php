@@ -5,7 +5,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class Avpvh_Filelist_Send {
+class Avpvh_Flst_Send {
 
 	public $eeSettingsDefault = array(
 
@@ -166,21 +166,21 @@ class Avpvh_Filelist_Send {
 
 		// Verify that front-end file sending is enabled for this list
 		if($eeSFL->eeListSettings['AllowFrontSend'] != 'YES') {
-			avpvh_filelist_debug_log("ERROR: Front-end file sending is disabled", 'Send', $eeSFL->eeListID);
+			avpvh_flst_debug_log("ERROR: Front-end file sending is disabled", 'Send', $eeSFL->eeListID);
 			return __('File sending is not enabled', 'avpvh-filelist');
 		}
 
 		// Only people who may see the list may send its files
-		if( !avpvh_filelist_user_can_see_list($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) {
+		if( !avpvh_flst_user_can_see_list($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) {
 			return __('File sending is not enabled', 'avpvh-filelist');
 		}
 
 		// Rate limit email sending per IP / user (max 10 emails per 15 minutes)
 		$eeCallerID = get_current_user_id() ? 'user_' . get_current_user_id() : 'ip_' . (isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown');
-		$eeRateKey = 'avpvh_filelist_send_rate_' . substr(hash('sha256', $eeCallerID), 0, 32);
+		$eeRateKey = 'avpvh_flst_send_rate_' . substr(hash('sha256', $eeCallerID), 0, 32);
 		$eeSendCount = (int) get_transient($eeRateKey);
 		if( $eeSendCount >= 10 ) {
-			avpvh_filelist_debug_log("ERROR: Email send rate limit exceeded for " . $eeCallerID, 'Send', $eeSFL->eeListID);
+			avpvh_flst_debug_log("ERROR: Email send rate limit exceeded for " . $eeCallerID, 'Send', $eeSFL->eeListID);
 			return __('Too many emails sent. Please try again later.', 'avpvh-filelist');
 		}
 		set_transient($eeRateKey, $eeSendCount + 1, 15 * MINUTE_IN_SECONDS);
@@ -245,7 +245,7 @@ class Avpvh_Filelist_Send {
 		if( is_array($eeFilesArray) ) { // The files array checkboxes
 
 			// Validate requested files against stored file list
-			$eeStoredFiles = get_option('avpvh_filelist_files_' . $eeSFL->eeListID, array());
+			$eeStoredFiles = get_option('avpvh_flst_files_' . $eeSFL->eeListID, array());
 			if(!is_array($eeStoredFiles)) { $eeStoredFiles = array(); }
 
 			foreach($eeFilesArray as $eeFile) {
@@ -266,9 +266,9 @@ class Avpvh_Filelist_Send {
 
 				// Only files the sender may open themselves. For a protected list the link goes to the
 				// download handler, which checks the recipient's own access when they open it.
-				if( !avpvh_filelist_user_can_read_file($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedItem, get_current_user_id()) ) { continue; }
+				if( !avpvh_flst_user_can_read_file($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedItem, get_current_user_id()) ) { continue; }
 
-				$eeFileLinks .= avpvh_filelist_file_url($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedPath) . PHP_EOL . PHP_EOL;
+				$eeFileLinks .= avpvh_flst_file_url($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedPath) . PHP_EOL . PHP_EOL;
 			}
 
 			if( $eeFileLinks === '' ) {
@@ -286,7 +286,7 @@ class Avpvh_Filelist_Send {
 		$eeMessage .= PHP_EOL .  PHP_EOL . $eeFileLinks . $eeFooter; // with Custom Footer
 
 		// Email Headers
-		$eeHeaders = avpvh_filelist_return_header_string($eeFrom, $eeCc, $eeBcc);
+		$eeHeaders = avpvh_flst_return_header_string($eeFrom, $eeCc, $eeBcc);
 
 		// TO DO -- Allow files to be attached if less than X MB
 		// $eeAttached = array();

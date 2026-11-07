@@ -93,13 +93,13 @@ expect() { # label, condition result
 }
 expect "migration: the old plugin is deactivated" "$(wp plugin is-active simple-file-list && echo no || echo yes)"
 expect "migration: the page uses [avpvh_filelist]" "$([ "$(wp post get "$PAGE" --field=post_content)" = '<!-- wp:shortcode -->[avpvh_filelist]<!-- /wp:shortcode -->' ] && echo yes || echo no)"
-expect "migration: list 1 keeps its settings" "$(wp eval '$s = get_option("avpvh_filelist_settings_1"); echo ($s["ListTitle"] ?? "") === "Ledenarchief" && $s["FileListDir"] === "wp-content/uploads/simple-file-list/" ? "yes" : "no";')"
-expect "migration: the old default sender name is updated" "$(wp eval '$s = get_option("avpvh_filelist_settings_1"); echo $s["NotifyFromName"] === "AV-PvH File List" ? "yes" : "no";')"
-expect "migration: the list ids are copied" "$(wp eval 'echo get_option("avpvh_filelist_list_ids") === array(1) ? "yes" : "no";')"
-expect "migration: an existing install, not a new one" "$(wp eval 'echo get_option("avpvh_filelist_version") === AVPVH_FILELIST_VERSION ? "yes" : "no";')"
-expect "migration: the old log is left behind" "$(wp eval 'echo get_option("avpvh_filelist_log", "none") === "none" ? "yes" : "no";')"
+expect "migration: list 1 keeps its settings" "$(wp eval '$s = get_option("avpvh_flst_settings_1"); echo ($s["ListTitle"] ?? "") === "Ledenarchief" && $s["FileListDir"] === "wp-content/uploads/simple-file-list/" ? "yes" : "no";')"
+expect "migration: the old default sender name is updated" "$(wp eval '$s = get_option("avpvh_flst_settings_1"); echo $s["NotifyFromName"] === "AV-PvH File List" ? "yes" : "no";')"
+expect "migration: the list ids are copied" "$(wp eval 'echo get_option("avpvh_flst_list_ids") === array(1) ? "yes" : "no";')"
+expect "migration: an existing install, not a new one" "$(wp eval 'echo get_option("avpvh_flst_version") === AVPVH_FLST_VERSION ? "yes" : "no";')"
+expect "migration: the old log is left behind" "$(wp eval 'echo get_option("avpvh_flst_log", "none") === "none" ? "yes" : "no";')"
 expect "migration: the old options stay for a rollback" "$(wp eval 'echo is_array(get_option("eeSFL_Settings_1")) ? "yes" : "no";')"
-expect "migration: runs once" "$(wp eval 'update_option("eeSFL_ListIDs", array(1, 7)); avpvh_filelist_migrate_legacy(); echo get_option("avpvh_filelist_list_ids") === array(1) ? "yes" : "no";')"
+expect "migration: runs once" "$(wp eval 'update_option("eeSFL_ListIDs", array(1, 7)); avpvh_flst_migrate_legacy(); echo get_option("avpvh_flst_list_ids") === array(1) ? "yes" : "no";')"
 
 # Directory: jan gets an e-mail address (matched by mail), piet is matched by uid; bestuur = piet
 for _ in $(seq 60); do
