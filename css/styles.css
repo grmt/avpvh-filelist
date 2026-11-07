@@ -285,3 +285,48 @@
 	vertical-align: middle;
 }
 
+
+
+/* SEARCH AND PAGES */
+.eeSFL .eeSFL_SearchForm {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	align-items: center;
+	margin-bottom: 1em;
+}
+.eeSFL .eeSFL_SearchForm input[type="search"] {
+	flex: 1 1 12em;
+	min-width: 0;
+}
+.eeSFL .eeSFL_SearchResults {
+	margin: 0 0 1em;
+}
+.eeSFL .eeSFL_Pagination {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .25em;
+	justify-content: center;
+	margin: 1em 0;
+}
+.eeSFL .eeSFL_Pagination a,
+.eeSFL .eeSFL_Pagination span {
+	padding: .35em .7em;
+	border: 1px solid var(--ee-color-table-border);
+	border-radius: 3px;
+	text-decoration: none;
+}
+.eeSFL .eeSFL_Pagination a {
+	background-color: var(--ee-color-action-link-background);
+	color: var(--ee-color-action-link-text);
+}
+.eeSFL .eeSFL_Pagination a:hover {
+	background-color: var(--ee-color-action-link-background-hover);
+	color: var(--ee-color-action-link-text-hover);
+}
+.eeSFL .eeSFL_Pagination .eeSFL_PageCurrent {
+	font-weight: bold;
+}
+.eeSFL .eeSFL_Pagination .eeSFL_PageGap {
+	border-color: transparent;
+}

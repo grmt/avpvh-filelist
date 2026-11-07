@@ -12,7 +12,7 @@ function eeSFL_BackEnd() {
 	if(!$eeAdmin) { return FALSE; }
 
 	global $eeSFL, $eeSFL_Tasks;
-	global $eeSFLU, $eeSFLS, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
+	global $eeSFLU, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
 
 	eeSFL_Debug_Log("Loading Back-End Display ...", 'Admin');
 
@@ -25,15 +25,6 @@ function eeSFL_BackEnd() {
 	$eeForceSort = FALSE; // Only used in shortcode
 	$eeConfirm = FALSE;
 
-	if($eeSFLS) {
-		if( !isset($eeSFL->eeListSettings['EnableSearch']) ) {
-			$eeArray = array_merge( $eeSFL->eeListSettings, $eeSFLS->eeSFLS_SettingsDefault );
-			eeSFL_Debug_Log('- Search Settings Not Found for List ID ' . $eeSFL->eeListID . '. Applying Defaults...', 'Admin', $eeSFL->eeListID);
-			update_option('eeSFL_Settings_' . $eeSFL->eeListID , $eeArray);
-			$eeSFL->eeListSettings = $eeArray;
-			unset($eeArray);
-		}
-	}
 
 	if($eeSFLE) {
 		if( !isset($eeSFL->eeListSettings['AllowFrontSend']) ) {

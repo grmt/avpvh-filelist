@@ -147,6 +147,8 @@ class eeSFL_MainClass {
 		'LabelOwner' => 'Submitter', // Label for the file owner
 		'SortBy' => 'Name', // Sort By (Name, Added, Changed, Size, Random)
 		'SortOrder' => 'Ascending', // Descending or Ascending
+		'ShowSearch' => 'NO', // Show the search form on the front end (always shown in wp-admin)
+		'FilesPerPage' => 0, // Files per page; 0 shows all files on one page
 		'ShowFileDateAs' => 'Changed', // Which Date shows in the Display
 		'MaxSize' => 131072, // (25GB) The maximum size of the list
 

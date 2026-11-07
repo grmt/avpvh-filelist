@@ -342,15 +342,59 @@ def step_no_folders(admin):
     check('no folders: a file in a subfolder is not served', admin.get(handler('oud/archief.pdf'), follow=False)[0] == 404)
 
 
+def listed(page):
+    return [n for n in FILES if 'sfl-file=' + n in page or '>' + n + '<' in page]
+
+
+def step_search_and_pages(admin):
+    """Search and paging on the front end, through GET parameters per list."""
+    admin.submit(ADMIN + '&tab=settings&eeListID=1', 'eeShowList', {'eeShowSearch': 'YES', 'eeFilesPerPage': '2', 'eeShowList': 'YES'})
+    front = '/?page_id=' + PAGE
+    visitor = Browser()
+
+    page = visitor.text(front)
+    check('search: the form is shown', 'name="sfl_search_1"' in page, page[:200])
+    check('pages: two files on page 1', len(re.findall(r'eeSFL_RealFileName', page)) == 2, len(re.findall(r'eeSFL_RealFileName', page)))
+    check('pages: links to page 3 of 3', 'sfl_page_1=3' in page and 'sfl_page_1=4' not in page)
+    page3 = visitor.text(front + '&sfl_page_1=3')
+    check('pages: the last page has the last file', len(re.findall(r'eeSFL_RealFileName', page3)) == 1)
+    check('pages: a page past the end shows the last page', visitor.text(front + '&sfl_page_1=99').count('eeSFL_RealFileName') == 1)
+
+    page = visitor.text(front + '&sfl_search_1=BRIEF')
+    check('search: finds by file name, any case', page.count('eeSFL_RealFileName') == 1 and 'ledenbrief.txt' in page)
+    check('search: says how many match', '1 file matches' in page)
+    page = visitor.text(front + '&sfl_search_1=' + urllib.parse.quote('"><script>alert(1)</script>'))
+    check('search: the query is escaped', '<script>alert(1)</script>' not in page and 'No files match' in page)
+
+    page = admin.text(ADMIN + '&tab=list&eeListID=1&sfl_search_1=video')
+    check('search in wp-admin: finds the file', page.count('eeSFL_RealFileName') == 1 and 'video.mp4' in page)
+    check('search in wp-admin: the form stays on the admin page', 'name="page" value="simple-file-list"' in page and 'name="eeListID" value="1"' in page)
+
+    admin.submit(ADMIN + '&tab=settings&eeListID=1', 'eeShowList', {'eeShowSearch': '', 'eeFilesPerPage': '0'})
+    page = visitor.text(front + '&sfl_search_1=brief')
+    check('search: off means the parameter is ignored', 'name="sfl_search_1"' not in page and page.count('eeSFL_RealFileName') == len(FILES))
+
+
+def step_pages_count_only_readable_files():
+    """Files a visitor may not open don't take up room on the pages."""
+    admin = Browser('admin')
+    admin.submit(ADMIN + '&tab=settings&eeListID=1', 'eeShowList', {'eeFilesPerPage': '1'})
+    page = Browser('jan').text('/?page_id=' + PAGE)
+    check('pages: jan gets 4 pages for his 4 files', 'sfl_page_1=4' in page and 'sfl_page_1=5' not in page, re.findall(r'sfl_page_1=\d+', page))
+    admin.submit(ADMIN + '&tab=settings&eeListID=1', 'eeShowList', {'eeFilesPerPage': '0'})
+
+
 def main():
     if not PAGE:
         raise SystemExit('SFL_IT_PAGE is not set; start the tests with run.sh')
     admin = Browser('admin')
     step_no_folders(admin)
+    step_search_and_pages(admin)
     step_ldap_settings(admin)
     step_list_settings(admin)
     step_file_access(admin)
     step_front_end()
+    step_pages_count_only_readable_files()
     step_headers()
     step_ldap_down(admin)
     step_front_manage(admin)

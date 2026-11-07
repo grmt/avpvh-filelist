@@ -117,6 +117,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 		,'GenerateVideoThumbs'
 			,'AllowBulkFileDownload'
 		,'AudioEnabled'
+		,'ShowSearch'
 	);
 
 	if(!$eeSFLA) { $eeCheckboxes[] = 'AllowFrontManage'; } // Otherwise this moves to the File Access Settings tab
@@ -142,6 +143,9 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 	foreach( $eeTextInputs as $eeTerm ) {
 		$eeSFL->eeListSettings[$eeTerm] = eeSFL_ProcessTextInput($eeTerm);
 	}
+
+	// Files per page: 0 shows everything on one page
+	$eeSFL->eeListSettings['FilesPerPage'] = min(500, absint(eeSFL_ProcessTextInput('FilesPerPage')));
 
 
 	if(!empty($_POST['eeSortOrder'])) {
@@ -607,6 +611,20 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 		 $eeOutput .= ' /> &darr; ' . __('Descending', 'simple-file-list') . '</p>
 
 		<div class="eeNote">' . __('Sort the list by name, date, file size, or randomly.', 'simple-file-list') . ' ' . __('Check the box to reverse the sort order.', 'simple-file-list') . '</div>
+
+		</div>
+
+		<div class="eeSettingsTile">
+
+		<h2>' . __('Search and Pages', 'simple-file-list') . '</h2>
+
+		<p><label for="eeShowSearch">' . __('Search', 'simple-file-list') . ':</label>
+		<input type="checkbox" name="eeShowSearch" value="YES" id="eeShowSearch"' . (($eeSFL->eeListSettings['ShowSearch'] ?? 'NO') == 'YES' ? ' checked="checked"' : '') . ' /> ' . __('Show a search form above the list', 'simple-file-list') . '</p>
+
+		<p><label for="eeFilesPerPage">' . __('Files Per Page', 'simple-file-list') . ':</label>
+		<input type="number" min="0" max="500" step="1" name="eeFilesPerPage" value="' . (int) ($eeSFL->eeListSettings['FilesPerPage'] ?? 0) . '" id="eeFilesPerPage" /></p>
+
+		<div class="eeNote">' . __('Search looks in file names, nice names and descriptions; every word must match. It is always available in wp-admin.', 'simple-file-list') . ' ' . __('Set the number of files per page to 0 to show all files on one page.', 'simple-file-list') . ' ' . __('Shortcode: search="YES", filecount="25", paged="NO".', 'simple-file-list') . '</div>
 
 		</div>';
 

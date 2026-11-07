@@ -9,7 +9,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	}
 
 	global $eeSFL, $eeSFL_UploadFormRun, $eeSFL_VarsForJS;
-    global $eeSFLU, $eeSFLS, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
+    global $eeSFLU, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
 
     eeSFL_Debug_Log("Shortcode Function Loading ...", 'Shortcode');
 	eeSFL_Debug_Log('URL: ' . $eeSFL->eeSFL_GetThisURL(), 'Shortcode', $eeSFL->eeListID);
@@ -40,6 +40,9 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 			'hidename' => '', // Hide the name matches
 			'getdesc' => '', // YES or NO to show the upload description input
 			'getinfo' => '', // YES or NO to show the upload user info inputs
+			'search' => '', // YES or NO to show the search form
+			'filecount' => '', // Files per page; 0 shows all
+			'paged' => '', // NO to show all files on one page
 		), $atts );
 
 	// Extract attributes into variables
@@ -102,6 +105,9 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		if($showactions) { $eeSFL->eeListSettings['ShowFileActions'] = strtoupper($showactions); }
 		if($getdesc !== '') { $eeSFL->eeListSettings['GetUploaderDesc'] = strtoupper($getdesc); }
 		if($getinfo !== '') { $eeSFL->eeListSettings['GetUploaderInfo'] = strtoupper($getinfo); }
+		if($search !== '') { $eeSFL->eeListSettings['ShowSearch'] = strtoupper($search) == 'YES' ? 'YES' : 'NO'; }
+		if($filecount !== '') { $eeSFL->eeListSettings['FilesPerPage'] = min(500, absint($filecount)); }
+		if(strtoupper($paged) == 'NO') { $eeSFL->eeListSettings['FilesPerPage'] = 0; }
 
 		// Force a re-sort of the file list array if a shortcode attribute was used
 		if($sortby OR $sortorder) {
@@ -197,7 +203,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 
 	$eeShowUploadForm = FALSE;
 
-	if(!$eeSFL_Uploaded AND $eeSFL->eeListSettings['AllowUploads'] != 'NO' AND !$eeSFL_UploadFormRun AND !(isset($_POST['eeSFLS_Searching']) && sanitize_text_field(wp_unslash($_POST['eeSFLS_Searching'])) && wp_verify_nonce(isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '', 'ee-search-form'))) {
+	if(!$eeSFL_Uploaded AND $eeSFL->eeListSettings['AllowUploads'] != 'NO' AND !$eeSFL_UploadFormRun) {
 
 		eeSFL_Debug_Log("Upload form enabled - AllowUploads: " . $eeSFL->eeListSettings['AllowUploads'], 'Shortcode', $eeSFL->eeListID);
 		wp_enqueue_style('ee-simple-file-list-css-upload');

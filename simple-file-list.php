@@ -50,7 +50,6 @@ $eeSFL_HideType = FALSE;
 $eeSFL_VarsForJS = array(); // Translated strings we pass to JavaScript
 $eeSFL_StartTime = 0;
 $eeSFL_MemoryUsedStart = 0;
-$eeSFLS = FALSE; // Search Object — initialised by ee-simple-file-list-search when active
 $eeSFLA = FALSE; // Access Object — initialised by ee-simple-file-list-access when active
 $eeSFL_Extensions = array();
 
@@ -164,6 +163,7 @@ function eeSFL_Setup() {
 		include_once(plugin_dir_path(__FILE__) . 'includes/ee-lists.php');
 		include_once(plugin_dir_path(__FILE__) . 'includes/ee-groups.php');
 		include_once(plugin_dir_path(__FILE__) . 'includes/ee-access.php');
+		include_once(plugin_dir_path(__FILE__) . 'includes/ee-search.php');
 		if( is_admin() ) {
 			include_once(plugin_dir_path(__FILE__) . 'includes/ee-access-admin.php');
 		}
