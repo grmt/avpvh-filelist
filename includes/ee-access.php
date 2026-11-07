@@ -1,6 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // Simple File List - Who may see a list and read its files, and the protected download handler
+// Copyright 2026 grmt, part of Simple File List (grmt): https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 //
 // A list's "Show To" setting decides who sees the list. ShowList = GRANTED limits it to the

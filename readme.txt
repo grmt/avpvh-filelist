@@ -1,7 +1,6 @@
 === Simple File List (grmt) ===
 Contributors: grmt, eemitch
-Donate link: http://simplefilelist.com
-Tags: file manager, file sharing, share documents, document library, ftp alternative
+Tags: file manager, file sharing, document library, file access, ldap
 Requires at least: 6.0
 Requires PHP: 8.1
 Tested up to: 7.0
@@ -9,202 +8,80 @@ Stable tag: 6.3.13-grmt.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-File lists and uploads for WordPress, independently maintained by grmt. Original upstream credits retained.
+File lists with uploads, access control, search and paging for WordPress. Maintained by grmt, based on Simple File List by Mitchell Bennis.
 
 == Description ==
 
-**Simple File List is the easiest way to add a fully functional file manager to your WordPress website.** Drop the shortcode `[eeSFL]` on any page and your visitors instantly get a clean, browsable file library — complete with thumbnails, descriptions, an inline media player, email file sharing, and optional file uploading. You can control exactly who can see and manage files based on their WordPress role.
+Put a list of files on any page with the shortcode `[eeSFL]`. Visitors can open, download and (if you allow it) upload files. The files stay on your own server, separate from the Media Library.
 
-Stop wrestling with clumsy FTP clients or third-party cloud storage to exchange files with clients and colleagues. Simple File List keeps everything on your own server, where you own your data.
+This is an independently maintained version of **Simple File List** by **Mitchell Bennis** (Element Engage, [simplefilelist.com](https://simplefilelist.com)). The original plugin was closed on WordPress.org in July 2026. This version is maintained by grmt at [github.com/grmt/simple-file-list](https://github.com/grmt/simple-file-list) and is not affiliated with or endorsed by the original author. Everything is free; there is no paid version.
 
-<img src="https://ps.w.org/simple-file-list/assets/screenshot-1.png" alt="Screenshot" />
+= Lists and display =
 
-## Why Simple File List?
+* Several file lists, each with its own folder, settings and shortcode: `[eeSFL list="2"]`.
+* Table, Tiles or Flex layout; light, dark or no theme.
+* File name, date, size and thumbnails for images, PDFs and videos.
+* A display name (Nice Name) and a description per file.
+* Sort by name, date added, date changed, size or at random.
+* Search in names and descriptions, and pages for long lists: `[eeSFL search="YES" filecount="25"]`.
+* Inline audio and video player.
 
-* **One shortcode, instant file manager** -- `[eeSFL]` is all you need to deploy a fully featured file library.
-* **Separate from the Media Library** -- your files stay organized and out of the way.
-* **Role-based access** -- show the file manager to everyone, only logged-in users, only admins, or no one.
-* **Your data, your server** -- no third-party cloud storage, no monthly SaaS fees.
-* **Works on managed WordPress hosts** -- fully compatible with Pressable, Kinsta, WP Engine and similar environments.
-* **PHP 8.5 approved** and actively maintained.
+= Access =
 
-## File Manager Features
+* Show a list to everyone, logged-in users, administrators, or specific users, roles and directory groups.
+* Limit single files to specific users, roles or groups.
+* Protect files: every download goes through WordPress, which checks access first. Direct URLs to the folder are blocked.
+* Groups from an LDAP directory, looked up by user name or e-mail address.
+* Choose per list which role manages it in wp-admin.
 
-* Add, rename, delete and edit file descriptions from both the front end and the WordPress admin.
-* Three display styles: **Table**, **Tiles** or **Flex** -- pick the look that fits your site.
-* Light theme, dark theme, or bring your own CSS -- fully customizable.
-* Show file name, date, size and auto-generated thumbnails for PDFs, images and videos.
-* Give any file a friendly **display name** (Nice Name) that can contain characters not allowed in real file names.
-* Add descriptions to files; optionally display them in the file manager.
-* Sort by name, date added, date modified or file size -- ascending or descending.
-* **Inline Media Player** -- audio and video files play directly in the browser without leaving the page.
-* **Email File Sharing** -- let users send a file link by email straight from the file manager.
-* **Bulk File Management** -- select multiple files at once and apply a description, download as a zip archive, or delete them all using the File Ops Bar.
-* **Custom File Directory** -- define any path on your server as the file manager's storage directory.
-* Optionally allow front-end users to rename, send, delete and edit files themselves.
-* Includes custom action hooks: Uploaded, Added, Removed, Deleted, Edited, Listed, Loaded, Scanned.
+= Files =
 
-## This Plugin is Perfect For:
+* Upload from the front end or wp-admin, with drag and drop and a progress bar.
+* Limit who may upload, which file types and how large.
+* E-mail notification of uploads.
+* Rename, delete and describe files, from wp-admin or (if allowed) the front end.
+* Select several files to describe, download as a ZIP, or delete.
+* Send a file link by e-mail.
+* Action hooks: Uploaded, Added, Removed, Deleted, Edited, Listed, Loaded, Scanned.
 
-* Sharing contracts, reports or official documents with clients.
-* Building an internal document library for your team or organization.
-* Distributing class materials, course downloads or e-learning resources.
-* Hosting an archive of audio, video, PDF or other downloadable files.
-* Replacing FTP or Dropbox for exchanging large files with non-technical clients.
-* Any situation where files are too large or too numerous for email attachments.
+= Translations =
 
-## File Upload Features
+Czech, Danish, Dutch, French (Belgium, Canada, France), German, Italian, Portuguese (Brazil, Portugal), Spanish (Mexico, Spain) and Swedish, from the original plugin. New texts are in English.
 
-* Simple, reliable uploader that works on mobile devices too.
-* Drag-and-drop upload zone with a real-time progress bar.
-* Allow uploads by everyone, logged-in users only, admins only, or disable entirely.
-* Restrict accepted file types and maximum file size.
-* Limit the number of files per submission.
-* Email notification each time a file is uploaded.
-* Optionally collect the uploader's name, email and a file description.
+= Credits =
 
-
-## Internationalized
-
-* cz_CZ - Czech (Czech Republic)
-* da_DK - Danish (Denmark)
-* de_DE - German (Germany)
-* es_ES - Spanish (Spain)
-* es_MX - Spanish (Mexico)
-* fr_CA - French (Canada)
-* fr_FR - French (France)
-* fr_BE - French (Belgium)
-* it_IT - Italian (Italy)
-* nl_NL - Dutch (Netherlands)
-* pt_BR - Portuguese (Brazil)
-* pt_PT - Portuguese (Portugal)
-* sv_SE - Swedish (Sweden)
-
-
-### Plus
-
-* Lightweight and easy to style -- override any CSS to match your theme.
-* Committed, responsive support directly from the developer.
-
-### Try the Demo
-
-[Simple File List Demo](https://free.simplefilelist.com)
-
-
-## Upgrade to PRO -- Add Sub-Folder Support
-
-Take your file manager to the next level with unlimited folder hierarchies:
-
-* Create unlimited levels of sub-folders.
-* Use a shortcode attribute to display any specific folder: **[eeSFL folder="folderA/folderB"]**
-* Display different folders in different places on your site -- even multiple folders on the same page.
-* Front-end users cannot navigate above the folder you specify.
-* Breadcrumb navigation shows exactly where you are.
-* Easily move files and folders as needed.
-* Rename folders and add descriptions that appear in the file manager.
-* Delete any folder along with all of its contents in one click.
-* Sort folders first, or sort them together with files.
-* Optionally display folder sizes.
-* Define a custom file manager directory anywhere on your server.
-
-[Get Simple File List Pro](https://get.simplefilelist.com/)
-
-
-## PRO Extensions
-
-### File Access Manager
-
-Lock down your files so only the right people can see them:
-
-* Prevent direct file URL access -- files are only reachable through the file manager.
-* Limit access to logged-in users; specify a minimum role or an exact role match.
-* Create a private file manager for a specific WordPress user or a group of users.
-* Independently control upload permissions and front-end file management per access mode.
-
-**Five access modes:**
-
-**Normal Mode** -- No restrictions. Files are viewable by anyone who can reach the page and may be linked to from outside your site.
-
-**Limited Mode** -- Restrict access to WordPress users with a specified role or higher.
-
-**Group Mode** -- Restrict access to a defined group of WordPress users.
-
-**User Mode** -- Restrict access to a single specific WordPress user.
-
-**Restricted Mode** -- Restrict all files by default; grant access to specific files for specific users or roles.
-
-### Search & Pagination
-
-* Adds a search bar and pagination to any file manager instance.
-* Search by file name and/or date within the current folder and sub-folders.
-* Pagination keeps large file libraries fast and easy to navigate.
-* Configure files per page, and show or hide search and pagination independently.
-* Shortcode attributes for full control: **[eeSFL search="YES/NO" paged="YES/NO" filecount="25"]**
-* Place a standalone search form anywhere on your site: **[eeSFLS permalink='file-list-url']**
-
-[More Information](https://simplefilelist.com/) | [Try the Demo](https://demo.simplefilelist.com/add-search-and-pagination/)
-
-### Tools Extension
-
-The Tools extension adds a suite of utility features for power users and site administrators:
-
-* Additional administrative tools for managing and maintaining your file library.
-* Designed to complement the core file manager with advanced housekeeping capabilities.
-
-[More Information](https://simplefilelist.com/)
+Simple File List was created by Mitchell Bennis of Element Engage ([simplefilelist.com](https://simplefilelist.com)) and released under the GPL. This version keeps the original copyright notices and builds on that work. The features that used to be paid add-ons (multiple lists, file access, search and paging) were rewritten for this version.
 
 
 == Installation ==
 
-1. Install through the WordPress Plugin Directory, or upload the plugin zip file and activate it.
-1. A new **File List** menu item will appear in the WordPress admin -- click it.
-1. Click the **Settings** tab and configure your file manager options.
-1. Add files by clicking the **Upload Files** button or by dropping them directly into your upload folder.
-1. Place the file manager on any page or post using the shortcode: **[eeSFL]**
-1. Override any setting on a per-page basis using shortcode attributes.
+1. Download the plugin zip from the [releases on GitHub](https://github.com/grmt/simple-file-list/releases) and upload it under Plugins, Add New. Updates then arrive through the normal WordPress updates.
+1. A **File List** menu item appears in wp-admin.
+1. Set up the list under **List Settings** and add files with **Upload Files**, or put them in the list's folder.
+1. Put the shortcode `[eeSFL]` on a page or post. Shortcode attributes override the list settings for that page.
 
 
 == Frequently Asked Questions ==
 
-= Who is Simple File List for? =
-
-Anyone who needs to share, organize or exchange files with clients, customers, students or coworkers -- directly from their WordPress website.
-
 = Are files stored in the Media Library? =
 
-No. Files are stored in a dedicated folder inside your WordPress uploads directory (or any custom path you specify), completely separate from the Media Library.
+No. Each list has its own folder, by default inside the uploads directory.
 
-= Can I restrict who sees the file manager? =
+= Who can see a list? =
 
-Yes. You can limit the file manager and/or the upload form to everyone, logged-in users only, or admins only. For granular per-user or per-role file access control, see the <a href="https://simplefilelist.com/file-access-manager/">File Access Manager</a> extension.
+Choose under List Settings: everyone, logged-in users, administrators, or specific users, roles and groups. Single files can be limited further under the File Access tab. Turn on Protect Files so that the file URLs only work for the right people.
 
 = Can uploaded files overwrite existing ones? =
 
-No -- by default a duplicate filename gets a series number appended (e.g. filename_(2).ext). You can allow overwrites by unchecking that option in the Upload Settings tab.
+By default a duplicate name gets a number added (file_(2).ext). You can allow overwrites in the Upload Settings; an upload never overwrites a file the uploader may not open.
 
-= Can I place different file managers in different places on my site? =
+= Are there sub-folders? =
 
-Yes. Place the [eeSFL] shortcode on any page, post or widget area. Upgrade to <a href="https://simplefilelist.com">Pro</a> to display different folders in different locations.
+No. A list shows the files directly in its folder. Use several lists instead.
 
-= Will my files be indexed by Google? =
+= Where do I report a problem? =
 
-Only if the file manager is publicly visible. If you restrict access to logged-in users or admins, search engines will not index those files.
-
-= Can I customize the look of the file manager? =
-
-Yes. Choose from Table, Tiles or Flex layouts plus light, dark or no theme. The CSS is easy to override for anyone with basic CSS knowledge. See the Instructions tab in the plugin admin for details.
-
-= Can I trigger custom code when a file action happens? =
-
-Yes. Hook into any of the provided <a href="https://free.simple-file-list.com">custom action hooks</a>: Uploaded, Added, Removed, Deleted, Edited, Listed, Loaded, Scanned.
-
-= What is the maximum upload file size? =
-
-The default is the maximum your host currently allows, which is detected automatically. You can set a lower limit in the Upload Settings tab.
-
-= I need help -- will you support me? =
-
-Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/simple-file-list/">WordPress support forum</a> or directly via <a href="https://simplefilelist.com/get-support/">simplefilelist.com</a>.
+In the [issues on GitHub](https://github.com/grmt/simple-file-list/issues). Please don't ask the original author for help with this version.
 
 
 == Upgrade Notice ==
@@ -215,9 +92,9 @@ Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/
 
 == Screenshots ==
 
-1. Front-side file manager with upload form activated.
-2. Back-side file manager -- always active in the WordPress admin.
-3. Back-side settings page.
+1. Front-side file list with upload form.
+2. The file list in wp-admin.
+3. List settings.
 
 
 == Changelog ==
@@ -237,7 +114,13 @@ Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/
 * Security: An upload never overwrites a file the uploader may not read; it is saved under a new name instead.
 * Security: The .htaccess for unprotected lists now blocks every configured file type (the first type in the list was skipped).
 * Fix: Users who manage a list through its "Admin Role" (not only administrators) can now edit, rename, delete and upload files in it.
+* New: Search and pages, built in (previously the paid Search & Pagination add-on). Turn them on per list under "Search and Pages", or per shortcode with `search="YES"`, `filecount="25"` and `paged="NO"`. Search looks in file names, nice names and descriptions; every word must match. Results and pages are links (`sfl_search_N`, `sfl_page_N`), so they can be bookmarked. Files a visitor may not open are left out of the counts. Search is always available in wp-admin.
+* Change: Maintained by grmt, with credit to the original author, Mitchell Bennis, in the plugin header, the readme, the admin footer and every source file. Help and documentation links go to the GitHub repository.
+* Removed: The "Get Pro Version" tab and links, the upgrade texts, the settings that only the paid version used, and the links to the original author's support pages. The index page placed in list folders no longer loads a logo from the original author's website.
 * Removed: The leftover code for sub-folders from the old Pro version (create, move, folder download, breadcrumbs, archive extraction). It could never run. A list shows the files directly in its folder; folders and their contents are ignored.
+* Removed: The hooks for the old File Access Manager add-on. If that add-on, or the old Search & Pagination add-on, is still active, it is deactivated, because its features are built in; its lists and per-file grants are kept. A list it left on "show by file" becomes "Specific Users, Roles or Groups" with no one chosen yet, so only its managers see it until its access is set.
+* Fix: Sending files by e-mail now works in lists shown to specific users, roles or groups, for the people who may see them.
+* Fix: Creating the first list folder no longer tries to copy the removed PDF manual into it.
 
 = 6.3.12 =
 * Security Fix: Escaped file names, descriptions, submitter metadata, and column labels across Table, Flex, and Tiles display templates to prevent Stored XSS.

@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 // The Main File List Display Page Used Both Front and Back
@@ -20,6 +20,11 @@ $eeForceSort = FALSE; // Force re-sort of file list
 if(empty($eeURL)) { $eeURL = $eeSFL->eeSFL_GetThisURL(); }
 $eeDateFormat = get_option('date_format');
 $eeMessages = array('File List Loading');
+$eeShowSearch = FALSE; // Search and paging, set below
+$eeSearchQuery = '';
+$eeListTotal = 0;
+$eeMatchCount = 0;
+$eePaging = array();
 
 if(!isset($eeSFL_HideName)) { $eeSFL_HideName = FALSE; }
 if(!isset($eeSFL_HideType)) { $eeSFL_HideType = FALSE; }
@@ -56,8 +61,6 @@ if( $eeSFL_Uploaded ) { // Reduce down to upload Results
 		$eeSFL->eeUserMessages['errors'][] = $eeSFLU->eeUploadedFiles;
 	}
 
-	$eeSFLS = FALSE; // Hide the search form and pagination
-
 } else { // Reduce full list down to just the items for display <<<---------------------------
 
 	eeSFL_Debug_Log('Scanning File Array...', 'List', $eeSFL->eeListID);
@@ -72,57 +75,38 @@ if( $eeSFL_Uploaded ) { // Reduce down to upload Results
 	unset($eeKey);
 	unset($eeFileArray);
 
-	// Extension Check
-	if($eeSFLS AND isset($_POST['eeSFLS_Searching'])) {
-		// Verify nonce for search form submission (Missing nonce security)
-		if (!wp_verify_nonce(isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '', 'ee-search-form') && !is_admin()) {
-			// Skip search processing if nonce verification fails
-		} else {
-			include(WP_PLUGIN_DIR . '/ee-simple-file-list-search/includes/ee-search-processor.php'); // Run the Search Processor
-		} // Close nonce verification block
-	}
-
-	// Extension Check
-	if($eeSFLA) {
-
-		if( $eeSFLA->eeSFLA_GetNextAvailableID() > 2 ) {
-
-			if($eeAdmin) { $eeShowCopyLink = TRUE; }
-			if($eeSFL->eeListSettings['AllowCopyToList'] == 'YES') { $eeShowCopyLink = TRUE; }
-
-			// Build the Select Input
-			$eeArray = $eeSFLA->eeSFLA_GetAllListBasics();
-			unset($eeArray[$eeSFL->eeListID]); // Remove this list
-
-			$eeSelectListInput = '
-			<select name="eeListID">';
-
-			foreach( $eeArray as $eeKey => $eeList ) {
-				$eeSelectListInput .= '
-				<option value="' . $eeKey . '">' . $eeList['ListTitle'] . '</option>';
-			}
-
-			$eeSelectListInput .= '
-			</select>';
-		}
-
-		if($eeAdmin AND (
-			(isset($eeSFL->eeListSettings['Mode']) && $eeSFL->eeListSettings['Mode'] == 'RESTRICTED') OR
-			(isset($eeSFL->eeListSettings['Mode']) && $eeSFL->eeListSettings['Mode'] == 'USER')
-		)) {
-
-			$eeShowGrantLink = TRUE;
+	// Only what this visitor will see, so the counts and pages are right
+	foreach( $eeSFL->eeDisplayFiles as $eeKey => $eeFileArray ) {
+		if( !strpos($eeFileArray['FilePath'], '.')
+			|| !eeSFL_UserCanReadFile($eeSFL->eeListID, $eeSFL->eeListSettings, $eeFileArray, get_current_user_id())
+			|| ( $eeSFL_HideName && in_array($eeFileArray['FilePath'], array_map('trim', explode(',', $eeSFL_HideName)), TRUE) )
+			|| ( $eeSFL_HideType && in_array($eeFileArray['FileExt'], array_map('trim', explode(',', strtolower($eeSFL_HideType))), TRUE) ) ) {
+			unset($eeSFL->eeDisplayFiles[$eeKey]);
 		}
 	}
+	unset($eeKey, $eeFileArray);
+
+	// Search: always in wp-admin, on the front end when the list or shortcode turns it on
+	$eeShowSearch = $eeAdmin || ($eeSFL->eeListSettings['ShowSearch'] ?? 'NO') == 'YES';
+	$eeSearchQuery = $eeShowSearch ? eeSFL_SearchQuery($eeSFL->eeListID) : '';
+	$eeListTotal = count($eeSFL->eeDisplayFiles);
+
+	if( $eeSearchQuery !== '' ) {
+		$eeSFL->eeDisplayFiles = eeSFL_FilterFiles($eeSFL->eeDisplayFiles, $eeSearchQuery);
+		eeSFL_Debug_Log('- Search "' . $eeSearchQuery . '": ' . count($eeSFL->eeDisplayFiles) . ' of ' . $eeListTotal, 'List', $eeSFL->eeListID);
+	}
+
+	$eeMatchCount = count($eeSFL->eeDisplayFiles);
+
+	// Paging
+	$eePaging = eeSFL_Paginate($eeMatchCount, (int) ($eeSFL->eeListSettings['FilesPerPage'] ?? 0), eeSFL_PageQuery($eeSFL->eeListID));
+	if( $eePaging['length'] ) {
+		$eeSFL->eeDisplayFiles = array_slice($eeSFL->eeDisplayFiles, $eePaging['offset'], $eePaging['length'], TRUE); // Keep the keys
+	}
+
 }
 
 // echo '<pre>'; print_r($eeSFL->eeDisplayFiles); echo '</pre>'; exit;
-
-
-// Extension Check
-if($eeSFLS) {
-	include(WP_PLUGIN_DIR . '/ee-simple-file-list-search/includes/ee-pagination-processing.php'); // Run Pagination Processing
-}
 
 
 // DISPLAY ===================================================
@@ -140,37 +124,6 @@ if($eeSFL->eeListRun == 1) { $eeOutput .= ' id="eeSFL"'; } // 3/20 - Legacy for 
 // User Messaging
  $eeOutput .= $eeSFL->eeSFL_ResultsNotification();
 
-// Check if user needs to log in for RESTRICTED or USER mode
-$eeSFLA_ShowLoginForm = false;
-$eeSFLA_HasPublicFiles = false;
-
-if( !is_admin() &&
-    !get_current_user_id() &&
-    isset($eeSFL->eeListSettings['Mode']) &&
-    ($eeSFL->eeListSettings['Mode'] == 'RESTRICTED' || $eeSFL->eeListSettings['Mode'] == 'USER') ) {
-
-    $eeSFLA_ShowLoginForm = true;
-
-    // Check if there are any publicly accessible files
-    if($eeSFLA && !empty($eeSFL->eeDisplayFiles)) {
-
-        foreach($eeSFL->eeDisplayFiles as $eeFileArray) {
-            if($eeSFLA->eeSFLA_FileFirewall($eeFileArray) !== FALSE) {
-                $eeSFLA_HasPublicFiles = true;
-                break;
-            }
-        }
-    }
-
-    // If no public files, show only login form and return early
-    if(!$eeSFLA_HasPublicFiles) {
-         $eeOutput .= eeSFLA_DisplayLoginForm();
-         $eeOutput .= '</div><!-- .eeSFL -->';
-        return  $eeOutput;
-    }
-
-    // Otherwise, we'll show the list and add login form at the bottom
-}
 
 // Page Setup ----------
  $eeOutput .= '
@@ -202,9 +155,18 @@ if(!is_admin() AND $eeSFL_Uploaded) {
 
 // echo '<pre>'; print_r($eeSFL->eeDisplayFiles); echo '</pre>'; exit;
 
-// Extension Check - Only show search if there are files to display
-if($eeSFLS && !empty($eeSFL->eeDisplayFiles)) {
-	include(WP_PLUGIN_DIR . '/ee-simple-file-list-search/includes/ee-search-form.php');
+// Search form, with the result count while searching
+if( !empty($eeShowSearch) && ($eeListTotal > 0 || $eeSearchQuery !== '') ) {
+
+	$eeOutput .= eeSFL_SearchFormHTML($eeSFL->eeListID, $eeSearchQuery, $eeURL);
+
+	if( $eeSearchQuery !== '' ) {
+		$eeOutput .= '<p class="eeSFL_SearchResults">' . ( $eeMatchCount
+			/* translators: 1: number of files, 2: the search text */
+			? esc_html(sprintf(_n('%1$d file matches “%2$s”.', '%1$d files match “%2$s”.', $eeMatchCount, 'simple-file-list'), $eeMatchCount, $eeSearchQuery))
+			/* translators: %s: the search text */
+			: esc_html(sprintf(__('No files match “%s”.', 'simple-file-list'), $eeSearchQuery)) ) . '</p>';
+	}
 }
 
 // Conditions for File Operations Display -------------
@@ -218,8 +180,8 @@ if( $eeAdmin ) {
 	if( $eeSFL->eeListSettings['AllowFrontManage'] == 'YES' AND $eeSFL->eeListRun == 1 ) { $eeShowOps = TRUE; }
 }
 
-// Never show for upload confirmation or search results
-if( isset($_POST['eeSFL_Upload']) ) { // isset($_POST['eeSFLS_Searching']) OR
+// Never show for upload confirmation
+if( isset($_POST['eeSFL_Upload']) ) {
 	// Verify nonce for upload form submission (Missing nonce security)
 	if (!wp_verify_nonce(isset($_POST['ee-simple-file-list-upload-form-nonce']) ? sanitize_text_field(wp_unslash($_POST['ee-simple-file-list-upload-form-nonce'])) : '', 'ee-simple-file-list-upload-form') && !is_admin()) {
 		// Skip upload confirmation processing if nonce verification fails.
@@ -238,9 +200,6 @@ if( ($eeShowOps OR $eeSFL->eeListSettings['AllowBulkFileDownload'] == 'YES') AND
 	include($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-list-ops-bar-display.php'); // File List Managment Controls
 }
 
-
-// $eeSFL->eeFileCount = 0; // Reset
-$eeListPosition = FALSE; // eeSFLS
 
 $eeSFL->eeItemCount = count($eeSFL->eeDisplayFiles);
 eeSFL_Debug_Log('- Listing ' . $eeSFL->eeItemCount . ' Items ...', 'List', $eeSFL->eeListID);
@@ -261,14 +220,14 @@ if( $eeSFL->eeItemCount ) {
 
 	}
 
-	// Extension Check
-	if($eeSFLS) { // Pagination Controls
-		include(WP_PLUGIN_DIR . '/ee-simple-file-list-search/includes/ee-pagination-display.php');
+	// Page links
+	if( !empty($eePaging) ) {
+		$eeOutput .= eeSFL_PaginationHTML($eeSFL->eeListID, $eePaging, $eeURL);
 	}
 
 
 // No Files Found and Not Empty Search
-} elseif( $eeSFL->eeFileCount === 0 ) {
+} elseif( $eeSFL->eeFileCount === 0 AND $eeSearchQuery === '' ) {
 
 	eeSFL_Debug_Log("There are no files here :-(", 'List');
 
@@ -357,25 +316,7 @@ if(is_object($eeSFLE) && method_exists($eeSFLE, 'eeSFLE_EmailSendForm')) {
 	 $eeOutput .= $eeSFLE->eeSFLE_EmailSendForm();
 }
 
-// Extension Check
-if($eeSFLA) {
 
-	if($eeAdmin OR $eeSFL->eeListSettings['AllowCopyToList'] == 'YES') {
-		include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_ModalCopy.php');
-	}
-
-	if($eeAdmin OR $eeSFLA->eeSFLA_IsListOwner) {
-		include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_ModalAccess.php');
-	}
-}
-
-// Show login form at the bottom if there are public files but user isn't logged in
-if(isset($eeSFLA_ShowLoginForm) && $eeSFLA_ShowLoginForm && isset($eeSFLA_HasPublicFiles) && $eeSFLA_HasPublicFiles) {
-	 $eeOutput .= '<div class="eeSFL_LoginPrompt" style="margin-top: 2em; padding-top: 2em; border-top: 1px solid #ddd;">';
-	 $eeOutput .= '<p>' . __('Log in to see additional files.', 'simple-file-list') . '</p>';
-	 $eeOutput .= eeSFLA_DisplayLoginForm();
-	 $eeOutput .= '</div>';
-}
 
 
 eeSFL_Debug_Log("File Listing Completed.", 'List');

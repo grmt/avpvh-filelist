@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -459,13 +459,11 @@ function eeSFL_AppendProperUrlOp($eeURL) {
 
 
 
-// Check for the Upload Folder, Create if Needed. A newly created folder gets a copy of the
-// manual as a first file, unless $eeCopyManual is FALSE (lists created from the admin).
-function eeSFL_FileListDirCheck($eeFileListDir, $eeCopyManual = TRUE) {
+// Check for the Upload Folder, Create if Needed
+function eeSFL_FileListDirCheck($eeFileListDir) {
 
 	global $eeSFL;
 	static $eeReportedDirErrors = array(); // Prevent duplicate error messages across repeated calls
-	$eeCopyManualFile = FALSE;
 
 	if(!$eeFileListDir OR substr($eeFileListDir, 0, 1) == '/' OR strpos($eeFileListDir, '../') ) {
 
@@ -531,8 +529,6 @@ function eeSFL_FileListDirCheck($eeFileListDir, $eeCopyManual = TRUE) {
 
 		} else {
 
-			$eeCopyManualFile = TRUE;
-
 			eeSFL_Debug_Log("The File List Dir Has Been Created!", 'General');
 			eeSFL_Debug_Log($eeFileListDir, 'General', $eeSFL->eeListID);
 		}
@@ -565,14 +561,6 @@ function eeSFL_FileListDirCheck($eeFileListDir, $eeCopyManual = TRUE) {
 					$eeSFL->eeUserMessages['warnings'][] = $eeSiteRoot . $eeFileListDir;
 				}
 			}
-		}
-
-		if($eeCopyManualFile === TRUE && $eeCopyManual) {
-
-			// Copy the Manual to the new directory, so there's at least one file.
-			$eeCopyFrom = $eeSFL->eeEnvironment['pluginDir'] . 'Simple-File-List.pdf';
-			$eeCopyTo = $eeSiteRoot . $eeFileListDir . 'Simple-File-List.pdf';
-			eeSFL_FileSystem('copy', array('from' => $eeCopyFrom, 'to' => $eeCopyTo));
 		}
 	}
 
@@ -1481,9 +1469,6 @@ function eeSFL_VersionCheck() {
 				update_option('eeSFL_Settings_1', $eeSettings);
 				update_option('eeSFL_Version', eeSFL_Version);
 
-				// Add First File - The Documentation
-				$eeCopyFrom = dirname(dirname(__FILE__)) . '/Simple-File-List.pdf';
-				$eeCopyTo = $eeSFL->eeSFL_GetRootPath() . $eeSettings['FileListDir'] . 'Simple-File-List.pdf';
 				return TRUE;
 
 			} else {
@@ -1779,7 +1764,7 @@ function eeSFL_UploadCompletedAdmin() {
 // Admin <head>
 function eeSFL_AdminHead($eeHook) {
 
-	global $eeSFL, $eeSFL_VarsForJS, $eeSFLA;
+	global $eeSFL, $eeSFL_VarsForJS;
 
 	$deps = array('jquery');
 
@@ -1833,16 +1818,6 @@ function eeSFL_AdminHead($eeHook) {
 		wp_localize_script( 'ee-simple-file-list-js-media', 'eeSFLM_Vars', $eeSFLM_VarsForJS );
 
 
-		if($eeSFLA) {
-
-			$eeSFLA_URL = plugins_url() . '/'. $eeSFLA->eeSFLA_Slug . '/';
-
-			// exit($eeSFLA_URL);
-
-			wp_enqueue_style( 'eesfla-style', plugins_url( $eeSFLA_URL . 'css/style.css', __DIR__ ), '', eeSFLA_Version );
-			wp_enqueue_script('eesfla-head-js', plugins_url( $eeSFLA_URL . 'js/eeSFLA_scripts-head.js', __DIR__), $deps, eeSFLA_Version, false );
-			wp_enqueue_script('eesfla-footer-js', plugins_url( $eeSFLA_URL . 'js/eeSFLA_scripts-footer.js', __DIR__), $deps, eeSFLA_Version, true );
-		}
 
 
     }
@@ -1853,7 +1828,7 @@ function eeSFL_AdminHead($eeHook) {
 // Admin Pages
 function eeSFL_AdminMenu() {
 
-	global $eeSFL, $eeSFLA;
+	global $eeSFL;
 
 	// Only include when accessing the plugin admin pages
 	if( isset($_GET['page']) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page param for admin menu routing, not form submission

@@ -1,29 +1,10 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
-// Pre-filter files for RESTRICTED/USER mode to check if any will be displayed
-$eeSFLA_HasAccessibleFiles = false;
-if($eeSFLA && !is_admin() &&
-   isset($eeSFL->eeListSettings['Mode']) &&
-   ($eeSFL->eeListSettings['Mode'] == 'RESTRICTED' || $eeSFL->eeListSettings['Mode'] == 'USER')) {
-
-    // Check if at least one file passes the firewall
-    foreach($eeSFL->eeDisplayFiles as $eeFileArray) {
-        if($eeSFLA->eeSFLA_FileFirewall($eeFileArray) !== FALSE) {
-            $eeSFLA_HasAccessibleFiles = true;
-            break;
-        }
-    }
-
-    // If no accessible files, don't render the table at all
-    if(!$eeSFLA_HasAccessibleFiles) {
-        return;
-    }
-}
 
 // TABLE HEAD ==================================================================================================
 
@@ -98,15 +79,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 	// Populate our class properties for this file
 	if( $eeSFL->eeSFL_ProcessFileArray($eeFileArray, $eeSFL_HideName, $eeSFL_HideType) ) {
 
-		// Extension Check
-		if($eeSFLA AND !is_admin() ) {
-			if( $eeSFLA->eeSFLA_FileFirewall($eeFileArray) === FALSE ) { continue; } // Skip this file if FALSE
-		}
 
-		// Extension Check
-		if(!$eeListPosition AND $eeListPosition !== 0) { // eeSFLS Pagination
-			// $eeListPosition = $eeFileID; // Get the first key
-		}
 
 		// Start The List --------------------------------------------------------------
 
@@ -146,20 +119,6 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 		if($eeSFL->eeFileURL) {
 
 
-			// Proper Path for Search Results
-			if(isset($_POST['eeSFLS_Searching'])) {
-				// Verify nonce for search form submission (Missing nonce security)
-				if (!wp_verify_nonce(isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '', 'ee-search-form') && !is_admin()) {
-					// Skip search result path display if nonce verification fails
-				} else {
-					$eePathInfo = pathinfo($eeSFL->eeFilePath);
-					$eePath = $eePathInfo['dirname'];
-					if($eePath != '.') {
-						 $eeOutput .= '
-						<span class="eeSFL_RealFilePath eeHide">' . esc_html($eePath . '/') . '</span>';
-					}
-				}
-			}
 
 			 $eeOutput .= '
 			<span class="eeSFL_RealFileName eeHide">' . esc_html($eeSFL->eeRealFileName) . '</span>
@@ -167,15 +126,6 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 			<span class="eeSFL_FileMimeType eeHide">' . esc_html($eeSFL->eeFileMIME) . '</span>';
 
 
-			// Extension Check
-			if( isset($_POST['eeSFLS_Searching']) ) {
-				// Verify nonce for search form submission (Missing nonce security)
-				if (!wp_verify_nonce(isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '', 'ee-search-form') && !is_admin()) {
-					// Skip search path display if nonce verification fails
-				} else {
-					 $eeOutput .= $eeSFLS->eeSFLS_DisplaySearchPath($eeSFL->eeFilePath);
-				}
-			}
 
 			 $eeOutput .= '<a class="eeSFL_FileName" href="' . esc_url($eeSFL->eeFileURL) .  '"';
 

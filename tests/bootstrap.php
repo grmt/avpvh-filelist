@@ -48,9 +48,29 @@ function set_transient($eeKey, $eeValue, $eeExpiration = 0) { return true; }
 function home_url($eePath = '') { return 'https://example.org' . $eePath; }
 function wp_json_encode($eeData) { return json_encode($eeData); }
 function __($eeText, $eeDomain = 'default') { return $eeText; }
+if( !function_exists('sanitize_text_field') ) { function sanitize_text_field($eeValue) { return trim(strip_tags((string) $eeValue)); } }
+function esc_html($eeText) { return htmlspecialchars((string) $eeText, ENT_QUOTES); }
+function esc_attr($eeText) { return htmlspecialchars((string) $eeText, ENT_QUOTES); }
+function esc_url($eeURL) { return htmlspecialchars((string) $eeURL, ENT_QUOTES); }
+function esc_html__($eeText, $eeDomain = 'default') { return esc_html($eeText); }
+function esc_attr__($eeText, $eeDomain = 'default') { return esc_attr($eeText); }
+function wp_parse_url($eeURL, $eeComponent = -1) { return parse_url($eeURL, $eeComponent); }
+function add_query_arg($eeKey, $eeValue, $eeURL) {
+	$eeParts = explode('?', $eeURL, 2);
+	parse_str($eeParts[1] ?? '', $eeArgs);
+	$eeArgs[$eeKey] = $eeValue;
+	return $eeParts[0] . '?' . http_build_query($eeArgs);
+}
+function remove_query_arg($eeKeys, $eeURL) {
+	$eeParts = explode('?', $eeURL, 2);
+	parse_str($eeParts[1] ?? '', $eeArgs);
+	foreach( (array) $eeKeys as $eeKey ) { unset($eeArgs[$eeKey]); }
+	return $eeParts[0] . ($eeArgs ? '?' . http_build_query($eeArgs) : '');
+}
 if( !defined('MINUTE_IN_SECONDS') ) { define('MINUTE_IN_SECONDS', 60); }
 
 require dirname(__DIR__) . '/includes/ee-functions.php';
 require dirname(__DIR__) . '/includes/ee-groups.php';
 require dirname(__DIR__) . '/includes/ee-access.php';
 require dirname(__DIR__) . '/includes/ee-lists.php';
+require dirname(__DIR__) . '/includes/ee-search.php';
