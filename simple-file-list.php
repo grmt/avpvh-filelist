@@ -6,7 +6,7 @@
 /*
 Plugin Name: Simple File List (grmt)
 Plugin URI: https://github.com/grmt/simple-file-list
-Description: File lists and uploads for WordPress. Independently maintained grmt fork of Simple File List; original upstream credits retained.
+Description: File lists with uploads, access control, search and paging. Maintained by grmt; based on Simple File List by Mitchell Bennis (simplefilelist.com), not affiliated with the original author.
 Author: grmt
 Version: 6.3.13-grmt.1
 Author URI: https://github.com/grmt
@@ -31,10 +31,6 @@ define('eeSFL_PluginMenuTitle', 'File List');
 // Common
 define('eeSFL_Prefix', 'eeSFL');
 define('eeSFL_FileListDefaultDir', 'simple-file-list/'); // Default Upload Directory
-define('eeSFL_PluginWebPage', 'https://simplefilelist.com');
-define('eeSFL_AddOnsURL', 'https://get.simplefilelist.com/index.php');
-define('eeSFL_RegCheckURL', 'https://reg.simplefilelist.com/index.php');
-define('eeSFL_AdminEmail', 'admin@simplefilelist.com');
 define('eeSFL_Go', wp_date('Y-m-d h:m:s') ); // Log Entry Key
 
 
@@ -50,7 +46,6 @@ $eeSFL_HideType = FALSE;
 $eeSFL_VarsForJS = array(); // Translated strings we pass to JavaScript
 $eeSFL_StartTime = 0;
 $eeSFL_MemoryUsedStart = 0;
-$eeSFLA = FALSE; // Access Object — initialised by ee-simple-file-list-access when active
 $eeSFL_Extensions = array();
 
 
@@ -122,6 +117,23 @@ function eeSFL_Setup() {
 					esc_html__('The Media extension has been automatically deactivated because media functionality is now integrated into core.', 'simple-file-list') .
 					'</p></div>';
 			});
+		}
+
+		// Deactivate the old add-ons whose features are now built in: multiple lists and file access, and search
+		foreach( array(
+			'ee-simple-file-list-access/ee-simple-file-list-access.php' => __('File Access Manager', 'simple-file-list'),
+			'ee-simple-file-list-search/ee-simple-file-list-search.php' => __('Search', 'simple-file-list'),
+		) as $eePlugin => $eeAddOnName ) {
+			if( is_plugin_active($eePlugin) ) {
+				deactivate_plugins($eePlugin);
+				add_action( 'admin_notices', function() use ($eeAddOnName) {
+					echo '<div class="notice notice-warning is-dismissible"><p><strong>' .
+						esc_html__('Simple File List:', 'simple-file-list') . '</strong> ' .
+						/* translators: %s: name of the old add-on */
+						esc_html(sprintf(__('The %s add-on has been deactivated because its features are now built in. Its lists and file access are kept.', 'simple-file-list'), $eeAddOnName)) .
+						'</p></div>';
+				});
+			}
 		}
 
 	} // end is_admin()

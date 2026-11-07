@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -18,18 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 		 $eeOutput .= '
 
 		<div id="eeSFL_HeaderMeta">
-			<a href="https://get.simplefilelist.com/index.php" target="_blank">
+			<a href="https://github.com/grmt/simple-file-list" target="_blank" rel="noopener">
 				<img src="' . $eeSFL->eeEnvironment['pluginURL'] . '/images/icon-128x128.png" alt="Simple File List ' . __('Logo', 'simple-file-list') . '" title="Simple File List" /></a>
 			<div>
 				<p class="heading">' . eeSFL_PluginName . '</p>
 				<p class="eeTagLine">' . __('Easy File Sharing for WordPress', 'simple-file-list') . '</p>
 				<p class="eeHeaderLinks">
-					<a href="https://simplefilelist.com/documentation/" target="_blank">' . __('Documentation', 'simple-file-list') . '</a><a href="https://simplefilelist.com/get-support/" target="_blank">' . __('Get Support', 'simple-file-list') . '</a>';
-					if(defined('eeSFL_Pro')) {
-						 $eeOutput .= '<a href="https://account.simplefilelist.com/" target="_blank">' . __('My Account', 'simple-file-list') . '</a>';
-					} else {
-						 $eeOutput .= '<a href="https://get.simplefilelist.com/" target="_blank">' . __('Get Pro Version', 'simple-file-list') . '</a>';
-					}
+					<a href="https://github.com/grmt/simple-file-list#readme" target="_blank" rel="noopener">' . __('Documentation', 'simple-file-list') . '</a><a href="https://github.com/grmt/simple-file-list/issues" target="_blank" rel="noopener">' . __('Get Support', 'simple-file-list') . '</a>';
 
 				 $eeOutput .= '</p>
 			</div>

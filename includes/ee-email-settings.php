@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -22,11 +22,6 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 		$eeSFL->eeListSettings[$eeTerm] = eeSFL_ProcessCheckboxInput($eeTerm);
 	}
 
-	// Extension Check
-	if($eeSFLA) {
-
-		include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_NoticeSettingsProcess.php');
-	}
 
 	$eeDelivery = array('To', 'Cc', 'Bcc');
 
@@ -88,7 +83,6 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 	<div class="eeColHalfLeft">
 
 		<h1>' . __('Notifications Settings', 'simple-file-list') . '</h1>
-		<a class="" href="https://simplefilelist.com/notification-settings/" target="_blank">' . __('Instructions', 'simple-file-list') . '</a>
 
 	</div>
 
@@ -177,18 +171,12 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 
 		<fieldset>';
 
-		if($eeSFLA) {
 
-			include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_NoticeSettingsDisplay.php');
+		 $eeOutput .= '
 
-		} else {
-
-			 $eeOutput .= '
-
-			<div><label class="eeBlock">' . __('Notice Email', 'simple-file-list') . '
-			<input type="text" name="eeNotifyTo" value="' . $eeSFL->eeListSettings['NotifyTo'] . '" id="eeNotifyTo" /></label></div>
-			<div class="eeNote">' . __('Send an email here whenever a file is uploaded.', 'simple-file-list') . '</div>';
-		}
+		<div><label class="eeBlock">' . __('Notice Email', 'simple-file-list') . '
+		<input type="text" name="eeNotifyTo" value="' . $eeSFL->eeListSettings['NotifyTo'] . '" id="eeNotifyTo" /></label></div>
+		<div class="eeNote">' . __('Send an email here whenever a file is uploaded.', 'simple-file-list') . '</div>';
 
 
 		// For All List Types

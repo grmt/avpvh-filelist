@@ -1,10 +1,18 @@
-# Simple File List — independent downstream repository
+# Simple File List (grmt)
+
+File lists with uploads, access control, search and paging for WordPress, maintained by grmt.
+
+**Based on [Simple File List](https://simplefilelist.com/) by Mitchell Bennis (Element Engage).** The original plugin is GPL-licensed; its copyright notices are kept in the source files. This version is not affiliated with or endorsed by the original author, so please don't ask them for support for it: use the [issues](https://github.com/grmt/simple-file-list/issues) here instead.
+
+Everything is free. The features that used to be paid add-ons (multiple lists, per-file access, search and paging) were rewritten for this version, and the upgrade prompts and links to the paid version are gone. Sub-folders, a feature of the old Pro version, are not supported.
+
+## History
 
 This repository contains version 6.3.13-grmt.1 (based on upstream 6.3.11) of the GPL-licensed WordPress plugin
 Simple File List. The initial commit is a byte-for-byte import of the plugin
 copy installed for `vp40-42.vve.rechtspreker.nl` on 14 September 2026.
 
-## Original upstream
+### Original upstream
 
 - Project website: <https://simplefilelist.com/>
 - WordPress.org listing: <https://wordpress.org/plugins/simple-file-list/>
@@ -15,7 +23,7 @@ The original project does not provide an official GitHub repository. Therefore
 this GitHub repository is an independent downstream maintenance repository, not
 a GitHub fork. The WordPress Plugin SVN repository above is the source upstream.
 
-## Upstream status
+### Upstream status
 
 WordPress.org reports that the plugin was closed on 23 July 2026 and is no
 longer available for download. It describes the closure as temporary, pending a

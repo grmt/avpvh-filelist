@@ -1,6 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // Simple File List - Multiple file lists
+// Copyright 2026 grmt, part of Simple File List (grmt): https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 //
 // Each list keeps its settings in eeSFL_Settings_{ID} and its file cache in eeSFL_FileList_{ID},
@@ -183,7 +184,7 @@ function eeSFL_CreateList($eeTitle, $eeDir) {
 		return sprintf(__('This folder overlaps the folder of list %d. Each list needs its own folder.', 'simple-file-list'), $eeOverlap);
 	}
 
-	if( !eeSFL_FileListDirCheck($eeDir, FALSE) ) { return __('The folder could not be created.', 'simple-file-list'); }
+	if( !eeSFL_FileListDirCheck($eeDir) ) { return __('The folder could not be created.', 'simple-file-list'); }
 
 	$eeBase = array_merge($eeSFL->eeDefaultListSettings, (array) get_option('eeSFL_Settings_1', array()));
 	$eeSettings = eeSFL_NewListSettings($eeBase, $eeTitle, $eeDir);

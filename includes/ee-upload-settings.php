@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -10,23 +10,21 @@ eeSFL_Debug_Log("Loaded: Upload Settings", 'General');
 // Check for POST, Capability and Nonce
 if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanitize_text_field(wp_unslash($_POST['eePost']))) AND check_admin_referer( 'ee-simple-file-list-upload-settings', 'ee-simple-file-list-upload-settings-nonce')) {
 
-	if(!$eeSFLA) {
 
-		if(isset($_POST['eeAllowUploads']) && $_POST['eeAllowUploads'] == 'YES') {
+	if(isset($_POST['eeAllowUploads']) && $_POST['eeAllowUploads'] == 'YES') {
 
-			$eeSFL->eeListSettings['AllowUploads'] = 'YES';
+		$eeSFL->eeListSettings['AllowUploads'] = 'YES';
 
-		} elseif(isset($_POST['eeAllowUploads']) && $_POST['eeAllowUploads'] == 'USER') { // Only logged in users
+	} elseif(isset($_POST['eeAllowUploads']) && $_POST['eeAllowUploads'] == 'USER') { // Only logged in users
 
-			 $eeSFL->eeListSettings['AllowUploads'] = 'USER';
+		 $eeSFL->eeListSettings['AllowUploads'] = 'USER';
 
-		} elseif(isset($_POST['eeAllowUploads']) && $_POST['eeAllowUploads'] == 'ADMIN') { // Only logged in users
+	} elseif(isset($_POST['eeAllowUploads']) && $_POST['eeAllowUploads'] == 'ADMIN') { // Only logged in users
 
-			 $eeSFL->eeListSettings['AllowUploads'] = 'ADMIN';
+		 $eeSFL->eeListSettings['AllowUploads'] = 'ADMIN';
 
-		} else {
-			$eeSFL->eeListSettings['AllowUploads'] = 'NO';
-		}
+	} else {
+		$eeSFL->eeListSettings['AllowUploads'] = 'NO';
 	}
 
 	// File Number Limit
@@ -108,7 +106,6 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 	<div class="eeColHalfLeft">
 
 		<h1>' . __('File Upload Settings', 'simple-file-list') . '</h1>
-		<a class="" href="https://simplefilelist.com/upload-settings/" target="_blank">' . __('Instructions', 'simple-file-list') . '</a>
 
 	</div>
 
@@ -128,50 +125,44 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 
 		<h2>' . __('File Upload Restrictions', 'simple-file-list') . '</h2>';
 
-		if(!$eeSFLA) {
 
-		 $eeOutput .= '
+	 $eeOutput .= '
 
-		<fieldset>
-		<legend>' . __('Who Can Upload Files', 'simple-file-list') . '</legend>
-		<div><label>' . __('Restrict To', 'simple-file-list') . '
-		<select name="eeAllowUploads" id="eeAllowUploads">
+	<fieldset>
+	<legend>' . __('Who Can Upload Files', 'simple-file-list') . '</legend>
+	<div><label>' . __('Restrict To', 'simple-file-list') . '
+	<select name="eeAllowUploads" id="eeAllowUploads">
 
-			<option value="YES" style="background-color:#FFFF00;"';
+		<option value="YES" style="background-color:#FFFF00;"';
 
-			if($eeSFL->eeListSettings['AllowUploads'] == 'YES') {  $eeOutput .= ' selected'; }
+		if($eeSFL->eeListSettings['AllowUploads'] == 'YES') {  $eeOutput .= ' selected'; }
 
-			 $eeOutput .= '>' . __('Anyone Can Upload', 'simple-file-list') . ' !!!</option>
+		 $eeOutput .= '>' . __('Anyone Can Upload', 'simple-file-list') . ' !!!</option>
 
-			<option value="USER"';
+		<option value="USER"';
 
-			if($eeSFL->eeListSettings['AllowUploads'] == 'USER') {  $eeOutput .= ' selected'; }
+		if($eeSFL->eeListSettings['AllowUploads'] == 'USER') {  $eeOutput .= ' selected'; }
 
-			 $eeOutput .= '>' . __('Only Logged in Users Can Upload', 'simple-file-list') . '</option>
+		 $eeOutput .= '>' . __('Only Logged in Users Can Upload', 'simple-file-list') . '</option>
 
-			<option value="ADMIN"';
+		<option value="ADMIN"';
 
-			if($eeSFL->eeListSettings['AllowUploads'] == 'ADMIN') {  $eeOutput .= ' selected'; }
+		if($eeSFL->eeListSettings['AllowUploads'] == 'ADMIN') {  $eeOutput .= ' selected'; }
 
-			 $eeOutput .= '>' . __('Only Logged in Admins Can Upload', 'simple-file-list') . '</option>
+		 $eeOutput .= '>' . __('Only Logged in Admins Can Upload', 'simple-file-list') . '</option>
 
-			<option value="NO"';
+		<option value="NO"';
 
-			if($eeSFL->eeListSettings['AllowUploads'] == 'NO') {  $eeOutput .= ' selected'; }
+		if($eeSFL->eeListSettings['AllowUploads'] == 'NO') {  $eeOutput .= ' selected'; }
 
-			 $eeOutput .= '>' . __('Hide the Front Side Uploader Completely', 'simple-file-list') . '</option>
+		 $eeOutput .= '>' . __('Hide the Front Side Uploader Completely', 'simple-file-list') . '</option>
 
-		</select></label></div>
+	</select></label></div>
 
-		<div class="eeNote">' . __('Allow anyone to upload, only logged-in users, administrators or nobody.', 'simple-file-list') . ' <strong>' . __('Please use "Anyone Can Upload" with Caution', 'simple-file-list') . '</strong></div>
+	<div class="eeNote">' . __('Allow anyone to upload, only logged-in users, administrators or nobody.', 'simple-file-list') . ' <strong>' . __('Please use "Anyone Can Upload" with Caution', 'simple-file-list') . '</strong></div>
 
-		</fieldset>';
+	</fieldset>';
 
-		} else {
-
-			 $eeOutput .= '<p>' . __('This setting has moved to the List Access Settings tab.', 'simple-file-list') . '</p>
-			<a class="button" href="' . $eeSFL->eeSFL_GetThisURL(FALSE) . '?page=' . eeSFL_PluginSlug . '&tab=settings&subtab=list_access&eeListID=' . $eeSFL->eeListID . '">' . __('Go There', 'simple-file-list') . '</a>';
-		}
 
 		 $eeOutput .= '</div>
 

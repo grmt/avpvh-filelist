@@ -1,8 +1,7 @@
 # security.txt
-# Contact information for security issues related to Simple File List plugins
+# Security contact for this version of Simple File List (maintained by grmt).
+# Please do not report issues in this version to the original author.
 
-Contact: mailto:support@simplefilelist.com
-Contact: mailto:mitch@elementengage.com  # Backup contact
-Preferred-Languages: en
-Policy: https://simplefilelist.com/simple-file-list-security-policy/
-Expires: 2026-01-01T00:00:00Z
+Contact: https://github.com/grmt/simple-file-list/security/advisories/new
+Preferred-Languages: en, nl
+Expires: 2027-11-07T00:00:00Z

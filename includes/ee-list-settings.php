@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -17,11 +17,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 	}
 
 
-	if($eeSFLA) {
-
-		include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_ListSettingsProcess.php');
-
-	} elseif( isset($_POST['eeFileListDir']) ) {
+	if( isset($_POST['eeFileListDir']) ) {
 
 		if( $_POST['eeFileListDir'] != $eeSFL->eeListSettings['FileListDir'] ) {
 
@@ -120,7 +116,7 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 		,'ShowSearch'
 	);
 
-	if(!$eeSFLA) { $eeCheckboxes[] = 'AllowFrontManage'; } // Otherwise this moves to the File Access Settings tab
+	$eeCheckboxes[] = 'AllowFrontManage';
 
 	foreach( $eeCheckboxes as $eeTerm ) { // "ee" is added in the function
 		$eeSFL->eeListSettings[$eeTerm] = eeSFL_ProcessCheckboxInput($eeTerm);
@@ -155,79 +151,6 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_tex
 	}
 
 
-	if(defined('eeSFL_Pro')) {
-
-		// Re-Scan and Thumbnail Tasks
-		$eeSFL_Tasks[$eeSFL->eeListID]['Scan'] = 'OFF'; // Assume OFF
-		$eeSFL_Tasks[$eeSFL->eeListID]['Background'] = 'NO';
-		$eeSFL_Tasks[$eeSFL->eeListID]['GenerateThumbs'] = 'NO'; // Assume NO
-
-		if(isset($_POST['eeUseCache'])) {
-
-			// Choices are...
-			// 	EACH - The file list is re-scanned each time.
-			//  HOUR - The file list is re-scanned not more than once each hour.
-			//  DAY - The file list is re-scanned not more than once each night.
-			//  OFF - The file list is only re-scanned using the button.
-
-			if($_POST['eeUseCache'] == 'EACH') {
-				$eeSFL->eeListSettings['UseCache'] = 'EACH';
-
-			} elseif($_POST['eeUseCache'] == 'HOUR') {
-				$eeSFL->eeListSettings['UseCache'] = 'HOUR';
-
-			} elseif($_POST['eeUseCache'] == 'DAY') {
-				$eeSFL->eeListSettings['UseCache'] = 'DAY';
-
-			} else {
-				$eeSFL->eeListSettings['UseCache'] = 'OFF';
-			}
-
-			// Use wp-cron ?
-			$eeSFL->eeListSettings['UseCacheCron'] = 'NO';
-			$eeSFL_Tasks[$eeSFL->eeListID]['Scan'] = $eeSFL->eeListSettings['UseCache'];
-			if(isset($_POST['eeUseCacheCron'])) {
-				if($_POST['eeUseCacheCron'] == 'YES' AND ($eeSFL->eeListSettings['UseCache'] == 'HOUR' OR $eeSFL->eeListSettings['UseCache'] == 'DAY')) {
-					$eeSFL->eeListSettings['UseCacheCron'] = 'YES';
-					$eeSFL_Tasks[$eeSFL->eeListID]['Background'] = 'YES';
-				}
-			}
-
-		} else {
-			$eeSFL->eeListSettings['UseCache'] = 'EACH';
-		}
-
-
-		// Background Thumbnail Generation
-		if($eeSFL->eeListSettings['UseCacheCron'] == 'YES') {
-
-			if(isset($_POST['eeGenerateImgThumbs'])) {
-				$eeSFL_Tasks[$eeSFL->eeListID]['GenerateThumbs'] = 'YES';
-			}
-			if(isset($_POST['eeGeneratePDFThumbs'])) {
-				$eeSFL_Tasks[$eeSFL->eeListID]['GenerateThumbs'] = 'YES';
-			}
-			if(isset($_POST['eeGenerateVideoThumbs'])) {
-				$eeSFL_Tasks[$eeSFL->eeListID]['GenerateThumbs'] = 'YES';
-			}
-			if(isset($_POST['eeGeneratePDFThumbs'])) {
-				$eeSFL->eeUserMessages['warnings'][] = __('Missing thumbnail images will be generated in the background and may not appear right away.', 'simple-file-list');
-			}
-		}
-
-		// Remove Any Running Tasks
-		$eeSFL_Timestamp = wp_next_scheduled( 'eeSFL_Background_ReIndex_Hook_' . $eeSFL->eeListID, array($eeSFL->eeListID) );
-		if($eeSFL_Timestamp) {
-			wp_unschedule_event( $eeSFL_Timestamp, 'eeSFL_Background_ReIndex_Hook_' . $eeSFL->eeListID, array($eeSFL->eeListID) );
-		}
-		$eeSFL_Timestamp = wp_next_scheduled( 'eeSFL_Background_GenerateThumbs_Hook_' . $eeSFL->eeListID, array($eeSFL->eeListID) );
-		if($eeSFL_Timestamp) {
-			wp_unschedule_event( $eeSFL_Timestamp, 'eeSFL_Background_GenerateThumbs_Hook_' . $eeSFL->eeListID, array($eeSFL->eeListID) );
-		}
-
-		update_option('eeSFL_Tasks', $eeSFL_Tasks);
-
-	} // end defined('eeSFL_Pro') — Performance save logic
 
 	// echo '<pre>'; print_r($eeSFL->eeUserMessages); echo '</pre>'; exit;
 
@@ -267,7 +190,6 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 	<div class="eeColHalfLeft">
 
 		<h1>' . __('File List Settings', 'simple-file-list') . '</h1>
-		<a class="" href="https://simplefilelist.com/file-list-settings/" target="_blank">' . __('Instructions', 'simple-file-list') . '</a>
 
 	</div>
 
@@ -294,30 +216,15 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 
 		<p><label class="eeBlock" for="eeFileListDir">' . __('File List Directory', 'simple-file-list') . '</label>';
 
-		if($eeSFLA) {
 
-			 $eeOutput .= '
+		 $eeOutput .= '
 
-			<input class="eeFullWidth" disabled="disabled" type="text" name="eeFileListDirDisabled" value="' . $eeSFL->eeListSettings['FileListDir'] . '" id="eeFileListDir" />
-			<input type="hidden" name="eeFileListDir" value="' . $eeSFL->eeListSettings['FileListDir'] . '" /></p>';
-
-			if($eeSFL->eeListID == 1) {
-				 $eeOutput .= '<div class="eeNote">' . __('To change this setting, deactivate the plugin', 'simple-file-list') . ' File Access Manager.</div>';
-			} else {
-				 $eeOutput .= '<div class="eeNote">' . __('This cannot be changed. Create a new list instead.', 'simple-file-list') . '</div>';
-			}
-
-		} else {
-
-			 $eeOutput .= '
-
-			<input class="eeFullWidth" type="text" name="eeFileListDir" value="' . $eeSFL->eeListSettings['FileListDir'] . '" id="eeFileListDir" /></p>
-			<div class="eeNote">' . __('This must be relative to your Wordpress home folder.', 'simple-file-list') . '<br />
-				* ' . __('Default Location', 'simple-file-list') . ': <em>wp-content/uploads/simple-file-list/</em><br />
-				* ' . __('The directory you enter will be created if it does not exist.', 'simple-file-list') . '<br />
-				* ' . __('If you change this later, information such as file descriptions will be lost.', 'simple-file-list') . '
-			</div>';
-		}
+		<input class="eeFullWidth" type="text" name="eeFileListDir" value="' . $eeSFL->eeListSettings['FileListDir'] . '" id="eeFileListDir" /></p>
+		<div class="eeNote">' . __('This must be relative to your Wordpress home folder.', 'simple-file-list') . '<br />
+			* ' . __('Default Location', 'simple-file-list') . ': <em>wp-content/uploads/simple-file-list/</em><br />
+			* ' . __('The directory you enter will be created if it does not exist.', 'simple-file-list') . '<br />
+			* ' . __('If you change this later, information such as file descriptions will be lost.', 'simple-file-list') . '
+		</div>';
 
  $eeOutput .= '
 
@@ -336,148 +243,139 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 
 		<h2>' . __('File List Access', 'simple-file-list') . '</h2>';
 
-		// This moves to the File Access Settings tab if extension is installed
-		if(!$eeSFLA)  {
 
-			 $eeOutput .= '<fieldset>
+		 $eeOutput .= '<fieldset>
 
-			<legend>' . __('Front-End Display', 'simple-file-list') . '</legend>
+		<legend>' . __('Front-End Display', 'simple-file-list') . '</legend>
 
-			<div><label for="eeShowList">' . __('Show To', 'simple-file-list') . '</label>
+		<div><label for="eeShowList">' . __('Show To', 'simple-file-list') . '</label>
 
-			<select name="eeShowList" id="eeShowList">
+		<select name="eeShowList" id="eeShowList">
 
-				<option value="YES"';
+			<option value="YES"';
 
-				if($eeSFL->eeListSettings['ShowList'] == 'YES') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['ShowList'] == 'YES') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Everyone', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Everyone', 'simple-file-list') . '</option>
 
-				<option value="USER"';
+			<option value="USER"';
 
-				if($eeSFL->eeListSettings['ShowList'] == 'USER') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['ShowList'] == 'USER') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Only Logged in Users', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Only Logged in Users', 'simple-file-list') . '</option>
 
-				<option value="GRANTED"';
+			<option value="GRANTED"';
 
-				if($eeSFL->eeListSettings['ShowList'] == 'GRANTED') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['ShowList'] == 'GRANTED') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Specific Users, Roles or Groups', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Specific Users, Roles or Groups', 'simple-file-list') . '</option>
 
-				<option value="ADMIN"';
+			<option value="ADMIN"';
 
-				if($eeSFL->eeListSettings['ShowList'] == 'ADMIN') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['ShowList'] == 'ADMIN') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Only Logged in Admins', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Only Logged in Admins', 'simple-file-list') . '</option>
 
-				<option value="NO"';
+			<option value="NO"';
 
-				if($eeSFL->eeListSettings['ShowList'] == 'NO') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['ShowList'] == 'NO') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Hide Completely', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Hide Completely', 'simple-file-list') . '</option>
 
-			</select></div>
-			<div class="eeNote">' . __('Determine who you will show the front-side list to.', 'simple-file-list') . '</div>
+		</select></div>
+		<div class="eeNote">' . __('Determine who you will show the front-side list to.', 'simple-file-list') . '</div>
 
-			<div id="eeSFL_ListAccessPicker"' . ($eeSFL->eeListSettings['ShowList'] == 'GRANTED' ? '' : ' style="display:none"') . '>'
-				. eeSFL_GrantPicker('eeListAccess', $eeSFL->eeListSettings['ListAccess'] ?? array()) . '
-			</div>
-			<script>
-			document.getElementById("eeShowList").addEventListener("change", function() {
-				document.getElementById("eeSFL_ListAccessPicker").style.display = this.value === "GRANTED" ? "" : "none";
-			});
-			</script>
+		<div id="eeSFL_ListAccessPicker"' . ($eeSFL->eeListSettings['ShowList'] == 'GRANTED' ? '' : ' style="display:none"') . '>'
+			. eeSFL_GrantPicker('eeListAccess', $eeSFL->eeListSettings['ListAccess'] ?? array()) . '
+		</div>
+		<script>
+		document.getElementById("eeShowList").addEventListener("change", function() {
+			document.getElementById("eeSFL_ListAccessPicker").style.display = this.value === "GRANTED" ? "" : "none";
+		});
+		</script>
 
-			</fieldset>
-			<fieldset>
+		</fieldset>
+		<fieldset>
 
-			<legend>' . __('Protect Files', 'simple-file-list') . '</legend>
+		<legend>' . __('Protect Files', 'simple-file-list') . '</legend>
 
-			<div><label for="eeProtectFiles">' . __('Protect', 'simple-file-list') . '</label>
-			<input type="checkbox" name="eeProtectFiles" value="YES" id="eeProtectFiles"' . (eeSFL_ListIsProtected($eeSFL->eeListSettings) ? ' checked="checked"' : '') . ' /></div>
+		<div><label for="eeProtectFiles">' . __('Protect', 'simple-file-list') . '</label>
+		<input type="checkbox" name="eeProtectFiles" value="YES" id="eeProtectFiles"' . (eeSFL_ListIsProtected($eeSFL->eeListSettings) ? ' checked="checked"' : '') . ' /></div>
 
-			<div class="eeNote">' . __('Serve files through WordPress, which checks on every download who may open the file. Needed for "Show To" and per-file access to protect the files themselves, not just the list. The folder must then be blocked for direct access: done automatically on Apache, the settings page shows what to add for nginx.', 'simple-file-list') . '</div>
+		<div class="eeNote">' . __('Serve files through WordPress, which checks on every download who may open the file. Needed for "Show To" and per-file access to protect the files themselves, not just the list. The folder must then be blocked for direct access: done automatically on Apache, the settings page shows what to add for nginx.', 'simple-file-list') . '</div>
 
-			</fieldset>
-			<fieldset>
+		</fieldset>
+		<fieldset>
 
-			<legend>' . __('Back-End Access', 'simple-file-list') . '</legend>
+		<legend>' . __('Back-End Access', 'simple-file-list') . '</legend>
 
-			<div><label for="eeAdminRole">' . __('Choose Role', 'simple-file-list') . '</label>
+		<div><label for="eeAdminRole">' . __('Choose Role', 'simple-file-list') . '</label>
 
-			<select name="eeAdminRole" id="eeAdminRole">
+		<select name="eeAdminRole" id="eeAdminRole">
 
-				<option value="1"'; // 1
+			<option value="1"'; // 1
 
-				if($eeSFL->eeListSettings['AdminRole'] == '1') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['AdminRole'] == '1') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Subscribers and Above', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Subscribers and Above', 'simple-file-list') . '</option>
 
 
-				<option value="2"'; // 2
+			<option value="2"'; // 2
 
-				if($eeSFL->eeListSettings['AdminRole'] == '2') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['AdminRole'] == '2') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Contributers and Above', 'simple-file-list') . '</option>
-
-
-				<option value="3"'; // 3
-
-				if($eeSFL->eeListSettings['AdminRole'] == '3') {  $eeOutput .= ' selected'; }
-
-				 $eeOutput .= '>' . __('Authors and Above', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Contributers and Above', 'simple-file-list') . '</option>
 
 
-				<option value="4"'; // 4
+			<option value="3"'; // 3
 
-				if($eeSFL->eeListSettings['AdminRole'] == '4') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['AdminRole'] == '3') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Editors and Above', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Authors and Above', 'simple-file-list') . '</option>
 
 
-				<option value="5"'; // 5
+			<option value="4"'; // 4
 
-				if($eeSFL->eeListSettings['AdminRole'] == '5') {  $eeOutput .= ' selected'; }
+			if($eeSFL->eeListSettings['AdminRole'] == '4') {  $eeOutput .= ' selected'; }
 
-				 $eeOutput .= '>' . __('Admins Only', 'simple-file-list') . '</option>
+			 $eeOutput .= '>' . __('Editors and Above', 'simple-file-list') . '</option>
 
-			</select></div>
 
-			<div class="eeNote">' . __('Determine who can access the back-side settings.', 'simple-file-list') . '</div>
+			<option value="5"'; // 5
 
-			</fieldset>
+			if($eeSFL->eeListSettings['AdminRole'] == '5') {  $eeOutput .= ' selected'; }
 
-			<fieldset>
+			 $eeOutput .= '>' . __('Admins Only', 'simple-file-list') . '</option>
 
-			<legend>' . __('Front-End Management', 'simple-file-list') . '</legend>
+		</select></div>
 
-			<div><label for="eeAllowFrontManage">' . __('Allow', 'simple-file-list') . '</label>
-			<input type="checkbox" name="eeAllowFrontManage" value="YES" id="eeAllowFrontManage"';
+		<div class="eeNote">' . __('Determine who can access the back-side settings.', 'simple-file-list') . '</div>
 
-			if( $eeSFL->eeListSettings['AllowFrontManage'] == 'YES') {  $eeOutput .= ' checked="checked"'; }
+		</fieldset>
 
-			 $eeOutput .= ' /></div>
+		<fieldset>
 
-			<div class="eeNote">' . __('Allow file deletion, file renaming, editing descriptions and dates.', 'simple-file-list') . '</div>
+		<legend>' . __('Front-End Management', 'simple-file-list') . '</legend>
 
-			<div id="eeAllowFrontManageWarning" class="eeNote" style="color:#b32d2e;font-weight:bold;' . ($eeSFL->eeListSettings['AllowFrontManage'] == 'YES' ? '' : 'display:none;') . '">&#9888; ' . __('Warning: Front-End Management is enabled. Any visitor who can access this page will be able to delete, rename, and edit files. Restrict access to this page using WordPress page protection or a members-only plugin.', 'simple-file-list') . '</div>
+		<div><label for="eeAllowFrontManage">' . __('Allow', 'simple-file-list') . '</label>
+		<input type="checkbox" name="eeAllowFrontManage" value="YES" id="eeAllowFrontManage"';
 
-			<script>
-			document.getElementById("eeAllowFrontManage").addEventListener("change", function() {
-				document.getElementById("eeAllowFrontManageWarning").style.display = this.checked ? "" : "none";
-			});
-			</script>
+		if( $eeSFL->eeListSettings['AllowFrontManage'] == 'YES') {  $eeOutput .= ' checked="checked"'; }
 
-			</fieldset>';
+		 $eeOutput .= ' /></div>
 
-		} else {
+		<div class="eeNote">' . __('Allow file deletion, file renaming, editing descriptions and dates.', 'simple-file-list') . '</div>
 
-			 $eeOutput .= '
+		<div id="eeAllowFrontManageWarning" class="eeNote" style="color:#b32d2e;font-weight:bold;' . ($eeSFL->eeListSettings['AllowFrontManage'] == 'YES' ? '' : 'display:none;') . '">&#9888; ' . __('Warning: Front-End Management is enabled. Any visitor who can access this page will be able to delete, rename, and edit files. Restrict access to this page using WordPress page protection or a members-only plugin.', 'simple-file-list') . '</div>
 
-			<p>' . __('These settings have moved to the List Access Settings tab.', 'simple-file-list') . '</p>
-			<a class="button" href="' . $eeSFL->eeSFL_GetThisURL(FALSE) . '?page=' . eeSFL_PluginSlug . '&tab=settings&subtab=list_access&eeListID=' . $eeSFL->eeListID . '">' . __('Go There', 'simple-file-list') . '</a>';
-		}
+		<script>
+		document.getElementById("eeAllowFrontManage").addEventListener("change", function() {
+			document.getElementById("eeAllowFrontManageWarning").style.display = this.checked ? "" : "none";
+		});
+		</script>
+
+		</fieldset>';
+
 
 
 
@@ -628,59 +526,6 @@ eeSFL_Debug_Log("Loading: List Settings", 'General');
 
 		</div>';
 
-	if(defined('eeSFL_Pro')) {
-
-		 $eeOutput .= '<div class="eeSettingsTile">
-
-		<h2>' . __('Performance', 'simple-file-list') . '</h2>
-
-		<fieldset>
-
-		<legend>' . __('File List Disk Re-Scan Method', 'simple-file-list') . '</legend>
-
-		<div><label for="eeUseCache">' . __('Re-Scan', 'simple-file-list') . '</label>
-
-		<select name="eeUseCache" id="eeUseCache">
-			<option value="EACH"';
-			$eeDisabled = FALSE;
-			if( $eeSFL->eeListSettings['UseCache'] == 'EACH') {  $eeOutput .= ' selected="selected"'; $eeDisabled = TRUE; }
-			 $eeOutput .= '>' . __('Scan Each Time', 'simple-file-list') . '</option>
-			<option value="HOUR"';
-			if( $eeSFL->eeListSettings['UseCache'] == 'HOUR') {  $eeOutput .= ' selected="selected"'; }
-			 $eeOutput .= '>' . __('Scan Each Hour', 'simple-file-list') . '</option>
-			<option value="DAY"';
-			if( $eeSFL->eeListSettings['UseCache'] == 'DAY') {  $eeOutput .= ' selected="selected"'; }
-			 $eeOutput .= '>' . __('Scan Each Day', 'simple-file-list') . '</option>
-			<option value="OFF"';
-			if( $eeSFL->eeListSettings['UseCache'] == 'OFF') {  $eeOutput .= ' selected="selected"'; $eeDisabled = TRUE; }
-			 $eeOutput .= '>' . __('Scan Only Manually', 'simple-file-list') . '</option>
-		</select></div>
-
-		<div class="eeNote">' . __('Reduce server load by only scanning the hard disk occasionally.', 'simple-file-list') . ' '  . __('Choose to re-scan for external changes each time a page loads, each hour, once per day or manually.', 'simple-file-list') . '</div>
-
-		</fieldset>
-		<fieldset>
-
-		<legend>' . __('Scan in Background', 'simple-file-list') . '</legend>
-
-		<div><label for="eeUseCacheCron">' . __('Background', 'simple-file-list') . '</label>
-
-		<input id="eeUseCacheCron" type="checkbox" name="eeUseCacheCron" value="YES"';
-
-		if(defined('DISABLE_WP_CRON')) { if('DISABLE_WP_CRON') { $eeDisabled = TRUE; } }
-
-		if( !$eeDisabled AND $eeSFL->eeListSettings['UseCacheCron'] == 'YES' ) {  $eeOutput .= ' checked="checked"'; }
-		if( $eeDisabled ) {  $eeOutput .= ' disabled="disabled"'; }
-
-		 $eeOutput .= ' /></div>
-
-		<div class="eeNote">' . __('Background scanning may not work well in all environments.', 'simple-file-list') . '</div>
-
-		</fieldset>
-
-		</div>';
-
-	} // end defined('eeSFL_Pro') — Performance UI
 
 		 $eeOutput .= '<div class="eeSettingsTile">
 

@@ -9,7 +9,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	}
 
 	global $eeSFL, $eeSFL_UploadFormRun, $eeSFL_VarsForJS;
-    global $eeSFLU, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
+    global $eeSFLU, $eeSFLE, $eeSFLM; // Extensions
 
     eeSFL_Debug_Log("Shortcode Function Loading ...", 'Shortcode');
 	eeSFL_Debug_Log('URL: ' . $eeSFL->eeSFL_GetThisURL(), 'Shortcode', $eeSFL->eeListID);
@@ -187,17 +187,6 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 
 	}
 
-	// Extension Check
-	if($eeSFLA) {
-	    eeSFL_Debug_Log('- Current User ID: ' . $eeSFL->eeEnvironment['wpUserID'], 'Shortcode', $eeSFL->eeListID);
-
-	    // Initialize the variable to prevent undefined variable warnings
-	    $eeSFLA_ShowTheList = TRUE; // Default to show list
-
-	    if( !$showlist ) { // Shortcode setting over-rides access
-			include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_FrontsideFirewall.php');
-		}
-	}
 	// Begin Front-End List Display ==================================================================
 
 
@@ -216,19 +205,11 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		 $eeOutput .= $eeSFLU->eeSFL_UploadForm();
 	}
 
-	// Extension Check
-	if($eeSFLA) {
-		if($eeSFLA_ShowTheList === FALSE) {
-			$eeSFL->eeListSettings['ShowList'] = 'NO'; // We cannot go on.
-		}
-	}
 
 	// Who Can View the List?
 	switch ($eeSFL->eeListSettings['ShowList']) {
 	    case 'YES':
 	        break; // Show It
-	    case 'RESTRICTED':
-	        break; // Show It By File (eeSFLA)
 	    case 'GRANTED':
 	        // Only the users, roles and groups in the list's grant
 	        if( eeSFL_UserCanSeeList($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) { break; }
@@ -253,7 +234,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 			$eeSFLE = new eeSFLE_class();
 		}
 
-		eeSFL_Debug_Log("Displaying frontend list - Mode: " . ($eeSFL->eeListSettings['Mode'] ?? 'Unknown'), 'Shortcode', $eeSFL->eeListID);
+		eeSFL_Debug_Log("Displaying frontend list - ShowList: " . $eeSFL->eeListSettings['ShowList'], 'Shortcode', $eeSFL->eeListID);
 		include($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-list-display.php'); // The List is Loaded Here -------------
 	} else {
 		eeSFL_Debug_Log("List display blocked (ShowList = NO)", 'Shortcode', $eeSFL->eeListID);

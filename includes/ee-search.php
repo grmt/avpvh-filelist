@@ -1,6 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // Simple File List - Search and paging
+// Copyright 2026 grmt, part of Simple File List (grmt): https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 // Search and paging for a file list. Both work through GET parameters named per list

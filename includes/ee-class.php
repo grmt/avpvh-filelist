@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026
-// Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
+// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -234,6 +234,12 @@ class eeSFL_MainClass {
 		// Folder settings from the old Pro version (there are no subfolders)
 		unset($this->eeListSettings['ShowBreadCrumb'], $this->eeListSettings['FoldersFirst'], $this->eeListSettings['AllowFolderDownload'], $this->eeListSettings['ShowFolderSize']);
 
+		// "Show by file" (RESTRICTED) came from the old File Access Manager add-on, which is no longer used.
+		// It becomes "Only granted users" with the list's own grant, so a list left that way stays
+		// closed to everyone but its managers until it is given a grant.
+		if( ($this->eeListSettings['ShowList'] ?? '') === 'RESTRICTED' ) { $this->eeListSettings['ShowList'] = 'GRANTED'; }
+		unset($this->eeListSettings['Mode']);
+
 		// Set up temp directory constants (path only — no disk write).
 		// Always initialized here because admins always have bulk download available
 		// regardless of the AllowBulkFileDownload setting.
@@ -453,8 +459,6 @@ class eeSFL_MainClass {
 	public $eeFileSubmitterName = FALSE;
 	public $eeFileSubmitterComments = FALSE;
 
-	public $eeAccessUsers = array(); // SFLA
-	public $eeAccessRole = FALSE;
 
 	// Total Counts
 	public $eeFileCount = 0;
@@ -529,7 +533,7 @@ class eeSFL_MainClass {
 
     public function eeSFL_ReturnFileActions($eeFileID, $eeFileArray) {
 
-		global $eeSFLA, $eeSFLE;
+		global $eeSFLE;
 
 		$eeAdmin = is_admin();
 
@@ -602,44 +606,6 @@ class eeSFL_MainClass {
 			<a href="' . esc_url($eeAccessURL) . '">' . ($eeHasGrant ? esc_html__('Access (limited)', 'simple-file-list') : esc_html__('Access', 'simple-file-list')) . '</a>';
 		}
 
-		// Extension Check
-		if($eeSFLA) {
-
-			if($eeAdmin OR $this->eeListSettings['AllowCopyToList'] == 'YES') {
-				 $eeOutput .= '
-				<a id="eeSFLA_FileCopy_' . $eeFileID . '" onclick="eeSFLA_OpenCopyModal(' . $eeFileID . ');" href="#" >' . __('Copy To', 'simple-file-list') . '</a>';
-			}
-
-			if((isset($this->eeListSettings['Mode']) && $this->eeListSettings['Mode'] == 'USER') OR
-			   (isset($this->eeListSettings['Mode']) && $this->eeListSettings['Mode'] == 'RESTRICTED')) {
-
-				$eeAccessUsers = '';
-				if(is_array($this->eeAccessUsers)) { $eeAccessUsers = implode(',', $this->eeAccessUsers); }
-
-				$eeApplyToChildren = isset($eeFileArray['ApplyToChildren']) ? $eeFileArray['ApplyToChildren'] : 'NO';
-
-				 $eeOutput .= '
-				<span class="eeHide eeSFLA_Access_Users">' . $eeAccessUsers . '</span>
-				<span class="eeHide eeSFLA_Access_Role">' . $this->eeAccessRole . '</span>
-				<span class="eeHide eeSFLA_ApplyToChildren">' . $eeApplyToChildren . '</span>';
-
-				// Show Access button only for list owner or admin (backend or bypass)
-				if($eeAdmin OR (isset($eeSFLA) && $eeSFLA->eeSFLA_IsListOwner)) {
-					// Check if this item inherits from a parent folder with ApplyToChildren
-					$isInherited = false;
-					if(function_exists('eeSFLA_FolderHasApplyToChildren') && eeSFLA_FolderHasApplyToChildren()) {
-						$isInherited = true;
-					}
-
-					// Only show Access button if not inherited from parent folder
-					if(!$isInherited) {
-						 $eeOutput .= '<a id="eeSFLA_FileAccess_' . $eeFileID . '" onclick="eeSFLA_OpenAccessModal(' . $eeFileID . ');" href="#" >' . __('Access', 'simple-file-list');
-						 $eeOutput .= '<span class="eeSFLS_HasAccess_Accent">' . eeSFLA_HasAccessHTML($eeFileArray) . '</span>';
-						 $eeOutput .= '</a>';
-					}
-				}
-			}
-		}
 
 
 		// File Details to Pass to the Editor
@@ -691,8 +657,6 @@ class eeSFL_MainClass {
 
     public function eeSFL_ProcessFileArray($eeFileArray, $eeHideName = FALSE, $eeHideType = FALSE) {
 
-	    global $eeSFLA;
-
 	    if( is_admin() ) { $eeAdmin = TRUE; } else { $eeAdmin = FALSE; }
 
 	    if( is_array($eeFileArray) ) {
@@ -731,8 +695,6 @@ class eeSFL_MainClass {
 			$this->eeFileSubmitterEmail = FALSE;
 			$this->eeFileSubmitterName = FALSE;
 			$this->eeFileSubmitterComments = FALSE;
-			$this->eeAccessUsers = FALSE;
-			$this->eeAccessRole = FALSE;
 
 
 			// LEGACY - Skip names hidden via shortcode
@@ -865,18 +827,6 @@ class eeSFL_MainClass {
 
 			}
 
-			// Extension Check
-			if($eeSFLA) {
-				if(isset($this->eeListSettings['Mode']) && $this->eeListSettings['Mode'] != 'NORMAL' AND $this->eeIsFile) {
-					// Build file access URL (no nonce — links are shareable/persistent)
-					$this->eeFileURL = add_query_arg(array(
-						'list' => $this->eeListID,
-						'file' => $eeFileArray['FilePath'],
-					), $this->eeEnvironment['wpSiteURL'] . 'ee-get-file/');
-				}
-				if(isset($eeFileArray['AccessUsers'])) { $this->eeAccessUsers = $eeFileArray['AccessUsers']; }
-				if(isset($eeFileArray['AccessRole'])) { $this->eeAccessRole = $eeFileArray['AccessRole']; }
-			}
 		}
 
 		$eeMessages = array($eeFileArray);
@@ -1005,7 +955,7 @@ class eeSFL_MainClass {
     // Scan the real files and create or update array as needed.
     public function eeSFL_UpdateFileListArray() {
 
-	    global $eeSFLU, $eeSFL_Tasks, $eeSFLA;
+	    global $eeSFLU, $eeSFL_Tasks;
 
 		$start_memory = memory_get_usage();
 		$peak_memory = memory_get_peak_usage();
@@ -1282,8 +1232,6 @@ class eeSFL_MainClass {
 
 			// Update the DB
 		    $this->eeSFL_UpdateMainFileArray(false);
-
-		    if($eeSFLA) { eeSFLA_FileViewerCheck(); }
 
 			// Add Custom Hook
 			$eeMessages[] = 'Disk Scan Completed';
@@ -1776,8 +1724,6 @@ class eeSFL_MainClass {
 	// Send the notification email
 	public function eeSFL_NotificationEmail($eeSFL_UploadJob) {
 
-		global $eeSFLA;
-
 		eeSFL_Debug_Log("Class Method Called: eeSFL_NotificationEmail()", 'General');
 
 		$eeAdminEmail = $this->eeListSettings['NotifyTo'];
@@ -1849,63 +1795,14 @@ class eeSFL_MainClass {
 
 			if($this->eeListSettings['NotifyBcc']) {
 				$eeSFL_HeadersCC .= PHP_EOL . "BCC:" . $this->eeListSettings['NotifyBcc'];
-				if($eeSFLA) {
-					if($eeSFLA->eeSFLA_Settings['BCC'] == 'YES' AND $this->eeListID > 1) { // Append if needed
-						$eeSFL_HeadersCC .= ',' . $eeAdminEmail;
-					}
-				}
 			}
 
-			if($eeSFLA) {
-				if($eeSFLA->eeSFLA_Settings['BCC'] == 'YES') {
-					$eeMainListSettings = get_option('eeSFL_Settings_1');
-					if($this->eeListSettings['NotifyBcc']) {
-						$eeSFL_HeadersCC .= ',' . $eeMainListSettings['NotifyTo']; // Add to existing BCC
-					} else {
-						$eeSFL_HeadersCC .= PHP_EOL . "BCC:" . $eeMainListSettings['NotifyTo']; // Set as BCC
-					}
-				}
-			}
 
 			// Must be an array
 			if(is_array($this->eeListSettings['NotifyTo'])) { $eeTo = $this->eeListSettings['NotifyTo']; }
 				else { $eeTo = array($this->eeListSettings['NotifyTo']); }
 
 
-			if( !strpos($eeTo[0], '@') ) { // Not an actual email address
-
-				if($eeSFLA) {
-
-					$eeArray = array();
-
-					if( $eeTo[0] == 'All' ) { // Send to all list users
-
-						$eeUsers = $eeSFLA->eeSFLA_GetMinRoleUsers($this->eeListSettings['ListRole'], FALSE, $this->eeListSettings['ListMatchMode']);
-
-						foreach( $eeUsers as $eeKey => $eeUser) { // Build array of addresses
-
-							$eeArray[] = $eeUser['Email'];
-						}
-
-						$eeTo = $eeArray;
-
-					} elseif( is_numeric($eeTo[0]) ) {
-
-						foreach( $eeTo as $eeKey => $eeID ){
-
-							$eeUserInfo = get_userdata($eeID);
-
-							$eeArray[] = $eeUserInfo->user_email;
-						}
-
-						$eeTo = $eeArray;
-
-					} else {
-
-						$eeTo = array($eeAdminEmail); // Send to Admin
-					}
-				}
-			}
 
 			$eeTo = array_unique($eeTo); // Remove duplicates
 
