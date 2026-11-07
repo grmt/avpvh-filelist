@@ -31,6 +31,13 @@ This repository exists so the installed GPL-licensed code has a reviewable
 history and can be maintained independently. It is not affiliated with or
 endorsed by the original developer.
 
+## Tests
+
+- **Unit tests:** `composer install && vendor/bin/phpunit` (tests/*.php, WordPress stubbed out).
+- **Integration tests:** `tests/integration/run.sh` needs Docker and Python 3. It starts WordPress (PHP 8.4, with the LDAP extension), MariaDB and OpenLDAP, sets up users, groups, a protected list and a per-file grant through the admin forms, then checks over HTTP who sees which file, the download handler's status codes and headers, blocked direct URLs, path traversal, and that group access fails closed when LDAP is down. It finishes by checking `debug.log` for PHP errors from the plugin. `KEEP=1` leaves the stack running on port 8891 (`SFL_IT_PORT`); `docker compose -f tests/integration/docker-compose.yml down -v` removes it.
+
+Both run in CI on every pull request.
+
 ## License and attribution
 
 The plugin is licensed under GPL-2.0-or-later. Original copyright notices and

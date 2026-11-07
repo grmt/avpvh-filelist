@@ -1,0 +1,47 @@
+# Throwaway stack for the integration tests: WordPress + this plugin, MariaDB, OpenLDAP.
+# All passwords here are test values for containers that live only during the test run.
+name: sfl-it
+
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_RANDOM_ROOT_PASSWORD: '1'
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 2s
+      retries: 30
+
+  ldap:
+    image: bitnamilegacy/openldap:2.6.10-debian-12-r4
+    environment:
+      LDAP_ROOT: dc=example,dc=org
+      LDAP_ADMIN_USERNAME: admin
+      LDAP_ADMIN_PASSWORD: throwaway-admin
+      LDAP_USERS: jan,piet
+      LDAP_PASSWORDS: throwaway-jan,throwaway-piet
+      LDAP_GROUP: leden
+
+  wordpress:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      ldap:
+        condition: service_started
+    ports:
+      - '${SFL_IT_PORT:-8891}:80'
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DEBUG: '1'
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_DEBUG_LOG', true);
+        define('WP_DEBUG_DISPLAY', false);
+    volumes:
+      - ../..:/var/www/html/wp-content/plugins/simple-file-list:ro
