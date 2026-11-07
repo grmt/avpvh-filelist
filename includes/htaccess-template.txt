@@ -1,4 +1,4 @@
-# Simple File List Access Restricter
+# AV-PvH File List Access Restricter
 
 RewriteEngine On
 

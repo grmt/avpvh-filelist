@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
-// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
+// AV-PvH File List, based on Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
@@ -23,7 +23,7 @@ if($eeSFL->eeListSettings['ShowHeader'] == 'YES' OR $eeAdmin) {  $eeOutput .= '<
 		 $eeOutput .= '<th class="eeSFL_Thumbnail">';
 
 		if($eeSFL->eeListSettings['LabelThumb']) {  $eeOutput .= esc_html(stripslashes($eeSFL->eeListSettings['LabelThumb'])); }
-			else {  $eeOutput .= __('Thumb', 'simple-file-list'); }
+			else {  $eeOutput .= __('Thumb', 'avpvh-filelist'); }
 
 		 $eeOutput .= '</th>';
 	}
@@ -32,7 +32,7 @@ if($eeSFL->eeListSettings['ShowHeader'] == 'YES' OR $eeAdmin) {  $eeOutput .= '<
 	 $eeOutput .= '<th class="eeSFL_FileName">';
 
 	if($eeSFL->eeListSettings['LabelName']) {  $eeOutput .= esc_html(stripslashes($eeSFL->eeListSettings['LabelName'])); }
-		else {  $eeOutput .= __('Name', 'simple-file-list'); }
+		else {  $eeOutput .= __('Name', 'avpvh-filelist'); }
 
 	 $eeOutput .= '</th>';
 
@@ -42,7 +42,7 @@ if($eeSFL->eeListSettings['ShowHeader'] == 'YES' OR $eeAdmin) {  $eeOutput .= '<
 		 $eeOutput .= '<th class="eeSFL_FileSize">';
 
 		if($eeSFL->eeListSettings['LabelSize']) {  $eeOutput .= esc_html(stripslashes($eeSFL->eeListSettings['LabelSize'])); }
-			else {  $eeOutput .= __('Size', 'simple-file-list'); }
+			else {  $eeOutput .= __('Size', 'avpvh-filelist'); }
 
 		 $eeOutput .= '</th>';
 	}
@@ -53,7 +53,7 @@ if($eeSFL->eeListSettings['ShowHeader'] == 'YES' OR $eeAdmin) {  $eeOutput .= '<
 		 $eeOutput .= '<th class="eeSFL_FileDate">';
 
 		if($eeSFL->eeListSettings['LabelDate']) {  $eeOutput .= esc_html(stripslashes($eeSFL->eeListSettings['LabelDate'])); }
-			else {  $eeOutput .= __('Date', 'simple-file-list'); }
+			else {  $eeOutput .= __('Date', 'avpvh-filelist'); }
 
 		 $eeOutput .= '</th>';
 	}
@@ -69,7 +69,7 @@ if($eeSFL->eeListSettings['ShowHeader'] == 'YES' OR $eeAdmin) {  $eeOutput .= '<
 <tbody>';
 
 
-eeSFL_Debug_Log("Listing Files in Table View...", 'General');
+avpvh_flst_debug_log("Listing Files in Table View...", 'General');
 
 // echo '<pre>'; print_r($eeSFL->eeAllFiles); echo '</pre>'; exit;
 
@@ -77,7 +77,7 @@ eeSFL_Debug_Log("Listing Files in Table View...", 'General');
 foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<---------------------------- BEGIN FILE LIST LOOP ----------------<<<
 
 	// Populate our class properties for this file
-	if( $eeSFL->eeSFL_ProcessFileArray($eeFileArray, $eeSFL_HideName, $eeSFL_HideType) ) {
+	if( $eeSFL->process_file_array($eeFileArray, $eeSFL_HideName, $eeSFL_HideType) ) {
 
 
 
@@ -167,7 +167,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 
 			// File Actions
-			 $eeOutput .= $eeSFL->eeSFL_ReturnFileActions($eeFileID, $eeFileArray);
+			 $eeOutput .= $eeSFL->return_file_actions($eeFileID, $eeFileArray);
 
 
 

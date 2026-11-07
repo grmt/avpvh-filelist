@@ -12,7 +12,7 @@
     <source>
         <include>
             <directory suffix=".php">includes</directory>
-            <file>simple-file-list.php</file>
+            <file>avpvh-filelist.php</file>
         </include>
     </source>
 </phpunit>

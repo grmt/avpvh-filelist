@@ -15,7 +15,7 @@ from html.parser import HTMLParser
 
 BASE = os.environ.get('SFL_IT_URL', 'http://localhost:8891')
 PAGE = os.environ.get('SFL_IT_PAGE', '')
-ADMIN = '/wp-admin/admin.php?page=simple-file-list'
+ADMIN = '/wp-admin/admin.php?page=avpvh-filelist'
 FILES = ['notulen-bestuur.pdf', 'ledenbrief.txt', 'publiek.txt', 'video.mp4', 'evil.html']
 USERS = {'admin': 'password', 'jan': 'pw-jan', 'piet': 'pw-piet', 'kees': 'pw-kees', 'redacteur': 'pw-redacteur'}
 
@@ -261,7 +261,7 @@ def step_ldap_down(admin):
 
 
 def edit_job(browser, nonce, action, name, **extra):
-    fields = {'action': 'simplefilelist_edit_job', 'eeSFL_ID': '1', 'eeFileName': name, 'eeFileAction': action, 'eeSecurity': nonce}
+    fields = {'action': 'avpvh_flst_edit_job', 'eeSFL_ID': '1', 'eeFileName': name, 'eeFileAction': action, 'eeSecurity': nonce}
     fields.update(extra)
     return browser.post('/wp-admin/admin-ajax.php', fields)[2].decode('utf-8', 'replace').strip()
 
@@ -317,7 +317,7 @@ def step_front_manage(admin):
     # Uploads with overwrite on: only files the uploader may read are replaced
     upload_nonce = page_value(page, r'var eeSFL_Nonce = "([^"]+)"')
     check('upload: jan gets the upload nonce', bool(upload_nonce))
-    fields = {'action': 'simplefilelist_upload_job', 'eeSFL_ID': '1', 'eeSFL_FileUploadDir': '', 'ee-simple-file-list-upload': upload_nonce}
+    fields = {'action': 'avpvh_flst_upload_job', 'eeSFL_ID': '1', 'eeSFL_FileUploadDir': '', 'avpvh-filelist-upload': upload_nonce}
     answer = jan.upload('/wp-admin/admin-ajax.php', fields, 'notulen-bestuur.pdf', b'%PDF-1.4 overwritten\n')[2].decode().strip()
     check('upload: a restricted file is not overwritten', content('piet', 'notulen-bestuur.pdf') == original, (answer, content('piet', 'notulen-bestuur.pdf')))
     answer = jan.upload('/wp-admin/admin-ajax.php', fields, 'ledenbrief.txt', b'nieuwe brief\n')[2].decode().strip()
@@ -327,7 +327,7 @@ def step_front_manage(admin):
     page = jan.text('/?page_id=' + PAGE)
     jan.post('/?page_id=' + PAGE, {
         'ee': '1', 'eeListID': '1', 'eeSFL_FileOpsAction': 'Delete', 'eeSFL_FileOpsFiles': ','.join(sorted(ids.values())),
-        'ee-simple-file-list-file-ops-bar-nonce': page_value(page, r'name="ee-simple-file-list-file-ops-bar-nonce" value="([^"]+)"'),
+        'avpvh-filelist-file-ops-bar-nonce': page_value(page, r'name="avpvh-filelist-file-ops-bar-nonce" value="([^"]+)"'),
         'eeSFL_ListOpsBarGo': 'GO',
     })
     check('bulk delete: the restricted file survives', content('piet', 'notulen-bestuur.pdf') == original, content('piet', 'notulen-bestuur.pdf'))
@@ -352,6 +352,7 @@ def step_old_addon():
     page = Browser().text('/?page_id=' + PAGE)
     check('old add-on: the page renders while the add-on is active', 'critical error' not in page and 'eeSFLA' not in page and 'eesfla' not in page)
     check('old add-on: a "show by file" list is closed to visitors', not any(name in page for name in FILES))
+    check('migration: the old plugin no longer answers the page', 'OLD SIMPLE FILE LIST' not in page)
 
     admin = Browser('admin')  # The first wp-admin request switches the add-on off
     plugins = admin.text('/wp-admin/plugins.php')
@@ -363,6 +364,19 @@ def step_old_addon():
     form = next(f for f in parser.forms if 'eeShowList' in f['ids'])
     shown = dict(form['fields']).get('eeShowList')
     check('old add-on: "show by file" becomes "only granted users"', shown == 'GRANTED', shown)
+
+
+def step_create_and_remove_list(admin):
+    """Lists are created and removed through their admin forms."""
+    admin.submit(ADMIN + '&tab=create', 'eeSFL_ListTitle',
+                 {'eeSFL_ListTitle': 'Tijdelijke lijst', 'eeSFL_ListDir': 'wp-content/uploads/tijdelijk/'}, ('eeSFL_CreateList', '1'))
+    lists = admin.text(ADMIN + '&tab=lists')
+    check('lists: a list is created from the form', 'Tijdelijke lijst' in lists)
+    found = re.search(r'name="eeSFL_DeleteListNonce" value="([^"]+)".{0,600}?name="eeSFL_DeleteList" value="(\d+)"', lists, re.S)
+    check('lists: the new list can be removed', bool(found))
+    if found:
+        admin.post(ADMIN + '&tab=lists', [('eeSFL_DeleteListNonce', found.group(1)), ('eeSFL_DeleteList', found.group(2))])
+        check('lists: the list is removed from the form', 'Tijdelijke lijst' not in admin.text(ADMIN + '&tab=lists'))
 
 
 def step_identity(admin):
@@ -395,7 +409,7 @@ def step_search_and_pages(admin):
 
     page = admin.text(ADMIN + '&tab=list&eeListID=1&sfl_search_1=video')
     check('search in wp-admin: finds the file', page.count('eeSFL_RealFileName') == 1 and 'video.mp4' in page)
-    check('search in wp-admin: the form stays on the admin page', 'name="page" value="simple-file-list"' in page and 'name="eeListID" value="1"' in page)
+    check('search in wp-admin: the form stays on the admin page', 'name="page" value="avpvh-filelist"' in page and 'name="eeListID" value="1"' in page)
 
     admin.submit(ADMIN + '&tab=settings&eeListID=1', 'eeShowList', {'eeShowSearch': '', 'eeFilesPerPage': '0'})
     page = visitor.text(front + '&sfl_search_1=brief')
@@ -418,6 +432,7 @@ def main():
     admin = Browser('admin')
     step_no_folders(admin)
     step_identity(admin)
+    step_create_and_remove_list(admin)
     step_search_and_pages(admin)
     step_ldap_settings(admin)
     step_list_settings(admin)

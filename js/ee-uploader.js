@@ -1,5 +1,5 @@
-// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
-// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
+// AV-PvH File List, based on Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 console.log('ee-uploader.js Loaded');
@@ -294,12 +294,12 @@ function eeSFL_UploadFile(eeSFL_File) { // Pass in file object
     };
 
     // WordPress Action
-    eeFormData.append("action", "simplefilelist_upload_job");
+    eeFormData.append("action", "avpvh_flst_upload_job");
 
     // Initial values are set in ee-upload-form.php
     eeFormData.append("file", eeSFL_File);
     eeFormData.append("eeSFL_ID", eeSFL_ListID);
-    eeFormData.append("ee-simple-file-list-upload", eeSFL_Nonce);
+    eeFormData.append("avpvh-filelist-upload", eeSFL_Nonce);
 
     // File modification date/time
     var eeDate = new Date(eeSFL_File.lastModified);

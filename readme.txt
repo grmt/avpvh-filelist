@@ -1,29 +1,31 @@
-=== Simple File List (grmt) ===
+=== AV-PvH File List ===
 Contributors: grmt, eemitch
 Tags: file manager, file sharing, document library, file access, ldap
 Requires at least: 7.1
 Requires PHP: 8.4
 Tested up to: 7.1
-Stable tag: 6.3.13-grmt.1
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-File lists with uploads, access control, search and paging for WordPress. Maintained by grmt, based on Simple File List by Mitchell Bennis.
+File lists with uploads, access control, search and paging for WordPress. Based on Simple File List by Mitchell Bennis.
 
 == Description ==
 
-Put a list of files on any page with the shortcode `[eeSFL]`. Visitors can open, download and (if you allow it) upload files. The files stay on your own server, separate from the Media Library.
+Put a list of files on any page with the shortcode `[avpvh_filelist]`. Visitors can open, download and (if you allow it) upload files. The files stay on your own server, separate from the Media Library.
 
-This is an independently maintained version of **Simple File List** by **Mitchell Bennis** (Element Engage, [simplefilelist.com](https://simplefilelist.com)). The original plugin was closed on WordPress.org in July 2026. This version is maintained by grmt at [github.com/grmt/simple-file-list](https://github.com/grmt/simple-file-list) and is not affiliated with or endorsed by the original author. Everything is free; there is no paid version.
+AV-PvH File List is based on **Simple File List** by **Mitchell Bennis** (Element Engage, [simplefilelist.com](https://simplefilelist.com)). The original plugin was closed on WordPress.org in July 2026. This plugin is maintained by grmt at [github.com/grmt/avpvh-filelist](https://github.com/grmt/avpvh-filelist) and is not affiliated with or endorsed by the original author. Everything is free; there is no paid version.
+
+A site running Simple File List moves over by itself: install and activate this plugin, and on its first request it copies the lists and settings, rewrites `[avpvh_filelist]` to `[avpvh_filelist]` in pages, posts and widgets, and deactivates Simple File List. The list folders, files and download links stay as they are. The old settings stay in the database, and `[avpvh_filelist]` keeps working.
 
 = Lists and display =
 
-* Several file lists, each with its own folder, settings and shortcode: `[eeSFL list="2"]`.
+* Several file lists, each with its own folder, settings and shortcode: `[avpvh_filelist list="2"]`.
 * Table, Tiles or Flex layout; light, dark or no theme.
 * File name, date, size and thumbnails for images, PDFs and videos.
 * A display name (Nice Name) and a description per file.
 * Sort by name, date added, date changed, size or at random.
-* Search in names and descriptions, and pages for long lists: `[eeSFL search="YES" filecount="25"]`.
+* Search in names and descriptions, and pages for long lists: `[avpvh_filelist search="YES" filecount="25"]`.
 * Inline audio and video player.
 
 = Access =
@@ -55,10 +57,10 @@ Simple File List was created by Mitchell Bennis of Element Engage ([simplefileli
 
 == Installation ==
 
-1. Download the plugin zip from the [releases on GitHub](https://github.com/grmt/simple-file-list/releases) and upload it under Plugins, Add New. Updates then arrive through the normal WordPress updates.
+1. Download the plugin zip from the [releases on GitHub](https://github.com/grmt/avpvh-filelist/releases) and upload it under Plugins, Add New. Updates then arrive through the normal WordPress updates.
 1. A **File List** menu item appears in wp-admin.
 1. Set up the list under **List Settings** and add files with **Upload Files**, or put them in the list's folder.
-1. Put the shortcode `[eeSFL]` on a page or post. Shortcode attributes override the list settings for that page.
+1. Put the shortcode `[avpvh_filelist]` on a page or post. Shortcode attributes override the list settings for that page.
 
 
 == Frequently Asked Questions ==
@@ -81,7 +83,7 @@ No. A list shows the files directly in its folder. Use several lists instead.
 
 = Where do I report a problem? =
 
-In the [issues on GitHub](https://github.com/grmt/simple-file-list/issues). Please don't ask the original author for help with this version.
+In the [issues on GitHub](https://github.com/grmt/avpvh-filelist/issues). Please don't ask the original author for help with this version.
 
 
 == Upgrade Notice ==
@@ -99,7 +101,9 @@ In the [issues on GitHub](https://github.com/grmt/simple-file-list/issues). Plea
 
 == Changelog ==
 
-= Unreleased =
+= 1.0.0 =
+* Change: Simple File List (grmt) is now **AV-PvH File List**: plugin folder `avpvh-filelist`, shortcode `[avpvh_filelist]`, text domain `avpvh-filelist`, repository grmt/avpvh-filelist. All code follows WordPress naming (`avpvh_flst_*` functions, `Avpvh_Flst_*` classes); options, hooks, AJAX actions and filters moved to `avpvh_flst_*` names. The wp-config constant is now `AVPVH_FLST_LDAP_BIND_PASSWORD` (`EESFL_LDAP_BIND_PASSWORD` still works).
+* New: A site moves over from Simple File List on the first request: lists and settings are copied, `[eeSFL]` becomes `[avpvh_filelist]` in posts, pages and text and block widgets, and Simple File List is deactivated. Its options stay for a rollback; `[eeSFL]` stays registered for places the migration doesn't reach.
 * Change: Requires PHP 8.4 and WordPress 7.1, the versions it is tested on. Both are now also in the plugin header, so WordPress won't activate it on older versions.
 * New: Multiple file lists. Create, rename and remove lists under "All File Lists" and "Create List"; each list has its own folder, settings and `[eeSFL list="N"]` shortcode. Lists left by the old File Access Manager add-on are picked up automatically.
 * New: A list switcher in wp-admin, and per-list admin access based on each list's "Admin Role" setting.

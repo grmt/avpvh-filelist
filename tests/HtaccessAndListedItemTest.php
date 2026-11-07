@@ -7,18 +7,18 @@ final class HtaccessAndListedItemTest extends TestCase {
 
 	private const FORMATS = 'jpg, jpeg, png, tif, pdf, mov, mp4, mp3, zip'; // Plugin default
 
-	/** The RewriteRule pattern exactly as eeSFL_LimitDirAccess() writes it, as a PHP regex. */
+	/** The RewriteRule pattern exactly as avpvh_flst_limit_dir_access() writes it, as a PHP regex. */
 	private static function rulePattern(string $eeFormats): string {
 		$eeTemplate = file_get_contents(dirname(__DIR__) . '/includes/htaccess-template.txt');
-		$eeTemplate = str_replace('FILE_TYPES', eeSFL_HtaccessFileTypes($eeFormats), $eeTemplate);
+		$eeTemplate = str_replace('FILE_TYPES', avpvh_flst_htaccess_file_types($eeFormats), $eeTemplate);
 		preg_match('/^RewriteRule (\S+) - \[([^\]]*)\]/m', $eeTemplate, $eeMatch);
 		$eeFlags = stripos($eeMatch[2], 'NC') !== false ? 'i' : '';
 		return '/' . str_replace('/', '\/', $eeMatch[1]) . '/' . $eeFlags;
 	}
 
 	public function testFileTypesAreTrimmedLowercasedAndEscaped(): void {
-		$this->assertSame('jpg|pdf|tar\.gz', eeSFL_HtaccessFileTypes(' JPG ,pdf,, tar.gz,jpg '));
-		$this->assertSame('', eeSFL_HtaccessFileTypes(' , '));
+		$this->assertSame('jpg|pdf|tar\.gz', avpvh_flst_htaccess_file_types(' JPG ,pdf,, tar.gz,jpg '));
+		$this->assertSame('', avpvh_flst_htaccess_file_types(' , '));
 	}
 
 	public static function blockedProvider(): array {
@@ -43,13 +43,13 @@ final class HtaccessAndListedItemTest extends TestCase {
 			array('FilePath' => 'doc.pdf'),
 			array('FilePath' => 'Folder/'),
 		);
-		$this->assertTrue(eeSFL_IsListedItem($eeFiles, 'doc.pdf'));
-		$this->assertTrue(eeSFL_IsListedItem($eeFiles, 'Folder'));
-		$this->assertFalse(eeSFL_IsListedItem($eeFiles, '.htaccess'));
-		$this->assertFalse(eeSFL_IsListedItem($eeFiles, 'DOC.pdf'));
-		$this->assertFalse(eeSFL_IsListedItem($eeFiles, ''));
-		$this->assertFalse(eeSFL_IsListedItem(false, 'doc.pdf'));
-		$this->assertSame(array('FilePath' => 'doc.pdf'), eeSFL_ListedItem($eeFiles, 'doc.pdf'));
-		$this->assertSame(array(), eeSFL_ListedItem($eeFiles, '.htaccess'));
+		$this->assertTrue(avpvh_flst_is_listed_item($eeFiles, 'doc.pdf'));
+		$this->assertTrue(avpvh_flst_is_listed_item($eeFiles, 'Folder'));
+		$this->assertFalse(avpvh_flst_is_listed_item($eeFiles, '.htaccess'));
+		$this->assertFalse(avpvh_flst_is_listed_item($eeFiles, 'DOC.pdf'));
+		$this->assertFalse(avpvh_flst_is_listed_item($eeFiles, ''));
+		$this->assertFalse(avpvh_flst_is_listed_item(false, 'doc.pdf'));
+		$this->assertSame(array('FilePath' => 'doc.pdf'), avpvh_flst_listed_item($eeFiles, 'doc.pdf'));
+		$this->assertSame(array(), avpvh_flst_listed_item($eeFiles, '.htaccess'));
 	}
 }

@@ -39,7 +39,7 @@ jobs:
     needs: build
     uses: grmt/wp-plugin-ci/.github/workflows/plugin-checks.yml@main
     with:
-      slug: simple-file-list
+      slug: avpvh-filelist
       artifact: build-artifact
       # outdated_tested_upto_header and plugin_updater_detected: the plugin is
       # not on WordPress.org; it updates from GitHub Releases (Update URI).

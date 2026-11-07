@@ -21,7 +21,8 @@ if ( ! function_exists( 'grmt_github_get_managed_repos' ) ) {
 	 */
 	function grmt_github_get_managed_repos() {
 		return array(
-			'simple-file-list'           => 'grmt/simple-file-list',
+			'avpvh-filelist'             => 'grmt/avpvh-filelist',
+			'simple-file-list'           => 'grmt/avpvh-filelist', // Old folder name, until a site has moved
 			'meili-search'               => 'grmt/meili-search',
 			'print-my-blog'              => 'grmt/printmyblog',
 			'wp-force-password-change'   => 'grmt/wp-force-password-change',

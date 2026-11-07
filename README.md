@@ -1,14 +1,14 @@
-# Simple File List (grmt)
+# AV-PvH File List
 
-File lists with uploads, access control, search and paging for WordPress, maintained by grmt.
+File lists with uploads, access control, search and paging for WordPress, maintained by grmt. Until 1.0.0 it was called Simple File List (grmt); a site running Simple File List moves over by itself when this plugin is activated (see `readme.txt`).
 
-**Based on [Simple File List](https://simplefilelist.com/) by Mitchell Bennis (Element Engage).** The original plugin is GPL-licensed; its copyright notices are kept in the source files. This version is not affiliated with or endorsed by the original author, so please don't ask them for support for it: use the [issues](https://github.com/grmt/simple-file-list/issues) here instead.
+**Based on [Simple File List](https://simplefilelist.com/) by Mitchell Bennis (Element Engage).** The original plugin is GPL-licensed; its copyright notices are kept in the source files. This plugin is not affiliated with or endorsed by the original author, so please don't ask them for support for it: use the [issues](https://github.com/grmt/avpvh-filelist/issues) here instead.
 
-Everything is free. The features that used to be paid add-ons (multiple lists, per-file access, search and paging) were rewritten for this version, and the upgrade prompts and links to the paid version are gone. Sub-folders, a feature of the old Pro version, are not supported.
+Everything is free. The features that used to be paid add-ons (multiple lists, per-file access, search and paging) were rewritten for this plugin, and the upgrade prompts and links to the paid version are gone. Sub-folders, a feature of the old Pro version, are not supported.
 
 ## History
 
-This repository contains version 6.3.13-grmt.1 (based on upstream 6.3.11) of the GPL-licensed WordPress plugin
+This repository started from version 6.3.11 of the GPL-licensed WordPress plugin
 Simple File List. The initial commit is a byte-for-byte import of the plugin
 copy installed for `vp40-42.vve.rechtspreker.nl` on 14 September 2026.
 

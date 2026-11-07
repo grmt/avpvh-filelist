@@ -1,13 +1,13 @@
 <?php
-// Simple File List - File Sending - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
-// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
+// AV-PvH File List - File Sending, based on Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-class eeSFLE_class {
+class Avpvh_Flst_Send {
 
-	public $eeSFLE_SettingsDefault = array(
+	public $eeSettingsDefault = array(
 
 		'AllowFrontSend' => 'YES',
 		'BccFileSender' => 'NO'
@@ -15,7 +15,7 @@ class eeSFLE_class {
 
 
 	// The Pop-Up Entry Form
-	public function eeSFLE_EmailSendForm() {
+	public function email_send_form() {
 
 		global $eeSFL;
 
@@ -35,49 +35,49 @@ class eeSFLE_class {
 
 			<button id="eeSFL_Modal_Send_Close" class="eeSFL_ModalClose">&times;</button>
 
-			<h1>' . __('Send Files by Email', 'simple-file-list') . '</h1>';
+			<h1>' . __('Send Files by Email', 'avpvh-filelist') . '</h1>';
 
 			if($eeCount > 1) {
-				 $eeOutput .= '<button class="button eeFont100p" onclick="eeSFLE_Send_AddMoreFiles();">' . __('Add More Files', 'simple-file-list') . '</button> ';
+				 $eeOutput .= '<button class="button eeFont100p" onclick="eeSFLE_Send_AddMoreFiles();">' . __('Add More Files', 'avpvh-filelist') . '</button> ';
 			}
 
 			 $eeOutput .= '
 
-			<p>' . __('Send an email with links to files. Add more files if needed.', 'simple-file-list') . '</p>
+			<p>' . __('Send an email with links to files. Add more files if needed.', 'avpvh-filelist') . '</p>
 
-			<p id="eeSFLE_SendTheseFilesList">' . __('Sending:', 'simple-file-list') . ' <em></em></p>
+			<p id="eeSFLE_SendTheseFilesList">' . __('Sending:', 'avpvh-filelist') . ' <em></em></p>
 
-			<form id="eeSFLE_SendFileForm" action="' . $eeSFL->eeSFL_GetThisURL() . '" method="POST">
+			<form id="eeSFLE_SendFileForm" action="' . $eeSFL->get_this_url() . '" method="POST">
 
 				<input type="hidden" name="eeListID" value="' . $eeSFL->eeListID . '" />
 
 				<fieldset id="eeSFLE_MessageDetials">
 
-				<h2>' . __('Message Details', 'simple-file-list') . '</h2>
+				<h2>' . __('Message Details', 'avpvh-filelist') . '</h2>
 
-					<label for="eeSFL_SendFrom">' . __('Your Address', 'simple-file-list'). '</label>
+					<label for="eeSFL_SendFrom">' . __('Your Address', 'avpvh-filelist'). '</label>
 					<input required type="email" name="eeSFL_SendFrom" value="" size="64" id="eeSFL_SendFrom" />
-					<small class="eeSFL_ModalNote">' . __('Enter your email address.', 'simple-file-list') . '</small>
+					<small class="eeSFL_ModalNote">' . __('Enter your email address.', 'avpvh-filelist') . '</small>
 
-					<label for="eeSFL_SendTo">' . __('The TO Address', 'simple-file-list'). '</label>
+					<label for="eeSFL_SendTo">' . __('The TO Address', 'avpvh-filelist'). '</label>
 					<input required type="email" name="eeSFL_SendTo" value="" size="64" id="eeSFL_SendTo" />
-					<small class="eeSFL_ModalNote">' . __('Enter the address to send the message to.', 'simple-file-list') . '</small>
+					<small class="eeSFL_ModalNote">' . __('Enter the address to send the message to.', 'avpvh-filelist') . '</small>
 
-					<label for="eeSFL_SendCc">' . __('The CC Address', 'simple-file-list'). '</label>
+					<label for="eeSFL_SendCc">' . __('The CC Address', 'avpvh-filelist'). '</label>
 					<input type="text" name="eeSFL_SendCc" value="" size="64" id="eeSFL_SendCc" />
-					<small class="eeSFL_ModalNote">' . __('Enter an address to copy the message to.', 'simple-file-list') . '</small>
+					<small class="eeSFL_ModalNote">' . __('Enter an address to copy the message to.', 'avpvh-filelist') . '</small>
 
-					<label for="eeSFL_SendSubject">' . __('The Subject', 'simple-file-list'). '</label>
+					<label for="eeSFL_SendSubject">' . __('The Subject', 'avpvh-filelist'). '</label>
 					<input type="text" name="eeSFL_SendSubject" value="" size="64" id="eeSFL_SendSubject" />
-					<small class="eeSFL_ModalNote">' . __('Enter the email subject.', 'simple-file-list') . '</small>
+					<small class="eeSFL_ModalNote">' . __('Enter the email subject.', 'avpvh-filelist') . '</small>
 
-					<label for="eeSFL_SendMessage">' . __('The Message', 'simple-file-list'). '</label>
+					<label for="eeSFL_SendMessage">' . __('The Message', 'avpvh-filelist'). '</label>
 					<textarea name="eeSFL_SendMessage" id="eeSFL_SendMessage" cols="64" rows="5"></textarea>
 
 					<br class="eeClear" />
 
 					<span id="SendFilesButton">
-						<button class="button" onclick="eeSFLE_DoFileSend()">' . __('Send', 'simple-file-list') . '</button>
+						<button class="button" onclick="eeSFLE_DoFileSend()">' . __('Send', 'avpvh-filelist') . '</button>
 					</span>
 
 				</fieldset>';
@@ -89,7 +89,7 @@ class eeSFLE_class {
 
 					<fieldset id="eeSFLE_SendMoreFiles">
 
-					<h3>' . __('Add More Files', 'simple-file-list') . '</h3>
+					<h3>' . __('Add More Files', 'avpvh-filelist') . '</h3>
 
 				<table>
 				 <tbody>';
@@ -113,8 +113,8 @@ class eeSFLE_class {
 					 $eeOutput .= '</tbody>
 						</table>
 
-						<p><button class="button eeInline eeFont100p" onclick="eeSFLE_Send_AddTheseFiles();">' . __('Add These Files', 'simple-file-list') . '</button>
-							<button class="button eeInline eeFont100p" onclick="eeSFLE_Send_AddMoreCancel();">' . __('Cancel', 'simple-file-list') . '</button></p>
+						<p><button class="button eeInline eeFont100p" onclick="eeSFLE_Send_AddTheseFiles();">' . __('Add These Files', 'avpvh-filelist') . '</button>
+							<button class="button eeInline eeFont100p" onclick="eeSFLE_Send_AddMoreCancel();">' . __('Cancel', 'avpvh-filelist') . '</button></p>
 
 					</fieldset>';
 
@@ -137,7 +137,7 @@ class eeSFLE_class {
 
 
 
-	public function eeSFLE_SendFilesEmail() {
+	public function send_files_email() {
 
 		// Nonce Check
 		if( !check_ajax_referer( 'eeSFL_SendNonce', 'eeSecurity', FALSE ) ) { return 'ERROR 98 - Send Files Ajax'; }
@@ -154,34 +154,34 @@ class eeSFLE_class {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Unslashing before sanitization on next line
 			$eeTemp = wp_unslash($_POST['id']);
 			$eeSFL->eeListID = absint(sanitize_text_field($eeTemp));
-			$eeSFL->eeSFL_GetSettings($eeSFL->eeListID);
+			$eeSFL->get_settings($eeSFL->eeListID);
 
 			if(!isset($eeSFL->eeListSettings['FileListDir'])) {
-				return __('Bad List ID', 'simple-file-list');
+				return __('Bad List ID', 'avpvh-filelist');
 			}
 
 		} else {
-			return __('Missing List ID', 'simple-file-list');
+			return __('Missing List ID', 'avpvh-filelist');
 		}
 
 		// Verify that front-end file sending is enabled for this list
 		if($eeSFL->eeListSettings['AllowFrontSend'] != 'YES') {
-			eeSFL_Debug_Log("ERROR: Front-end file sending is disabled", 'Send', $eeSFL->eeListID);
-			return __('File sending is not enabled', 'simple-file-list');
+			avpvh_flst_debug_log("ERROR: Front-end file sending is disabled", 'Send', $eeSFL->eeListID);
+			return __('File sending is not enabled', 'avpvh-filelist');
 		}
 
 		// Only people who may see the list may send its files
-		if( !eeSFL_UserCanSeeList($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) {
-			return __('File sending is not enabled', 'simple-file-list');
+		if( !avpvh_flst_user_can_see_list($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) {
+			return __('File sending is not enabled', 'avpvh-filelist');
 		}
 
 		// Rate limit email sending per IP / user (max 10 emails per 15 minutes)
 		$eeCallerID = get_current_user_id() ? 'user_' . get_current_user_id() : 'ip_' . (isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown');
-		$eeRateKey = 'eeSFL_SendRate_' . substr(hash('sha256', $eeCallerID), 0, 32);
+		$eeRateKey = 'avpvh_flst_send_rate_' . substr(hash('sha256', $eeCallerID), 0, 32);
 		$eeSendCount = (int) get_transient($eeRateKey);
 		if( $eeSendCount >= 10 ) {
-			eeSFL_Debug_Log("ERROR: Email send rate limit exceeded for " . $eeCallerID, 'Send', $eeSFL->eeListID);
-			return __('Too many emails sent. Please try again later.', 'simple-file-list');
+			avpvh_flst_debug_log("ERROR: Email send rate limit exceeded for " . $eeCallerID, 'Send', $eeSFL->eeListID);
+			return __('Too many emails sent. Please try again later.', 'avpvh-filelist');
 		}
 		set_transient($eeRateKey, $eeSendCount + 1, 15 * MINUTE_IN_SECONDS);
 
@@ -189,18 +189,18 @@ class eeSFLE_class {
 		if(isset($_POST['from'])) { // 1 Required
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- sanitize_email handles slashing
 			$eeFrom = sanitize_email($_POST['from']);
-			if(!$eeFrom) { return __('Bad Address', 'simple-file-list') . ': FROM'; }
+			if(!$eeFrom) { return __('Bad Address', 'avpvh-filelist') . ': FROM'; }
 		} else {
-			return __('Missing Address', 'simple-file-list') . ': FROM';
+			return __('Missing Address', 'avpvh-filelist') . ': FROM';
 		}
 
 		// To
 		if(isset($_POST['to'])) { // 1 Required
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- sanitize_email handles slashing
 			$eeTo = sanitize_email($_POST['to']);
-			if(!$eeTo) { return __('Bad Address', 'simple-file-list') . ': TO'; }
+			if(!$eeTo) { return __('Bad Address', 'avpvh-filelist') . ': TO'; }
 		} else {
-			return __('Missing Address', 'simple-file-list') . ': TO';
+			return __('Missing Address', 'avpvh-filelist') . ': TO';
 		}
 
 		// CC
@@ -218,7 +218,7 @@ class eeSFLE_class {
 			$eeTemp = wp_unslash($_POST['subject']);
 			$eeSubject = wp_strip_all_tags($eeTemp);
 		}
-		if(!$eeSubject) { $eeSubject = __('File Notification', 'simple-file-list'); }
+		if(!$eeSubject) { $eeSubject = __('File Notification', 'avpvh-filelist'); }
 
 		// Message
 		if(isset($_POST['message'])) {
@@ -239,13 +239,13 @@ class eeSFLE_class {
 			}
 
 		} else {
-			return __('No Files to Send', 'simple-file-list');
+			return __('No Files to Send', 'avpvh-filelist');
 		}
 
 		if( is_array($eeFilesArray) ) { // The files array checkboxes
 
 			// Validate requested files against stored file list
-			$eeStoredFiles = get_option('eeSFL_FileList_' . $eeSFL->eeListID, array());
+			$eeStoredFiles = get_option('avpvh_flst_files_' . $eeSFL->eeListID, array());
 			if(!is_array($eeStoredFiles)) { $eeStoredFiles = array(); }
 
 			foreach($eeFilesArray as $eeFile) {
@@ -266,17 +266,17 @@ class eeSFLE_class {
 
 				// Only files the sender may open themselves. For a protected list the link goes to the
 				// download handler, which checks the recipient's own access when they open it.
-				if( !eeSFL_UserCanReadFile($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedItem, get_current_user_id()) ) { continue; }
+				if( !avpvh_flst_user_can_read_file($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedItem, get_current_user_id()) ) { continue; }
 
-				$eeFileLinks .= eeSFL_FileURL($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedPath) . PHP_EOL . PHP_EOL;
+				$eeFileLinks .= avpvh_flst_file_url($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedPath) . PHP_EOL . PHP_EOL;
 			}
 
 			if( $eeFileLinks === '' ) {
-				return __('No Files to Send', 'simple-file-list');
+				return __('No Files to Send', 'avpvh-filelist');
 			}
 
 		} else {
-			return __('Bad File Array', 'simple-file-list');
+			return __('Bad File Array', 'avpvh-filelist');
 		}
 
 		// Footer
@@ -286,7 +286,7 @@ class eeSFLE_class {
 		$eeMessage .= PHP_EOL .  PHP_EOL . $eeFileLinks . $eeFooter; // with Custom Footer
 
 		// Email Headers
-		$eeHeaders = eeSFL_ReturnHeaderString($eeFrom, $eeCc, $eeBcc);
+		$eeHeaders = avpvh_flst_return_header_string($eeFrom, $eeCc, $eeBcc);
 
 		// TO DO -- Allow files to be attached if less than X MB
 		// $eeAttached = array();
@@ -307,7 +307,7 @@ class eeSFLE_class {
 
 
 	// Settings Inputs
-	public function eeSFLE_SettingsInputsDisplay() {
+	public function settings_inputs_display() {
 
 		global $eeSFL;
 
@@ -315,35 +315,35 @@ class eeSFLE_class {
 
 		<div class="eeSettingsTile">
 
-			<h2>' . __('Sending Files', 'simple-file-list') . '</h2>
+			<h2>' . __('Sending Files', 'avpvh-filelist') . '</h2>
 
 			<fieldset>
 
-				<legend>' . __('Allow File Sending', 'simple-file-list') . '</legend>
+				<legend>' . __('Allow File Sending', 'avpvh-filelist') . '</legend>
 
-				<div><label for="eeAllowFrontSend">' . __('Allow', 'simple-file-list') . '</label>
+				<div><label for="eeAllowFrontSend">' . __('Allow', 'avpvh-filelist') . '</label>
 				<input type="checkbox" name="eeAllowFrontSend" value="YES" id="eeAllowFrontSend"';
 
 				if( $eeSFL->eeListSettings['AllowFrontSend'] == 'YES') {  $eeOutput .= ' checked="checked"'; }
 
 				 $eeOutput .= ' /></div>
 
-				<div class="eeNote">' . __('Allow front-side users to send email messages containing links to files.', 'simple-file-list') . '</div>
+				<div class="eeNote">' . __('Allow front-side users to send email messages containing links to files.', 'avpvh-filelist') . '</div>
 
 			</fieldset>
 
 			<fieldset>
 
-				<legend>' . __('Blind Copy Self', 'simple-file-list') . '</legend>
+				<legend>' . __('Blind Copy Self', 'avpvh-filelist') . '</legend>
 
-				<div><label for="eeBccFileSender">BCC ' . __('Self', 'simple-file-list') . '</label>
+				<div><label for="eeBccFileSender">BCC ' . __('Self', 'avpvh-filelist') . '</label>
 				<input type="checkbox" name="eeBccFileSender" value="YES" id="eeBccFileSender"';
 
 				if( $eeSFL->eeListSettings['BccFileSender'] == 'YES') {  $eeOutput .= ' checked="checked"'; }
 
 				 $eeOutput .= ' /></div>
 
-				<div class="eeNote">' . __('Send a hidden copy of the message to the your reply address.', 'simple-file-list') . ' (BCC)</div>
+				<div class="eeNote">' . __('Send a hidden copy of the message to the your reply address.', 'avpvh-filelist') . ' (BCC)</div>
 
 			</fieldset>
 

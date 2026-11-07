@@ -1,15 +1,15 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-// Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
-// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/simple-file-list
+// AV-PvH File List, based on Simple File List - Copyright 2026 Mitchell Bennis (original author, https://simplefilelist.com) and grmt
+// Maintained by grmt, not affiliated with the original author: https://github.com/grmt/avpvh-filelist
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
-eeSFL_Debug_Log("Listing Files in Tile View...", 'General');
+avpvh_flst_debug_log("Listing Files in Tile View...", 'General');
 
 // Bulk Editing
 if( ($eeShowOps OR $eeSFL->eeListSettings['AllowBulkFileDownload'] == 'YES') AND !$eeShowingResults) {
 	 $eeOutput .= '<p class="eeSFL_BulkEdit eeCentered"><input type="checkbox" id="eeSFL_BulkEditAll" name="eeBulkEditAll" value="YES"/>
-	<label for="eeSFL_BulkEditAll">' . __('Select All', 'simple-file-list') . '</label></p>';
+	<label for="eeSFL_BulkEditAll">' . __('Select All', 'avpvh-filelist') . '</label></p>';
 }
 
  $eeOutput .= '<section class="eeFiles eeSFL_Item">';
@@ -18,7 +18,7 @@ if( ($eeShowOps OR $eeSFL->eeListSettings['AllowBulkFileDownload'] == 'YES') AND
 foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<---------------------------- BEGIN FILE LIST LOOP ----------------<<<
 
 	// Populate our class properties for this file
-	if( $eeSFL->eeSFL_ProcessFileArray($eeFileArray, $eeSFL_HideName, $eeSFL_HideType) ) {
+	if( $eeSFL->process_file_array($eeFileArray, $eeSFL_HideName, $eeSFL_HideType) ) {
 
 
 
@@ -51,7 +51,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 		 $eeOutput .= '</h4>';
 
 		// File Actions
-		 $eeOutput .= $eeSFL->eeSFL_ReturnFileActions($eeFileID, $eeFileArray);
+		 $eeOutput .= $eeSFL->return_file_actions($eeFileID, $eeFileArray);
 
 
 		// Thumbnail
