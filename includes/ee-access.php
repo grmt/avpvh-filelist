@@ -406,7 +406,8 @@ function eeSFL_SendFile($eeResolved, $eeDownload) {
 	}
 	header('Content-Length: ' . $eeLength);
 
-	if( ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD' || $eeLength === 0 ) { exit; }
+	$eeMethod = isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : 'GET';
+	if( $eeMethod === 'HEAD' || $eeLength === 0 ) { exit; }
 
 	// phpcs:disable WordPress.WP.AlternativeFunctions -- streaming a large file in chunks; WP_Filesystem has no partial reads
 	$eeHandle = fopen($eeFile, 'rb');
