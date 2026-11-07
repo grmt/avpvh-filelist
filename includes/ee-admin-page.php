@@ -83,6 +83,10 @@ function eeSFL_BackEnd() {
 	$eeOutput .= '
 	<a href="?page=' . eeSFL_PluginSlug . '&tab=list&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileList" class="nav-tab' . ($active_tab == 'list' ? ' eeActiveTab' : '') . '">' . $eeListName . '</a>';
 
+	// Who may open which file of this list
+	$eeOutput .= '
+	<a href="?page=' . eeSFL_PluginSlug . '&tab=access&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabFileAccess" class="nav-tab' . ($active_tab == 'access' ? ' eeActiveTab' : '') . '">' . __('File Access', 'simple-file-list') . '</a>';
+
 	// Settings
 	if(current_user_can('manage_options')) {
 		$eeOutput .= '
@@ -90,6 +94,9 @@ function eeSFL_BackEnd() {
 
 		$eeOutput .= '
 		<a href="?page=' . eeSFL_PluginSlug . '&tab=create" id="eeSFL_TabCreate" class="nav-tab' . ($active_tab == 'create' ? ' eeActiveTab' : '') . '">' . __('Create List', 'simple-file-list') . '</a>';
+
+		$eeOutput .= '
+		<a href="?page=' . eeSFL_PluginSlug . '&tab=groups" id="eeSFL_TabGroups" class="nav-tab' . ($active_tab == 'groups' ? ' eeActiveTab' : '') . '">' . __('Groups', 'simple-file-list') . '</a>';
 	}
 
 
@@ -130,6 +137,14 @@ function eeSFL_BackEnd() {
 
 		include_once($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-lists-admin.php');
 		$eeOutput .= eeSFL_CreateListPage();
+
+	} elseif($active_tab == 'access') {
+
+		$eeOutput .= eeSFL_FileAccessPage(); // Checks the list's admin capability itself
+
+	} elseif($active_tab == 'groups' && current_user_can('manage_options')) {
+
+		$eeOutput .= eeSFL_GroupsPage();
 
 	} elseif($active_tab == 'list') {
 

@@ -272,19 +272,18 @@ class eeSFLE_class {
 					if(!isset($eeStoredItem['FilePath']) || ($eeStoredItem['FileExt'] ?? '') === 'folder') { continue; }
 					if($eeStoredItem['FilePath'] === $eeFileTrimmed || basename($eeStoredItem['FilePath']) === $eeFileTrimmed) {
 						$eeMatchedPath = $eeStoredItem['FilePath'];
+						$eeMatchedItem = $eeStoredItem;
 						break;
 					}
 				}
 
 				if($eeMatchedPath === FALSE) { continue; }
 
-				if (isset($eeSFLA->eePluginName)) {
-					if($eeSFL->eeListSettings['Mode'] != 'Normal') {
-						$eeFileLinks .= $eeSFL->eeEnvironment['wpSiteURL'] . 'ee-get-file/?list=' . $eeSFL->eeListID . '&file=' . rawurlencode($eeMatchedPath) . PHP_EOL . PHP_EOL;
-					}
-				} else {
-					$eeFileLinks .= $eeSFL->eeEnvironment['wpSiteURL'] . $eeSFL->eeListSettings['FileListDir'] . $eeMatchedPath . PHP_EOL . PHP_EOL;
-				}
+				// Only files the sender may open themselves. For a protected list the link goes to the
+				// download handler, which checks the recipient's own access when they open it.
+				if( !eeSFL_UserCanReadFile($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedItem, get_current_user_id()) ) { continue; }
+
+				$eeFileLinks .= eeSFL_FileURL($eeSFL->eeListID, $eeSFL->eeListSettings, $eeMatchedPath) . PHP_EOL . PHP_EOL;
 			}
 
 			if( $eeFileLinks === '' ) {

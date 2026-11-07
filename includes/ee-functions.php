@@ -871,6 +871,8 @@ function eeSFL_LimitDirAccess($eeMode) {
 
 	global $eeSFL;
 
+	if( eeSFL_ListIsProtected($eeSFL->eeListSettings) ) { return eeSFL_ProtectListDir(); } // Files go through the download handler
+
 	// Delete and Start Over
 	$eeFile = $eeSFL->eeSFL_GetRootPath() . $eeSFL->eeListSettings['FileListDir'] . '.htaccess';
 	$file_check = eeSFL_FileSystem('exists', array('file' => $eeFile));

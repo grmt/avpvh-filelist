@@ -169,6 +169,9 @@ if( isset($_POST['eeSFL_ListOpsBarGo']) ) {
 							$eePath = $eeSiteRoot . $eeSFL->eeListSettings['FileListDir'] . $eeFileArray['FilePath'];
 								if($fileOpsAction == 'Download') {
 
+									// Never zip a file this user may not open
+									if( !eeSFL_UserCanReadFile($eeSFL->eeListID, $eeSFL->eeListSettings, $eeFileArray, get_current_user_id()) ) { continue; }
+
 									if( is_object($eeZipObject) ) {
 
 							if($eeFileArray['FileExt'] == 'folder') {
@@ -188,6 +191,7 @@ if( isset($_POST['eeSFL_ListOpsBarGo']) ) {
 							}
 
 							foreach($eeThisFolder as $eeThisItem) {
+								if( !eeSFL_UserCanReadFile($eeSFL->eeListID, $eeSFL->eeListSettings, $eeThisItem, get_current_user_id()) ) { continue; }
 								$eePath = $eeSiteRoot . $eeSFL->eeListSettings['FileListDir'] . $eeThisItem['FilePath'];
 								eeSFL_Debug_Log('FOLDER DOWNLOAD - Adding: ' . $eePath, 'OpsProcess', $eeSFL->eeListID);
 								if(file_exists($eePath)) {

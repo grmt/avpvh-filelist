@@ -448,7 +448,7 @@ class eeSFL_UploadClass {
 
 						// Notification Info
 						// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Email notifications use direct links to avoid email client censoring
-						$eeFileURL = $eeObject->eeListSettings['FileListURL'] . $eeFile;
+						$eeFileURL = eeSFL_FileURL($eeObject->eeListID, $eeObject->eeListSettings, $eeFile);
 
 						$eeUploadJob .=  $eeFile . " (" . $eeObject->eeSFL_FormatFileSize($eeNewFileArray['FileSize']) . ")" . PHP_EOL;
 						$eeUploadJob .=  $eeFileURL . PHP_EOL . PHP_EOL;

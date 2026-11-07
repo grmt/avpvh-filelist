@@ -73,8 +73,8 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		// Overrides that are equally or more restrictive than the stored setting always apply.
 		// Overrides that would expand access beyond the stored setting require manage_options,
 		// preventing Author-level users from exposing restricted content.
-		// Access levels: YES=3, USER=2, ADMIN=1, NO=0
-		$eeAccessLevels = ['YES' => 3, 'USER' => 2, 'ADMIN' => 1, 'NO' => 0];
+		// Access levels: YES=4, USER=3, GRANTED=2, ADMIN=1, NO=0
+		$eeAccessLevels = ['YES' => 4, 'USER' => 3, 'GRANTED' => 2, 'ADMIN' => 1, 'NO' => 0];
 
 		if($showlist) {
 			$eeShowlistUpper = strtoupper($showlist);
@@ -233,6 +233,11 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 	        break; // Show It
 	    case 'RESTRICTED':
 	        break; // Show It By File (eeSFLA)
+	    case 'GRANTED':
+	        // Only the users, roles and groups in the list's grant
+	        if( eeSFL_UserCanSeeList($eeSFL->eeListID, $eeSFL->eeListSettings, get_current_user_id()) ) { break; }
+	        $eeSFL->eeListSettings['ShowList'] = 'NO';
+	        break;
 	    case 'USER':
 	        // Show It If...
 	        if( get_current_user_id() ) { break; } else { $eeSFL->eeListSettings['ShowList'] = 'NO'; }
