@@ -1536,7 +1536,7 @@ function avpvh_flst_version_check() {
 	delete_option('avpvh_flst_free_log');
 
 	// Delete ALL transients on version update - reset all temporary data
-	$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_avpvh\_filelist\_%' OR option_name LIKE '\_transient\_timeout\_avpvh\_filelist\_%'"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk LIKE-pattern DELETE; no WP API equivalent; caching N/A for DELETE
+	$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_avpvh\_flst\_%' OR option_name LIKE '\_transient\_timeout\_avpvh\_flst\_%'"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk LIKE-pattern DELETE; no WP API equivalent; caching N/A for DELETE
 	avpvh_flst_debug_log("All SFL transients cleared on version update", 'Updating');
 
 	// (Simple File List 6.2.2.5 moved thumbnails from .thumbnails/ to _eeSFL_Thumbnails/. Every site
