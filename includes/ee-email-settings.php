@@ -22,11 +22,6 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 		$eeSFL->eeListSettings[$eeTerm] = eeSFL_ProcessCheckboxInput($eeTerm);
 	}
 
-	// Extension Check
-	if($eeSFLA) {
-
-		include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_NoticeSettingsProcess.php');
-	}
 
 	$eeDelivery = array('To', 'Cc', 'Bcc');
 
@@ -176,18 +171,12 @@ if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanit
 
 		<fieldset>';
 
-		if($eeSFLA) {
 
-			include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_NoticeSettingsDisplay.php');
+		 $eeOutput .= '
 
-		} else {
-
-			 $eeOutput .= '
-
-			<div><label class="eeBlock">' . __('Notice Email', 'simple-file-list') . '
-			<input type="text" name="eeNotifyTo" value="' . $eeSFL->eeListSettings['NotifyTo'] . '" id="eeNotifyTo" /></label></div>
-			<div class="eeNote">' . __('Send an email here whenever a file is uploaded.', 'simple-file-list') . '</div>';
-		}
+		<div><label class="eeBlock">' . __('Notice Email', 'simple-file-list') . '
+		<input type="text" name="eeNotifyTo" value="' . $eeSFL->eeListSettings['NotifyTo'] . '" id="eeNotifyTo" /></label></div>
+		<div class="eeNote">' . __('Send an email here whenever a file is uploaded.', 'simple-file-list') . '</div>';
 
 
 		// For All List Types

@@ -346,6 +346,25 @@ def listed(page):
     return [n for n in FILES if 'sfl-file=' + n in page or '>' + n + '<' in page]
 
 
+def step_old_addon():
+    """The old File Access Manager add-on is switched off, its hooks are gone, and a list left on its
+    "show by file" setting stays closed until it gets a grant."""
+    page = Browser().text('/?page_id=' + PAGE)
+    check('old add-on: the page renders while the add-on is active', 'critical error' not in page and 'eeSFLA' not in page and 'eesfla' not in page)
+    check('old add-on: a "show by file" list is closed to visitors', not any(name in page for name in FILES))
+
+    admin = Browser('admin')  # The first wp-admin request switches the add-on off
+    plugins = admin.text('/wp-admin/plugins.php')
+    check('old add-on: deactivated', 'action=activate&amp;plugin=ee-simple-file-list-access' in plugins)
+    page = admin.text(ADMIN + '&tab=list&eeListID=1')
+    check('old add-on: no access add-on links in wp-admin', 'eeSFLA' not in page and 'Access Extension' not in page)
+    parser = Forms()
+    parser.feed(admin.text(ADMIN + '&tab=settings&eeListID=1'))
+    form = next(f for f in parser.forms if 'eeShowList' in f['ids'])
+    shown = dict(form['fields']).get('eeShowList')
+    check('old add-on: "show by file" becomes "only granted users"', shown == 'GRANTED', shown)
+
+
 def step_identity(admin):
     """wp-admin credits the original author and has no upgrade prompts."""
     for tab in ('list', 'settings', 'lists'):
@@ -395,6 +414,7 @@ def step_pages_count_only_readable_files():
 def main():
     if not PAGE:
         raise SystemExit('SFL_IT_PAGE is not set; start the tests with run.sh')
+    step_old_addon()
     admin = Browser('admin')
     step_no_folders(admin)
     step_identity(admin)

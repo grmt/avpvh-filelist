@@ -184,7 +184,7 @@ function eeSFL_CreateList($eeTitle, $eeDir) {
 		return sprintf(__('This folder overlaps the folder of list %d. Each list needs its own folder.', 'simple-file-list'), $eeOverlap);
 	}
 
-	if( !eeSFL_FileListDirCheck($eeDir, FALSE) ) { return __('The folder could not be created.', 'simple-file-list'); }
+	if( !eeSFL_FileListDirCheck($eeDir) ) { return __('The folder could not be created.', 'simple-file-list'); }
 
 	$eeBase = array_merge($eeSFL->eeDefaultListSettings, (array) get_option('eeSFL_Settings_1', array()));
 	$eeSettings = eeSFL_NewListSettings($eeBase, $eeTitle, $eeDir);

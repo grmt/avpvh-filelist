@@ -12,7 +12,7 @@ function eeSFL_BackEnd() {
 	if(!$eeAdmin) { return FALSE; }
 
 	global $eeSFL, $eeSFL_Tasks;
-	global $eeSFLU, $eeSFLA, $eeSFLE, $eeSFLM; // Extensions
+	global $eeSFLU, $eeSFLE, $eeSFLM; // Extensions
 
 	eeSFL_Debug_Log("Loading Back-End Display ...", 'Admin');
 
@@ -45,12 +45,7 @@ function eeSFL_BackEnd() {
 	if( isset( $_GET[ 'tab' ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation param, not form submission
 		$active_tab = esc_js(sanitize_text_field(wp_unslash($_GET[ 'tab' ]))); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation param, not form submission
 	} else {
-		// Default tab logic - if SFLA exists but no SFLA settings found, go to settings tab for first-time setup
-		if ($eeSFLA && $eeSFLA->eeSFLA_FirstRun === TRUE) {
-			$active_tab = 'settings';
-		} else {
-			$active_tab = 'list';
-		}
+		$active_tab = 'list';
 	}
 
 	 $eeOutput .= '<h2 class="nav-tab-wrapper">';
@@ -106,7 +101,7 @@ function eeSFL_BackEnd() {
 	 $eeOutput .= '</h2>'; // END Main Tabs
 
     if($eeMultipleLists AND $active_tab == 'settings') {
-	     $eeOutput .= '<p id="eeSFLA_ListSettingsTitle">'. $eeListName . ' | ' . __('Settings', 'simple-file-list') . '</p>';
+	     $eeOutput .= '<p id="eeSFL_ListSettingsTitle">'. $eeListName . ' | ' . __('Settings', 'simple-file-list') . '</p>';
     }
 
     // Tab Content =============================================================
@@ -237,24 +232,13 @@ function eeSFL_BackEnd() {
 
 		// Sub Tabs
 		if( isset( $_GET[ 'subtab' ] ) ) { $active_subtab = esc_js(sanitize_text_field(wp_unslash($_GET['subtab']))); } // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation param, not form submission
-			else { if($eeSFLA) {  $active_subtab = 'list_access'; } else { $active_subtab = 'list_settings'; } }
+			else { $active_subtab = 'list_settings'; }
 
     	 $eeOutput .= '
 
     	<h2 class="nav-tab-wrapper">
     	<span class="ee-nav-sub-tabs">';
 
-		// Extension Check
-		if($eeSFLA) {
-			if( $eeSFL->eeListSettings['MaxSize'] ) {
-				 $eeOutput .= '<a href="?page=' . eeSFL_PluginSlug . '&tab=settings&subtab=list_access&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabAccess" class="nav-tab ';
-				if($active_subtab == 'list_access') { $eeOutput .= '  eeActiveTab ';}
-			    $active_subtab == 'list_access' ? 'nav-tab-active' : '';
-			     $eeOutput .= $active_subtab . '">' . __('List Access Settings', 'simple-file-list') . '</a>';
-			} else {
-				$eeSFLA = FALSE;
-			}
-		}
 
 		// List Settings
 		 $eeOutput .= '<a href="?page=' . eeSFL_PluginSlug . '&tab=settings&subtab=list_settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabListSettings" class="nav-tab ';
@@ -281,11 +265,7 @@ function eeSFL_BackEnd() {
 
 	    <section class="eeSFL_Settings">';
 
-		if($eeSFLA AND $active_subtab == 'list_access') { // Extension Check
-
-			include(WP_PLUGIN_DIR . '/ee-simple-file-list-access/includes/eeSFLA_ListAccessSettingsDisplay.php');
-
-		} elseif($active_subtab == 'uploader_settings') {
+		if($active_subtab == 'uploader_settings') {
 
 			include($eeSFL->eeEnvironment['pluginDir'] . 'includes/ee-upload-settings.php'); // The Uploader Settings
 
