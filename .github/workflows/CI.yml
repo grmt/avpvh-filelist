@@ -41,6 +41,11 @@ jobs:
     with:
       slug: avpvh-filelist
       artifact: build-artifact
+      # avpvh_flst: the convention in the plugins' shared CLAUDE.md; grmt_github: the
+      # GitHub updater shared with the other own plugins (includes/ee-github-updater.php).
+      prefixes: |
+        avpvh_flst
+        grmt_github
       # outdated_tested_upto_header and plugin_updater_detected: the plugin is
       # not on WordPress.org; it updates from GitHub Releases (Update URI).
       ignore-codes: |
