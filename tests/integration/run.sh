@@ -147,6 +147,12 @@ expect "page view: uploads for admins stay on" "$(wp eval '$s = get_option("avpv
 expect "page view: the maximum follows the server" "$(wp eval '$s = get_option("avpvh_flst_settings_1"); echo (int) $s["UploadMaxFileSize"] > 0 && (int) $s["UploadMaxFileSize"] < 9999 ? "yes" : "no";')"
 wp eval '$s = get_option("avpvh_flst_settings_1"); $s["UploadMaxFileSize"] = 9999; update_option("avpvh_flst_settings_1", $s); do_shortcode("[avpvh_filelist]");' >/dev/null 2>&1
 expect "command line: the server maximum is left alone" "$(wp eval '$s = get_option("avpvh_flst_settings_1"); echo (int) $s["UploadMaxFileSize"] === 9999 && $s["AllowUploads"] === "ADMIN" ? "yes" : "no";')"
+
+# The last file leaving the folder: the rescan must store the empty list
+echo "--- the last file removed from the folder"
+$DC exec -T -u www-data wordpress bash -c 'cd /var/www/html/wp-content/uploads/simple-file-list && find . -maxdepth 1 -type f ! -name index.html ! -name .htaccess -delete'
+curl -s -o /dev/null "$URL/?page_id=$PAGE"
+expect "rescan: an empty folder gives an empty list" "$(wp eval 'echo get_option("avpvh_flst_files_1") === array() ? "yes" : "no";')"
 if [ "$MIGRATION_FAILS" -gt 0 ]; then echo "FAIL: $MIGRATION_FAILS check(s) failed"; exit 1; fi
 
 echo "--- debug.log"
