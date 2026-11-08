@@ -28,11 +28,12 @@ function avpvh_flst_back_end() {
 
 	if($eeSFLE) {
 		if( !isset($eeSFL->eeListSettings['AllowFrontSend']) ) {
-			$eeArray = array_merge( $eeSFL->eeListSettings, $eeSFLE->eeSettingsDefault );
 			avpvh_flst_debug_log('- File Sending Settings Not Found for List ID ' . $eeSFL->eeListID . '. Applying Defaults...', 'Admin', $eeSFL->eeListID);
-			update_option('avpvh_flst_settings_' . $eeSFL->eeListID , $eeArray);
-			$eeSFL->eeListSettings = $eeArray;
-			unset($eeArray);
+			// Into the stored settings, not the ones adjusted for this page view
+			$eeStored = get_option('avpvh_flst_settings_' . $eeSFL->eeListID);
+			if( is_array($eeStored) ) { update_option('avpvh_flst_settings_' . $eeSFL->eeListID, array_merge($eeStored, $eeSFLE->eeSettingsDefault)); }
+			$eeSFL->eeListSettings = array_merge($eeSFL->eeListSettings, $eeSFLE->eeSettingsDefault);
+			unset($eeStored);
 		}
 	}
 

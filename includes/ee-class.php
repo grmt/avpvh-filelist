@@ -1199,11 +1199,12 @@ class Avpvh_Flst_Main {
 			    avpvh_flst_debug_log("Skipped Thumbnail Checks", 'General');
 		    }
 
-		    // Check for Environment Changes
+		    // Check for Environment Changes: the web server now allows less than the list's maximum.
+		    // Not from the command line, whose PHP limits are not the web server's.
 		    $eeActual = $eeSFLU->actual_upload_max();
-			if( $this->eeListSettings['UploadMaxFileSize'] > $eeActual ) {
+			if( PHP_SAPI !== 'cli' && $this->eeListSettings['UploadMaxFileSize'] > $eeActual ) {
 				$this->eeListSettings['UploadMaxFileSize'] = $eeActual;
-				update_option('avpvh_flst_settings_' . $this->eeListID, $this->eeListSettings); // Set to Actual Max
+				avpvh_flst_save_setting($this->eeListID, 'UploadMaxFileSize', $eeActual);
 			}
 
 			$end_memory = memory_get_usage();

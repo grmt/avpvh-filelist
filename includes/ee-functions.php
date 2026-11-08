@@ -360,23 +360,21 @@ function avpvh_flst_ensure_file_list_dir_exists($eeListID = 1) {
 
 
 
-// Update a Settings Option
-function avpvh_flst_update_setting($eeSetting, $eeValue, $eeReturn = FALSE) {
-
-	global $eeSFL;
-
-	if(isset($eeSFL->eeListSettings[$eeSetting])) {
-		$eeSFL->eeListSettings[$eeSetting] = $eeValue;
-		update_option('avpvh_flst_settings_' . $eeSFL->eeListID, $eeSFL->eeListSettings);
-
-		if($eeReturn === TRUE) {
-			return $eeSFL->eeListSettings;
-		}
-
-		return TRUE;
-	}
-
-	return FALSE;
+/**
+ * Change one stored setting of a list. Reads the stored settings rather than saving
+ * $eeSFL->eeListSettings, which a page view adjusts for its visitor (uploads off,
+ * shortcode attributes): those adjustments must never be stored.
+ *
+ * @param int    $eeListID
+ * @param string $eeKey
+ * @param mixed  $eeValue
+ * @return bool
+ */
+function avpvh_flst_save_setting($eeListID, $eeKey, $eeValue) {
+	$eeStored = get_option('avpvh_flst_settings_' . (int) $eeListID);
+	if( !is_array($eeStored) ) { return FALSE; }
+	$eeStored[$eeKey] = $eeValue;
+	return update_option('avpvh_flst_settings_' . (int) $eeListID, $eeStored);
 }
 
 
@@ -1538,54 +1536,11 @@ function avpvh_flst_version_check() {
 	delete_option('avpvh_flst_free_log');
 
 	// Delete ALL transients on version update - reset all temporary data
-	$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_avpvh\_filelist\_%' OR option_name LIKE '\_transient\_timeout\_avpvh\_filelist\_%'"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk LIKE-pattern DELETE; no WP API equivalent; caching N/A for DELETE
+	$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_avpvh\_flst\_%' OR option_name LIKE '\_transient\_timeout\_avpvh\_flst\_%'"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk LIKE-pattern DELETE; no WP API equivalent; caching N/A for DELETE
 	avpvh_flst_debug_log("All SFL transients cleared on version update", 'Updating');
 
-	// Thumbnail directory migration (.thumbnails → _eeSFL_Thumbnails)
-	// The old dot-prefix dir was blocked by nginx on managed hosts (Pressable, etc.)
-	if ( version_compare( $eeInstalled, '6.2.2.5', '<' ) ) {
-
-		avpvh_flst_debug_log( 'Migrating .thumbnails → _eeSFL_Thumbnails ...', 'Updating' );
-
-		$eeFileListDir = isset( $eeSettings['FileListDir'] ) ? $eeSettings['FileListDir'] : '';
-
-		if ( $eeFileListDir ) {
-
-			$eeOldThumbDir = AVPVH_FLST_WP_ROOT . $eeFileListDir . '.thumbnails/';
-			$eeNewThumbDir = AVPVH_FLST_WP_ROOT . $eeFileListDir . '_eeSFL_Thumbnails/';
-
-			$eeOldExists = avpvh_flst_file_system( 'is_dir', array( 'path' => $eeOldThumbDir ) );
-
-			if ( $eeOldExists && ! empty( $eeOldExists['data'] ) ) {
-
-				$eeMkResult = wp_mkdir_p( $eeNewThumbDir );
-				if ( $eeMkResult ) {
-
-					$eeDirContents = avpvh_flst_file_system( 'dirlist', array( 'path' => $eeOldThumbDir, 'include_hidden' => TRUE, 'recursive' => FALSE ) );
-
-					if ( $eeDirContents && ! empty( $eeDirContents['data'] ) && is_array( $eeDirContents['data'] ) ) {
-						foreach ( $eeDirContents['data'] as $eeThumbFile => $eeFileInfo ) {
-							avpvh_flst_file_system( 'move', array(
-								'from' => $eeOldThumbDir . $eeThumbFile,
-								'to'   => $eeNewThumbDir . $eeThumbFile,
-							) );
-						}
-					}
-
-					// Delete the old hidden directory
-					avpvh_flst_file_system( 'delete', array( 'file' => $eeOldThumbDir, 'recursive' => TRUE ) );
-					avpvh_flst_debug_log( '.thumbnails → _eeSFL_Thumbnails migration complete', 'Updating' );
-					$eeSFL->eeUserMessages['Updating'][] = '- Thumbnail dir migrated from .thumbnails to _eeSFL_Thumbnails';
-
-				} else {
-					avpvh_flst_debug_log( 'Failed to create _eeSFL_Thumbnails dir at: ' . $eeNewThumbDir, 'Updating' );
-				}
-
-			} else {
-				avpvh_flst_debug_log( 'No .thumbnails dir found, skipping', 'Updating' );
-			}
-		}
-	}
+	// (Simple File List 6.2.2.5 moved thumbnails from .thumbnails/ to _eeSFL_Thumbnails/. Every site
+	// is past that, and version numbers restarted at 1.0.0, so that step is gone.)
 
 	avpvh_flst_ensure_file_list_dir_exists(1);
 
