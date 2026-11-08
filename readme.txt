@@ -4,7 +4,7 @@ Tags: file manager, file sharing, document library, file access, ldap
 Requires at least: 7.1
 Requires PHP: 8.4
 Tested up to: 7.1
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,9 @@ In the [issues on GitHub](https://github.com/grmt/avpvh-filelist/issues). Please
 
 
 == Changelog ==
+
+= 1.0.2 =
+* Fix: When the last file of a list was removed from its folder, the rescan didn't store the now empty list, so the file stayed listed (with a broken link) until another file was added. (This bug came from Simple File List.)
 
 = 1.0.1 =
 * Fix: Viewing a list could store the visitor's view of its settings. When a page view rescanned the folder and the server allowed smaller uploads than the list's maximum, the whole settings array was saved as that visitor saw it, so uploads for admins or logged-in users could switch off. Now only the new maximum is stored, and never from the command line, whose PHP limits are not the web server's. (This bug came from Simple File List.)

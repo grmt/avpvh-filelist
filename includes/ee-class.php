@@ -1243,7 +1243,9 @@ class Avpvh_Flst_Main {
 
 		} else {
 
-			$this->eeAllFiles = array(); // No files found
+			// No files (left): store the empty list, or files that were removed stay listed
+			$this->eeAllFiles = array();
+			$this->update_main_file_array(false);
 
 			return FALSE;
 		}
