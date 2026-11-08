@@ -8,7 +8,7 @@ Plugin Name: AV-PvH File List
 Plugin URI: https://github.com/grmt/avpvh-filelist
 Description: File lists with uploads, access control, search and paging. Based on Simple File List by Mitchell Bennis (simplefilelist.com); not affiliated with the original author.
 Author: grmt
-Version: 1.0.2
+Version: 1.0.3
 Requires at least: 7.1
 Requires PHP: 8.4
 Author URI: https://github.com/grmt
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 require_once __DIR__ . '/includes/ee-github-updater.php';
 
 // CONSTANTS
-if(!defined('AVPVH_FLST_VERSION')) { define('AVPVH_FLST_VERSION', '1.0.2'); }
+if(!defined('AVPVH_FLST_VERSION')) { define('AVPVH_FLST_VERSION', '1.0.3'); }
 define('AVPVH_FLST_NAME', 'AV-PvH File List');
 define('AVPVH_FLST_SLUG', 'avpvh-filelist');
 define('AVPVH_FLST_PRODUCT', 'Free');
@@ -207,10 +207,17 @@ function avpvh_flst_setup() {
 
 			avpvh_flst_debug_log("CRITICAL: Root path determination failed - hosting incompatibility", 'ERROR');
 
-			add_action('admin_notices', function() {
+			// The reason get_root_path() found, e.g. WordPress can't create this month's upload folder
+			$eeReasons = array_map(function($eeReason) { return ltrim((string) $eeReason, '- '); }, (array) ($eeSFL->eeUserMessages['error'] ?? array()));
+
+			add_action('admin_notices', function() use ($eeReasons) {
 				echo '<div class="notice notice-error is-dismissible">';
 				echo '<p><strong>' . esc_html__('AV-PvH File List error:', 'avpvh-filelist') . '</strong> ' . esc_html__('This plugin cannot determine the correct file system paths on your hosting environment.', 'avpvh-filelist') . '</p>';
-				echo '<p>' . esc_html__('This typically occurs on managed WordPress hosting platforms. Please contact support with your hosting provider details.', 'avpvh-filelist') . '</p>';
+				if( $eeReasons ) {
+					foreach( $eeReasons as $eeReason ) { echo '<p><strong>' . esc_html__('Reason:', 'avpvh-filelist') . '</strong> ' . esc_html($eeReason) . '</p>'; }
+				} else {
+					echo '<p>' . esc_html__('This typically occurs on managed WordPress hosting platforms. Please contact support with your hosting provider details.', 'avpvh-filelist') . '</p>';
+				}
 				echo '<p>' . esc_html__('This plugin will not work under this configuration.', 'avpvh-filelist') . '</p>';
 				echo '</div>';
 			});
