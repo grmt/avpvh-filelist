@@ -387,14 +387,14 @@ function avpvh_flst_groups_page() {
 	if( avpvh_flst_ldap_password_in_config() ) {
 		$eeOutput .= '
 		<fieldset><p><strong>' . esc_html__('Bind Password', 'avpvh-filelist') . '</strong></p>
-		<div class="eeNote">' . esc_html__('Set in wp-config.php (AVPVH_FLST_LDAP_BIND_PASSWORD).', 'avpvh-filelist') . '</div></fieldset>';
+		<div class="eeNote">' . esc_html__('Set in wp-config.php (AVPVH_FLST_LDAP_BIND_PASSWORD or AVPVH_FLST_LDAP_BIND_PASSWORD_FILE).', 'avpvh-filelist') . '</div></fieldset>';
 	} else {
 		$eeOutput .= '
 		<fieldset>
 		<p><label class="eeBlock" for="eeLDAPBindPassword">' . esc_html__('Bind Password', 'avpvh-filelist') . '</label>
 		<input type="password" class="eeFullWidth" name="eeLDAPBindPassword" id="eeLDAPBindPassword" value="" autocomplete="new-password" placeholder="' . esc_attr($eeSettings['BindPassword'] !== '' ? __('(stored, leave empty to keep)', 'avpvh-filelist') : '') . '" /></p>
 		<p><label><input type="checkbox" name="eeLDAPClearPassword" value="1" /> ' . esc_html__('Remove the stored password', 'avpvh-filelist') . '</label></p>
-		<div class="eeNote">' . esc_html__('Stored in the database. To keep it out of the database, define AVPVH_FLST_LDAP_BIND_PASSWORD in wp-config.php instead.', 'avpvh-filelist') . '</div>
+		<div class="eeNote">' . esc_html__('Stored in the database. To keep it out of the database, define AVPVH_FLST_LDAP_BIND_PASSWORD or AVPVH_FLST_LDAP_BIND_PASSWORD_FILE in wp-config.php instead.', 'avpvh-filelist') . '</div>
 		</fieldset>';
 	}
 

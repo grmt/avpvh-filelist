@@ -13,7 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 //   avpvh_flst_available_groups (string[] $groups)
 //
 // The bind password can be kept out of the database by defining it in wp-config.php:
-//   define( 'AVPVH_FLST_LDAP_BIND_PASSWORD', '...' );   (EESFL_LDAP_BIND_PASSWORD still works)
+//   define( 'AVPVH_FLST_LDAP_BIND_PASSWORD', '...' );
+//   define( 'AVPVH_FLST_LDAP_BIND_PASSWORD_FILE', '/run/secrets/...' );
+// (EESFL_LDAP_BIND_PASSWORD and EESFL_LDAP_BIND_PASSWORD_FILE still work)
 
 
 
@@ -48,12 +50,15 @@ function avpvh_flst_ldap_settings() {
 
 
 /**
- * Is the bind password defined in wp-config.php?
+ * Is the bind password defined in wp-config.php (directly or as a secret file)?
  *
  * @return bool
  */
 function avpvh_flst_ldap_password_in_config() {
-	return defined('AVPVH_FLST_LDAP_BIND_PASSWORD') || defined('EESFL_LDAP_BIND_PASSWORD');
+	return defined('AVPVH_FLST_LDAP_BIND_PASSWORD')
+		|| defined('AVPVH_FLST_LDAP_BIND_PASSWORD_FILE')
+		|| defined('EESFL_LDAP_BIND_PASSWORD')
+		|| defined('EESFL_LDAP_BIND_PASSWORD_FILE');
 }
 
 
@@ -62,7 +67,19 @@ function avpvh_flst_ldap_password_in_config() {
  * @return string
  */
 function avpvh_flst_ldap_bind_password($eeSettings) {
-	return avpvh_flst_ldap_password_in_config() ? (string) constant(defined('AVPVH_FLST_LDAP_BIND_PASSWORD') ? 'AVPVH_FLST_LDAP_BIND_PASSWORD' : 'EESFL_LDAP_BIND_PASSWORD') : (string) ($eeSettings['BindPassword'] ?? '');
+	foreach( array('AVPVH_FLST_LDAP_BIND_PASSWORD_FILE', 'EESFL_LDAP_BIND_PASSWORD_FILE') as $eeFileConst ) {
+		if( defined($eeFileConst) ) {
+			$eeFile = (string) constant($eeFileConst);
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- reading a local Docker secret file
+			return ($eeFile !== '' && is_readable($eeFile)) ? trim((string) file_get_contents($eeFile)) : '';
+		}
+	}
+	foreach( array('AVPVH_FLST_LDAP_BIND_PASSWORD', 'EESFL_LDAP_BIND_PASSWORD') as $eeConst ) {
+		if( defined($eeConst) ) {
+			return (string) constant($eeConst);
+		}
+	}
+	return (string) ($eeSettings['BindPassword'] ?? '');
 }
 
 

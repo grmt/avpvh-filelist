@@ -69,6 +69,18 @@ class AccessTest extends TestCase {
 		$this->assertSame(array('it-beheer', 'leden'), avpvh_flst_filter_allowed_groups(array('leden', 'it-beheer'), array('AllowedGroups' => '')));
 	}
 
+	public function test_ldap_bind_password_supports_secret_file() {
+		$this->assertFalse(avpvh_flst_ldap_password_in_config());
+		$this->assertSame('from-db', avpvh_flst_ldap_bind_password(array('BindPassword' => 'from-db')));
+
+		$eeSecretFile = $this->eeRoot . 'ldap-secret.txt';
+		file_put_contents($eeSecretFile, "  from-secret-file\n");
+		define('AVPVH_FLST_LDAP_BIND_PASSWORD_FILE', $eeSecretFile);
+
+		$this->assertTrue(avpvh_flst_ldap_password_in_config());
+		$this->assertSame('from-secret-file', avpvh_flst_ldap_bind_password(array('BindPassword' => 'from-db')));
+	}
+
 	public function test_grant_is_normalised() {
 		$this->assertSame(
 			array('users' => array(2, 3), 'roles' => array('editor'), 'groups' => array('leden')),
