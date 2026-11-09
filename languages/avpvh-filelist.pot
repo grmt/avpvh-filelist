@@ -15,6 +15,16 @@ msgstr ""
 "X-Domain: simple-file-list\n"
 
 #. Plugin Name of the plugin
+#: avpvh-filelist.php
+msgid "AV-PvH File List"
+msgstr ""
+
+#. Description of the plugin
+#: avpvh-filelist.php
+msgid "File lists with uploads, access control, search and paging. Based on Simple File List by Mitchell Bennis (simplefilelist.com); not affiliated with the original author."
+msgstr ""
+
+#. Plugin Name of the plugin
 #: simple-file-list.php
 #: includes/ee-functions.php:2223
 #: includes/ee-functions.php:2245
