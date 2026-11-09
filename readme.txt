@@ -4,7 +4,7 @@ Tags: file manager, file sharing, document library, file access, ldap
 Requires at least: 7.1
 Requires PHP: 8.4
 Tested up to: 7.1
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,9 @@ In the [issues on GitHub](https://github.com/grmt/avpvh-filelist/issues). Please
 
 
 == Changelog ==
+
+= 1.0.3 =
+* Change: When the plugin can't determine the file system paths, the error notice now gives WordPress' reason (for example that it can't create this month's upload folder) instead of pointing at managed hosting.
 
 = 1.0.2 =
 * Fix: When the last file of a list was removed from its folder, the rescan didn't store the now empty list, so the file stayed listed (with a broken link) until another file was added. (This bug came from Simple File List.)

@@ -153,6 +153,16 @@ echo "--- the last file removed from the folder"
 $DC exec -T -u www-data wordpress bash -c 'cd /var/www/html/wp-content/uploads/simple-file-list && find . -maxdepth 1 -type f ! -name index.html ! -name .htaccess -delete'
 curl -s -o /dev/null "$URL/?page_id=$PAGE"
 expect "rescan: an empty folder gives an empty list" "$(wp eval 'echo get_option("avpvh_flst_files_1") === array() ? "yes" : "no";')"
+
+# When WordPress can't give an upload folder, the notice says why
+echo "--- the reason for a file system error"
+$DC exec -T -u www-data wordpress bash -c 'mkdir -p /var/www/html/wp-content/mu-plugins && cat > /var/www/html/wp-content/mu-plugins/upload-dir-error.php <<"PHP"
+<?php
+add_filter("upload_dir", function ($dirs) { $dirs["error"] = "TEST: cannot create wp-content/uploads/private/2026/11"; return $dirs; });
+PHP'
+wp transient delete avpvh_flst_root_path >/dev/null 2>&1 || true
+expect "root path: the notice names the reason" "$(wp eval 'ob_start(); do_action("admin_notices"); echo strpos(ob_get_clean(), "TEST: cannot create wp-content/uploads/private/2026/11") !== false ? "yes" : "no";' 2>/dev/null)"
+$DC exec -T -u www-data wordpress rm -f /var/www/html/wp-content/mu-plugins/upload-dir-error.php
 if [ "$MIGRATION_FAILS" -gt 0 ]; then echo "FAIL: $MIGRATION_FAILS check(s) failed"; exit 1; fi
 
 echo "--- debug.log"
