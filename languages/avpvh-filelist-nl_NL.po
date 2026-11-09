@@ -22,6 +22,16 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
 #. Plugin Name of the plugin
+#: avpvh-filelist.php
+msgid "AV-PvH File List"
+msgstr "AV-PvH Bestandslijst"
+
+#. Description of the plugin
+#: avpvh-filelist.php
+msgid "File lists with uploads, access control, search and paging. Based on Simple File List by Mitchell Bennis (simplefilelist.com); not affiliated with the original author."
+msgstr "Bestandslijsten met uploads, toegangsbeheer, zoeken en paginering. Gebaseerd op Simple File List van Mitchell Bennis (simplefilelist.com); niet gelieerd aan de oorspronkelijke auteur."
+
+#. Plugin Name of the plugin
 #: simple-file-list.php includes/ee-functions.php:2223
 #: includes/ee-functions.php:2245
 msgid "Simple File List"
