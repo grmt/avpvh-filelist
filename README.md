@@ -6,11 +6,43 @@ File lists with uploads, access control, search and paging for WordPress, mainta
 
 Everything is free. The features that used to be paid add-ons (multiple lists, per-file access, search and paging) were rewritten for this plugin, and the upgrade prompts and links to the paid version are gone. Sub-folders, a feature of the old Pro version, are not supported.
 
-## History
+## What changed from Simple File List
 
-This repository started from version 6.3.11 of the GPL-licensed WordPress plugin
-Simple File List. The initial commit is a byte-for-byte import of the plugin
-copy installed for `vp40-42.vve.rechtspreker.nl` on 14 September 2026.
+The full list is in the changelog in `readme.txt`. In short:
+
+**Security**
+- Stored XSS fixed: file names, descriptions, submitter details and column labels are escaped in every list layout.
+- Every settings tab requires `manage_options`.
+- Uploads: a longer blocklist of script extensions (`php3`–`php8`, `pht`, `inc`, `html`, `svg` and others), `AllowUploads` checked before an upload is processed, and an upload never overwrites a file the uploader may not read.
+- The `.htaccess` of an unprotected list blocks every configured file type (the first one used to be skipped).
+- Front-end management (edit, rename, delete, bulk actions) only reaches files the visitor may read, in lists they may see, and never items such as the folder's `.htaccess`.
+- Sending files by e-mail checks that the list may be shown, and is rate limited; ZIP downloads and sent links only include files the user may open. Temporary ZIP files get random names.
+
+**Access control**
+- *Protect files* per list: WordPress serves the files and checks access on every download (with Range support for media, and optional nginx `X-Accel-Redirect`). Direct URLs are blocked: a deny-all `.htaccess` for Apache, a location block to add for nginx. Files that could run scripts in the browser (HTML, SVG) are always sent as downloads.
+- A list can be shown to specific users, roles or directory groups, and a single file can be limited further within that audience.
+- Per-list admin access through the list's "Admin Role".
+
+**LDAP and directory groups**
+- Groups come from an LDAP directory ("Groups" tab), looked up by user name or e-mail address and cached for 15 minutes. If the directory can't be reached, group access fails closed.
+- The bind password can stay out of the database: `AVPVH_FLST_LDAP_BIND_PASSWORD` in `wp-config.php`, or `AVPVH_FLST_LDAP_BIND_PASSWORD_FILE` pointing at a file such as a Docker secret.
+- Other plugins can supply groups through the `avpvh_flst_user_groups` and `avpvh_flst_available_groups` filters; avpvh-members does this on the AV-PvH sites.
+
+**Former paid features, now built in**
+- Multiple file lists, each with its own folder, settings and shortcode, and a list switcher in wp-admin.
+- Search and paging per list or per shortcode, as links that can be bookmarked; files a visitor may not open are left out of the results and counts.
+- Lists and per-file grants from the old File Access Manager add-on are taken over, and the old add-ons are deactivated.
+
+**Removed**
+- The "Get Pro Version" tab, upgrade texts and links, and the settings only the paid version used.
+- The unused sub-folder code of the old Pro version.
+- Calls to the original author's website (the logo in list folders, help and support links).
+
+**Name and code**
+- Renamed to AV-PvH File List (folder `avpvh-filelist`, shortcode `[avpvh_filelist]`), with all code under the `avpvh_flst_` prefix. A site running Simple File List moves over on the first request: settings and lists are copied, the shortcode is rewritten in posts and widgets, and `[eeSFL]` keeps working.
+- Requires PHP 8.4 and WordPress 7.1; unit and integration tests (WordPress, MariaDB, OpenLDAP) run in CI.
+
+## History
 
 ### Original upstream
 
