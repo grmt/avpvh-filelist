@@ -8,7 +8,7 @@ Plugin Name: AV-PvH File List
 Plugin URI: https://github.com/grmt/avpvh-filelist
 Description: File lists with uploads, access control, search and paging. Based on Simple File List by Mitchell Bennis (simplefilelist.com); not affiliated with the original author.
 Author: grmt
-Version: 1.0.4
+Version: 1.0.5
 Requires at least: 7.1
 Requires PHP: 8.4
 Author URI: https://github.com/grmt
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 require_once __DIR__ . '/includes/ee-github-updater.php';
 
 // CONSTANTS
-if(!defined('AVPVH_FLST_VERSION')) { define('AVPVH_FLST_VERSION', '1.0.4'); }
+if(!defined('AVPVH_FLST_VERSION')) { define('AVPVH_FLST_VERSION', '1.0.5'); }
 define('AVPVH_FLST_NAME', 'AV-PvH File List');
 define('AVPVH_FLST_SLUG', 'avpvh-filelist');
 define('AVPVH_FLST_PRODUCT', 'Free');

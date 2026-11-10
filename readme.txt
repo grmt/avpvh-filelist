@@ -4,7 +4,7 @@ Tags: file manager, file sharing, document library, file access, ldap
 Requires at least: 7.1
 Requires PHP: 8.4
 Tested up to: 7.1
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,9 @@ In the [issues on GitHub](https://github.com/grmt/avpvh-filelist/issues). Please
 
 
 == Changelog ==
+
+= 1.0.5 =
+* New: The LDAP bind password can come from a file, such as a Docker secret: define `AVPVH_FLST_LDAP_BIND_PASSWORD_FILE` in wp-config.php with the path of the file. It takes precedence over `AVPVH_FLST_LDAP_BIND_PASSWORD` and the stored password.
 
 = 1.0.4 =
 * Change: The plugin name and description in the plugin list are now translated into Dutch (AV-PvH Bestandslijst) on Dutch sites.
