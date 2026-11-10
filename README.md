@@ -8,10 +8,6 @@ Everything is free. The features that used to be paid add-ons (multiple lists, p
 
 ## History
 
-This repository started from version 6.3.11 of the GPL-licensed WordPress plugin
-Simple File List. The initial commit is a byte-for-byte import of the plugin
-copy installed for `vp40-42.vve.rechtspreker.nl` on 14 September 2026.
-
 ### Original upstream
 
 - Project website: <https://simplefilelist.com/>
