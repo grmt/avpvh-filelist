@@ -1,5 +1,5 @@
-# Minor and patch updates come as one PR per ecosystem a week; majors stay
-# separate PRs.
+# Dependabot: weekly, minor and patch updates grouped into one PR per
+# ecosystem, major updates as separate PRs (see the shared CLAUDE.md, CI).
 version: 2
 updates:
 - package-ecosystem: github-actions
@@ -15,6 +15,15 @@ updates:
   directory: "/"
   groups:
     composer:
+      update-types: [minor, patch]
+  schedule:
+    interval: weekly
+  assignees:
+    - grmt
+- package-ecosystem: docker
+  directory: "/tests/integration"
+  groups:
+    docker-tests-integration:
       update-types: [minor, patch]
   schedule:
     interval: weekly
